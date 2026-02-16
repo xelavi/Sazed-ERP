@@ -49,6 +49,11 @@ const routes = [
     component: () => import('../views/About.vue') // Placeholder
   },
   {
+    path: '/invoices',
+    name: 'Invoices',
+    component: () => import('../views/Invoices.vue')
+  },
+  {
     path: '/customers',
     name: 'Customers',
     component: () => import('../views/Customers.vue')
