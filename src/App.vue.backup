@@ -1,0 +1,616 @@
+<script setup>
+import { ref } from 'vue'
+import { 
+  Home, Package, DollarSign, Users, Megaphone, 
+  Globe, Link, Settings, ChevronDown, ChevronRight,
+  Menu, Languages, Eye, ShoppingBag, Archive,
+  ClipboardList, Wallet, CreditCard, TrendingUp
+} from 'lucide-vue-next'
+
+const isSidebarCollapsed = ref(false)
+const expandedMenus = ref({})
+
+const menuItems = [
+  { 
+    id: 'home', 
+    label: 'Home', 
+    icon: Home, 
+    route: '/' 
+  },
+  { 
+    id: 'catalog', 
+    label: 'Catalog', 
+    icon: Package, 
+    submenu: [
+      { label: 'Products', route: '/products', icon: ShoppingBag },
+      { label: 'Collections', route: '/collections', icon: Archive },
+      { label: 'Inventory', route: '/inventory', icon: ClipboardList },
+      { label: 'Orders', route: '/orders', icon: ClipboardList }
+    ]
+  },
+  { 
+    id: 'finances', 
+    label: 'Finances', 
+    icon: DollarSign, 
+    submenu: [
+      { label: 'Wallet', route: '/wallet', icon: Wallet },
+      { label: 'Uvodo Card', route: '/card', icon: CreditCard },
+      { label: 'Payout', route: '/payout', icon: TrendingUp }
+    ]
+  },
+  { 
+    id: 'customers', 
+    label: 'Customers', 
+    icon: Users, 
+    route: '/customers' 
+  },
+  { 
+    id: 'marketing', 
+    label: 'Marketing', 
+    icon: Megaphone, 
+    route: '/marketing' 
+  }
+]
+
+const salesChannels = [
+  { id: 'online-store', label: 'Online Store', icon: Globe, route: '/online-store' },
+  { id: 'sell-link', label: 'Sell Via Link', icon: Link, route: '/sell-link' }
+]
+
+const toggleMenu = (menuId) => {
+  expandedMenus.value[menuId] = !expandedMenus.value[menuId]
+}
+
+const toggleSidebar = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
+}
+</script>
+
+<template>
+  <div id="app" class="erp-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" :class="{ collapsed: isSidebarCollapsed }">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <span v-if="!isSidebarCollapsed" class="logo-text">ERP System</span>
+        </div>
+        <div v-if="!isSidebarCollapsed" class="store-selector">
+          <Archive :size="16" />
+          <span class="store-name">rainbow-delight...</span>
+          <ChevronDown :size="14" class="store-chevron" />
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li v-for="item in menuItems" :key="item.id" class="nav-item">
+            <router-link 
+              v-if="!item.submenu" 
+              :to="item.route" 
+              class="nav-link"
+              active-class="active"
+            >
+              <component :is="item.icon" :size="20" class="nav-icon" />
+              <span v-if="!isSidebarCollapsed" class="nav-label">{{ item.label }}</span>
+            </router-link>
+            <div v-else>
+              <div 
+                class="nav-link" 
+                :class="{ 'has-submenu': true, 'expanded': expandedMenus[item.id] }"
+                @click="toggleMenu(item.id)"
+              >
+                <component :is="item.icon" :size="20" class="nav-icon" />
+                <span v-if="!isSidebarCollapsed" class="nav-label">{{ item.label }}</span>
+                <component 
+                  v-if="!isSidebarCollapsed"
+                  :is="expandedMenus[item.id] ? ChevronDown : ChevronRight" 
+                  :size="16" 
+                  class="expand-icon" 
+                />
+              </div>
+              <ul v-if="expandedMenus[item.id] && !isSidebarCollapsed" class="submenu">
+                <li v-for="subitem in item.submenu" :key="subitem.route">
+                  <router-link :to="subitem.route" class="submenu-link" active-class="active">
+                    <component :is="subitem.icon" :size="16" class="submenu-icon" /s="nav-label">{{ item.label }}</span>
+                <span v-if="!isSidebarCollapsed" class="expand-icon">
+                  {{ expandedMenus[item.id] ? '▼' : '▶' }}
+                </span>
+              </div>
+              <ul v-if="expandedMenus[item.id] && !isSidebarCollapsed" class="submenu">
+                <li v-for="subitem in item.submenu" :key="subitem.route">
+                  <router-link :to="subitem.route" class="submenu-link" active-class="active">
+                    <span class="submenu-dot">•</span>
+                    {{ subitem.label }}
+                  </router-link>
+                </li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+
+        <div class="nav-divider">
+          <span v-if="!isSidebarCollapsed" class="divider-label">Sales channels</span>
+        </div>
+
+        <ul clacomponent :is="channel.icon" :size="20" class="nav-icon" />
+              <span v-if="!isSidebarCollapsed" class="nav-label">{{ channel.label }}</span>
+              <Eye v-if="!isSidebarCollapsed" :size="16" class="channel-eye" /"active">
+              <span class="nav-icon">{{ channel.icon }}</span>
+              <span v-if="!isSidebarCollapsed" class="nav-label">{{ channel.label }}</span>
+              <span v-if="!isSidebarCollapsed" class="channel-eye">👁</span>
+            </router-link>
+          </li>
+        </ul>
+      </nav>
+Settings :size="20" class="nav-icon" />
+          <span v-if="!isSidebarCollapsed" class="nav-label">Settings</span>
+        </router-link>
+      </div>
+
+      <div v-if="!isSidebarCollapsed" class="sidebar-branding">
+        <div class="branding-content">
+          <div class="branding-logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
+              <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2"/>
+              <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="branding-text">
+            <span class="branding-name">ERP System</span>
+            <span class="branding-subtitle">Professional Edition</span>
+          </div>
+        </div
+        <div class="branding-logo">U</div>
+        <span v-if="!isSidebarCollapsed" class="branding-text">Uvodo
+            <Menu :size="20" />
+          </button>
+        </div>
+        <div class="header-right">
+          <button class="language-btn">
+            <Languages :size="16" />
+            <span>ES</span>
+          </button>
+          <div class="user-menu">
+            <div class="user-avatar">JD</div>
+            <span class="user-name">Jane Doe</span>
+            <ChevronDown :size="16" class="user-chevron" /
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="toggle-sidebar-btn" @click="toggleSidebar">☰</button>
+        </div>
+        <div class="header-right">
+          <button class="language-btn">🌐 Es</button>
+          <div class="user-menu">
+            <div class="user-avatar">JD</div>
+            <span class="user-name">Jane Doe</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <router-view />
+      </main>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.erp-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 260px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  border-right: 1px solid #e8eaed;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  overflow-x: hidden;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
+}
+
+.sidebar.collapsed {
+  width: 72px;
+}
+
+.sidebar-header {
+  padding: 1.75rem 1.25rem;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.logo-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.store-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  background: #f8f9fa;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.store-selector:hover {
+  background: #f0f2f5;
+  border-color: #d0d4d9;
+}
+
+.store-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.store-chevron {
+  color: var(--text-tertiary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 0.25rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  border-radius: 8px;
+  margin: 0 0.75rem;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
+  color: var(--text-primary);
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  color: var(--primary-color);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 60%;
+  width: 3px;
+  background: var(--primary-color);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-label {
+  flex: 1;
+  font-size: 0.9375rem;
+}
+
+.expand-icon {
+  color: var(--text-tertiary);
+  transition: transform 0.2s ease;
+}
+.5rem 0 0.5rem 0;
+  margin: 0.25rem 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.submenu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem 0.625rem 2.75rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin: 0.125rem 0.5rem;
+  font-weight: 500;
+}
+
+.submenu-link:hover {
+  background: white;
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.submenu-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+  background: white;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
+}
+
+.submenu-icon {
+  flex-shrink.active {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.submenu-dot {
+  font-size: 1.5rem;
+  line-height: 0;
+}
+
+.nav-divider {
+  padding: 1rem 1rem 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.divider-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.channel-eye {
+  margin-left: auto;#e8eaed;
+}
+
+.sidebar-branding {
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  margin: 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.branding-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.branding-logo {
+  width: 32px;
+  height: 32px;
+  background: white;
+  color: #667eea;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.branding-logo svg {
+  width: 18px;
+  height: 18px;
+}
+
+.branding-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}60px;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #f8f9fa;
+}
+
+.sidebar.collapsed + .main-wrapper {
+  margin-left: 72px;
+}
+
+/* Top Header */
+.top-header {
+  height: 68px;
+  background: white;
+  border-bottom: 1px solid #e8eaed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.toggle-sidebar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0.625rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-sidebar-btn:hover {
+  background: #f0f2f5;
+  color: var(--text-primary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.language-btn {
+  background: white;
+  border: 1px solid #e8eaed;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  font-family: var(--font-family);
+}
+
+.language-btn:hover {
+  background: #f0f2f5;
+  border-color: #d0d4d9;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem 0.875rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.user-menu:hover {
+  background: #f0f2f5;
+  border-color: #e8eaed;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+}
+
+.user-name {
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.user-chevron {
+  color: var(--text-tertiary)px;
+  transition: background-color 0.2s;
+}
+
+.user-menu:hover {
+  background: var(--bg-hover);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.user-name {
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+</style>
