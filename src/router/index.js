@@ -51,7 +51,7 @@ const routes = [
   {
     path: '/customers',
     name: 'Customers',
-    component: () => import('../views/About.vue') // Placeholder
+    component: () => import('../views/Customers.vue')
   },
   {
     path: '/marketing',
