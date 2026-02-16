@@ -4,7 +4,8 @@ import {
   Home, Package, DollarSign, Users, Megaphone, 
   Globe, Link, Settings, ChevronDown, ChevronRight,
   Menu, Search, Bell, HelpCircle, Eye, ShoppingBag, Archive,
-  ClipboardList, Wallet, CreditCard, TrendingUp, FolderOpen, Plus
+  ClipboardList, Wallet, CreditCard, TrendingUp, FolderOpen, Plus,
+  Receipt, FileText
 } from 'lucide-vue-next'
 
 const isSidebarCollapsed = ref(false)
@@ -32,6 +33,14 @@ const menuItems = [
       { label: 'Collections', route: '/collections', icon: Archive },
       { label: 'Inventory', route: '/inventory', icon: ClipboardList },
       { label: 'Orders', route: '/orders', icon: ClipboardList }
+    ]
+  },
+  { 
+    id: 'sales', 
+    label: 'Sales', 
+    icon: Receipt, 
+    submenu: [
+      { label: 'Invoices', route: '/invoices', icon: FileText }
     ]
   },
   { 
