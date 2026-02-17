@@ -116,12 +116,13 @@
                   <span v-if="invoice.type === 'CreditNote'" class="creditnote-hint">Credit note</span>
                 </td>
                 <td class="col-customer">
-                  <div class="customer-cell">
+                  <div class="customer-cell" v-if="invoice.customer">
                     <div class="customer-avatar-sm" :style="{ background: invoice.customer.avatarColor }">
                       {{ invoice.customer.initials }}
                     </div>
                     <span class="customer-name">{{ invoice.customer.name }}</span>
                   </div>
+                  <span v-else class="text-secondary">—</span>
                 </td>
                 <td class="col-date">
                   <span class="date-text">{{ formatDateShort(invoice.issueDate) }}</span>
@@ -256,248 +257,26 @@
     </div>
 
     <!-- ===================== INVOICE DETAIL DRAWER ===================== -->
-    <Transition name="drawer">
-      <div v-if="detailOpen && selectedInvoice" class="drawer-overlay" @click.self="closeDetail">
-        <div class="drawer-panel">
-          <div class="drawer-header">
-            <div class="drawer-title-row">
-              <div>
-                <h2 class="drawer-title">{{ selectedInvoice.number || 'Draft' }}</h2>
-                <span :class="['badge', statusBadgeClass(selectedInvoice)]">
-                  {{ displayStatus(selectedInvoice) }}
-                </span>
-              </div>
-              <button class="btn-icon" @click="closeDetail">
-                <X :size="20" />
-              </button>
-            </div>
-          </div>
+    <InvoiceDetailDrawer
+      v-if="selectedInvoice"
+      :invoice="selectedInvoice"
+      :open="detailOpen"
+      @close="closeDetail"
+      @edit="(inv) => { closeDetail(); openInvoiceForm(inv) }"
+      @approve="approveInvoice"
+      @record-payment="openPaymentModal"
+      @send="sendInvoice"
+      @download-pdf="downloadPdf"
+    />
 
-          <div class="drawer-body">
-            <!-- Summary cards -->
-            <div class="detail-summary">
-              <div class="summary-card">
-                <span class="summary-label">Total</span>
-                <span class="summary-amount">{{ formatCurrency(selectedInvoice.totalAmount) }}</span>
-              </div>
-              <div class="summary-card">
-                <span class="summary-label">Paid</span>
-                <span class="summary-amount paid-amount">{{ formatCurrency(selectedInvoice.paidAmount) }}</span>
-              </div>
-              <div class="summary-card">
-                <span class="summary-label">Balance due</span>
-                <span :class="['summary-amount', selectedInvoice.balanceDue > 0 ? 'has-balance' : 'zero-balance']">
-                  {{ formatCurrency(selectedInvoice.balanceDue) }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Payment progress -->
-            <div class="payment-progress">
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  :style="{ width: paymentPercent(selectedInvoice) + '%' }"
-                ></div>
-              </div>
-              <span class="progress-label">{{ paymentPercent(selectedInvoice) }}% collected</span>
-            </div>
-
-            <!-- Detail sections -->
-            <div class="detail-section">
-              <h4 class="section-title">
-                <User :size="16" />
-                Customer
-              </h4>
-              <div class="detail-row">
-                <span class="detail-label">Name</span>
-                <span class="detail-value">{{ selectedInvoice.customer.name }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">VAT ID</span>
-                <span class="detail-value">{{ selectedInvoice.customer.vatId || '—' }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Email</span>
-                <span class="detail-value">{{ selectedInvoice.customer.email }}</span>
-              </div>
-            </div>
-
-            <div class="detail-section">
-              <h4 class="section-title">
-                <FileText :size="16" />
-                Details
-              </h4>
-              <div class="detail-row">
-                <span class="detail-label">Series</span>
-                <span class="detail-value">{{ selectedInvoice.series }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Issue date</span>
-                <span class="detail-value">{{ formatDateShort(selectedInvoice.issueDate) }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Due date</span>
-                <span :class="['detail-value', isOverdue(selectedInvoice) ? 'overdue-text' : '']">
-                  {{ formatDateShort(selectedInvoice.dueDate) }}
-                </span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Payment method</span>
-                <span class="detail-value">{{ selectedInvoice.paymentMethod }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Currency</span>
-                <span class="detail-value">{{ selectedInvoice.currency }}</span>
-              </div>
-            </div>
-
-            <!-- Lines -->
-            <div class="detail-section">
-              <h4 class="section-title">
-                <ClipboardList :size="16" />
-                Lines
-              </h4>
-              <div class="lines-table">
-                <div class="lines-header">
-                  <span class="lh-desc">Description</span>
-                  <span class="lh-qty">Qty</span>
-                  <span class="lh-price">Price</span>
-                  <span class="lh-tax">Tax</span>
-                  <span class="lh-subtotal">Subtotal</span>
-                </div>
-                <div v-for="line in selectedInvoice.lines" :key="line.id" class="line-row">
-                  <span class="lr-desc">
-                    {{ line.description }}
-                    <small v-if="line.discount" class="line-discount">-{{ line.discount }}</small>
-                  </span>
-                  <span class="lr-qty">{{ line.quantity }}</span>
-                  <span class="lr-price">{{ formatCurrency(line.unitPrice) }}</span>
-                  <span class="lr-tax">{{ line.tax }}</span>
-                  <span class="lr-subtotal">{{ formatCurrency(line.subtotal) }}</span>
-                </div>
-              </div>
-
-              <!-- Totals -->
-              <div class="totals-block">
-                <div class="total-row">
-                  <span>Subtotal</span>
-                  <span>{{ formatCurrency(selectedInvoice.subtotal) }}</span>
-                </div>
-                <div v-if="selectedInvoice.discountAmount" class="total-row">
-                  <span>Discount</span>
-                  <span>-{{ formatCurrency(selectedInvoice.discountAmount) }}</span>
-                </div>
-                <div v-for="tax in selectedInvoice.taxSummary" :key="tax.name" class="total-row">
-                  <span>{{ tax.name }}</span>
-                  <span :class="tax.isRetention ? 'retention-amount' : ''">
-                    {{ tax.isRetention ? '-' : '' }}{{ formatCurrency(tax.amount) }}
-                  </span>
-                </div>
-                <div class="total-row total-final">
-                  <span>Total</span>
-                  <span>{{ formatCurrency(selectedInvoice.totalAmount) }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Payments -->
-            <div class="detail-section">
-              <div class="section-title-row">
-                <h4 class="section-title">
-                  <Banknote :size="16" />
-                  Payments
-                </h4>
-                <button
-                  v-if="selectedInvoice.status === 'Approved' || selectedInvoice.status === 'PartiallyPaid'"
-                  class="btn btn-sm btn-secondary"
-                  @click="openPaymentModal(selectedInvoice)"
-                >
-                  <Plus :size="14" />
-                  Add payment
-                </button>
-              </div>
-              <div v-if="selectedInvoice.payments.length" class="payments-list">
-                <div v-for="pay in selectedInvoice.payments" :key="pay.id" class="payment-item">
-                  <div class="payment-info">
-                    <span class="payment-date">{{ formatDateShort(pay.date) }}</span>
-                    <span class="payment-method-tag">{{ pay.method }}</span>
-                    <span v-if="pay.reference" class="payment-ref">{{ pay.reference }}</span>
-                  </div>
-                  <span class="payment-amount">{{ formatCurrency(pay.amount) }}</span>
-                </div>
-              </div>
-              <p v-else class="empty-hint">No payments recorded yet.</p>
-            </div>
-
-            <!-- Notes -->
-            <div v-if="selectedInvoice.customerNotes || selectedInvoice.internalNotes" class="detail-section">
-              <h4 class="section-title">
-                <StickyNote :size="16" />
-                Notes
-              </h4>
-              <div v-if="selectedInvoice.customerNotes" class="note-block">
-                <span class="note-label">Customer notes</span>
-                <p class="note-text">{{ selectedInvoice.customerNotes }}</p>
-              </div>
-              <div v-if="selectedInvoice.internalNotes" class="note-block">
-                <span class="note-label">Internal notes</span>
-                <p class="note-text internal-note">{{ selectedInvoice.internalNotes }}</p>
-              </div>
-            </div>
-
-            <!-- Timeline -->
-            <div class="detail-section">
-              <h4 class="section-title">
-                <Clock :size="16" />
-                Timeline
-              </h4>
-              <div class="timeline">
-                <div v-for="(event, idx) in selectedInvoice.timeline" :key="idx" class="timeline-item">
-                  <div :class="['timeline-dot', 'dot-' + event.type]"></div>
-                  <div class="timeline-content">
-                    <span class="timeline-action">{{ event.action }}</span>
-                    <span class="timeline-meta">{{ event.actor }} · {{ formatDateShort(event.date) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Drawer footer actions -->
-          <div class="drawer-footer">
-            <button
-              v-if="selectedInvoice.status === 'Draft'"
-              class="btn btn-primary"
-              @click="approveInvoice(selectedInvoice)"
-            >
-              <CheckCircle2 :size="18" />
-              Approve
-            </button>
-            <button
-              v-if="selectedInvoice.status === 'Approved' || selectedInvoice.status === 'PartiallyPaid'"
-              class="btn btn-primary"
-              @click="openPaymentModal(selectedInvoice)"
-            >
-              <Banknote :size="18" />
-              Record payment
-            </button>
-            <button class="btn btn-secondary" @click="downloadPdf(selectedInvoice)">
-              <FileDown :size="18" />
-              PDF
-            </button>
-            <button
-              v-if="selectedInvoice.status !== 'Draft' && selectedInvoice.status !== 'Voided'"
-              class="btn btn-secondary"
-              @click="sendInvoice(selectedInvoice)"
-            >
-              <Send :size="18" />
-              Send
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <!-- ===================== CREATE / EDIT MODAL ===================== -->
+    <InvoiceFormModal
+      :open="formModalOpen"
+      :invoice="formInvoice"
+      :invoices="invoices"
+      @close="closeInvoiceForm"
+      @save="handleInvoiceSave"
+    />
 
     <!-- ===================== PAYMENT MODAL ===================== -->
     <Transition name="fade">
@@ -555,10 +334,11 @@
 import { ref, computed } from 'vue'
 import {
   Plus, Search, ArrowUpDown, MoreVertical, Download,
-  FileText, Pencil, Eye, Copy, CheckCircle2, Send,
-  FileDown, Trash2, Ban, Banknote, FileX, X,
-  User, ClipboardList, Clock, StickyNote
+  Pencil, Eye, Copy, CheckCircle2, Send,
+  FileDown, Trash2, Ban, Banknote, FileX, X
 } from 'lucide-vue-next'
+import InvoiceDetailDrawer from '@/components/InvoiceDetailDrawer.vue'
+import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
 
 /* ══════════════════════════════════════════
    DRAWER STATE
@@ -577,11 +357,33 @@ function closeDetail() {
 }
 
 /* ══════════════════════════════════════════
-   FORM MODAL STATE (placeholder)
+   FORM MODAL STATE
    ══════════════════════════════════════════ */
+const formModalOpen = ref(false)
+const formInvoice = ref(null)
+
 function openInvoiceForm(invoice = null) {
-  console.log('Open invoice form:', invoice ? 'Edit ' + invoice.number : 'New')
-  // TODO: Navigate to editor or open modal
+  formInvoice.value = invoice
+  formModalOpen.value = true
+}
+
+function closeInvoiceForm() {
+  formModalOpen.value = false
+  formInvoice.value = null
+}
+
+function handleInvoiceSave(data) {
+  if (formInvoice.value) {
+    // Editing — update in place
+    const idx = invoices.value.findIndex(i => i.id === formInvoice.value.id)
+    if (idx !== -1) {
+      invoices.value[idx] = data
+    }
+  } else {
+    // Creating — prepend
+    invoices.value.unshift(data)
+  }
+  formInvoice.value = null
 }
 
 /* ══════════════════════════════════════════
@@ -715,8 +517,8 @@ function createRectifying(invoice) {
 }
 
 function sendInvoice(invoice) {
-  invoice.timeline.unshift({ type: 'sent', action: `Sent by email to ${invoice.customer.email}`, actor: 'You', date: new Date().toISOString().split('T')[0] })
-  console.log('Invoice sent:', invoice.number, '→', invoice.customer.email)
+  invoice.timeline.unshift({ type: 'sent', action: `Sent by email to ${invoice.customer?.email ?? '—'}`, actor: 'You', date: new Date().toISOString().split('T')[0] })
+  console.log('Invoice sent:', invoice.number, '→', invoice.customer?.email)
 }
 
 function downloadPdf(invoice) {
@@ -1117,7 +919,7 @@ const invoices = ref([
    COMPUTED
    ══════════════════════════════════════════ */
 const customers = computed(() => {
-  const names = [...new Set(invoices.value.map(i => i.customer.name))]
+  const names = [...new Set(invoices.value.map(i => i.customer?.name).filter(Boolean))]
   return names.sort()
 })
 
@@ -1225,12 +1027,6 @@ function statusBadgeClass(invoice) {
     Rectified: 'badge-gray'
   }
   return map[invoice.status] || 'badge-gray'
-}
-
-function paymentPercent(invoice) {
-  if (!invoice.totalAmount || invoice.totalAmount === 0) return 100
-  const pct = Math.round((invoice.paidAmount / Math.abs(invoice.totalAmount)) * 100)
-  return Math.min(100, Math.max(0, pct))
 }
 
 function formatCurrency(value) {
@@ -1610,424 +1406,7 @@ function formatDateShort(dateStr) {
 }
 
 /* ============================
-   DRAWER
-   ============================ */
-.drawer-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: rgba(0, 0, 0, 0.3);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.drawer-panel {
-  width: 520px;
-  max-width: 90vw;
-  background: white;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-}
-
-.drawer-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.drawer-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.drawer-title-row > div {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.drawer-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.drawer-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.5rem;
-}
-
-.drawer-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  gap: 0.625rem;
-  flex-wrap: wrap;
-}
-
-.drawer-enter-active,
-.drawer-leave-active {
-  transition: all 0.3s ease;
-}
-.drawer-enter-active .drawer-panel,
-.drawer-leave-active .drawer-panel {
-  transition: transform 0.3s ease;
-}
-.drawer-enter-from,
-.drawer-leave-to {
-  background: rgba(0, 0, 0, 0);
-}
-.drawer-enter-from .drawer-panel,
-.drawer-leave-to .drawer-panel {
-  transform: translateX(100%);
-}
-
-/* ============================
-   DETAIL SECTIONS
-   ============================ */
-.detail-summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
-}
-
-.summary-card {
-  background: var(--bg-secondary);
-  border-radius: var(--border-radius-sm);
-  padding: 0.875rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.summary-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 500;
-}
-
-.summary-amount {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.paid-amount {
-  color: var(--success-color);
-}
-
-/* Payment progress */
-.payment-progress {
-  margin-bottom: 1.5rem;
-}
-
-.progress-bar {
-  height: 6px;
-  background: var(--bg-secondary);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 0.375rem;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-
-.progress-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-}
-
-/* Section blocks */
-.detail-section {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #f0f2f5;
-}
-
-.detail-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.section-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 0.75rem;
-}
-
-.section-title-row .section-title {
-  margin-bottom: 0;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.375rem 0;
-}
-
-.detail-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-}
-
-.detail-value {
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-/* Lines table in drawer */
-.lines-table {
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-.lines-header {
-  display: grid;
-  grid-template-columns: 1fr 50px 80px 70px 80px;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--bg-secondary);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.line-row {
-  display: grid;
-  grid-template-columns: 1fr 50px 80px 70px 80px;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: var(--font-size-sm);
-  border-top: 1px solid var(--border-color);
-  align-items: center;
-}
-
-.lr-desc {
-  color: var(--text-primary);
-  font-weight: 500;
-  white-space: normal;
-  line-height: 1.3;
-}
-
-.line-discount {
-  display: inline-block;
-  margin-left: 0.375rem;
-  color: var(--error-color);
-  font-size: var(--font-size-xs);
-  font-weight: 400;
-}
-
-.lr-qty { color: var(--text-secondary); text-align: center; }
-.lr-price { color: var(--text-secondary); text-align: right; }
-.lr-tax { color: var(--text-tertiary); font-size: var(--font-size-xs); text-align: right; }
-.lr-subtotal { color: var(--text-primary); font-weight: 600; text-align: right; }
-.lh-qty { text-align: center; }
-.lh-price,
-.lh-tax,
-.lh-subtotal { text-align: right; }
-
-/* Totals block */
-.totals-block {
-  background: var(--bg-secondary);
-  border-radius: var(--border-radius-sm);
-  padding: 0.75rem;
-}
-
-.total-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.25rem 0;
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.total-final {
-  border-top: 1px solid var(--border-color);
-  margin-top: 0.375rem;
-  padding-top: 0.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: var(--font-size-base);
-}
-
-.retention-amount {
-  color: var(--error-color);
-}
-
-/* Payments list */
-.payments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.payment-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.625rem 0.75rem;
-  background: var(--bg-secondary);
-  border-radius: var(--border-radius-sm);
-}
-
-.payment-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.payment-date {
-  font-size: var(--font-size-xs);
-  color: var(--text-secondary);
-}
-
-.payment-method-tag {
-  display: inline-flex;
-  padding: 0.125rem 0.5rem;
-  font-size: 0.625rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  background: var(--primary-light);
-  color: var(--primary-color);
-  border-radius: 4px;
-  letter-spacing: 0.03em;
-}
-
-.payment-ref {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.payment-amount {
-  font-weight: 700;
-  font-size: var(--font-size-sm);
-  color: var(--success-color);
-}
-
-.empty-hint {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
-  font-style: italic;
-  margin: 0;
-}
-
-/* Notes */
-.note-block {
-  margin-bottom: 0.75rem;
-}
-
-.note-label {
-  display: block;
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.25rem;
-  font-weight: 500;
-}
-
-.note-text {
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.5;
-}
-
-.internal-note {
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-/* Timeline */
-.timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  position: relative;
-}
-
-.timeline-item {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  position: relative;
-}
-
-.timeline-item:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  left: 5px;
-  top: 22px;
-  bottom: -2px;
-  width: 2px;
-  background: var(--border-color);
-}
-
-.timeline-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.dot-created { background: var(--text-tertiary); }
-.dot-approved { background: var(--primary-color); }
-.dot-sent { background: var(--info-color); }
-.dot-payment { background: var(--warning-color); }
-.dot-paid { background: var(--success-color); }
-.dot-voided { background: var(--error-color); }
-
-.timeline-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.timeline-action {
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.timeline-meta {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-}
-
-/* ============================
-   MODAL
+   PAYMENT MODAL
    ============================ */
 .modal-overlay {
   position: fixed;
@@ -2117,13 +1496,6 @@ function formatDateShort(dateStr) {
   }
   .table-card {
     border-radius: 8px;
-  }
-  .drawer-panel {
-    width: 100vw;
-    max-width: 100vw;
-  }
-  .detail-summary {
-    grid-template-columns: 1fr;
   }
 }
 

@@ -11,7 +11,7 @@
             <Download :size="18" />
             <span>Export</span>
           </button>
-          <button class="btn btn-primary">
+          <button class="btn btn-primary" @click="openCustomerForm()">
             <Plus :size="18" />
             <span>Add customer</span>
           </button>
@@ -86,7 +86,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="customer in filteredCustomers" :key="customer.id" class="table-row">
+              <tr v-for="customer in filteredCustomers" :key="customer.id" class="table-row" @click="openDetail(customer)">
                 <td class="col-checkbox" @click.stop>
                   <input type="checkbox" class="checkbox" v-model="selectedCustomers" :value="customer.id" />
                 </td>
@@ -125,6 +125,9 @@
                   </span>
                 </td>
                 <td class="col-actions" @click.stop>
+                  <button class="btn-icon" @click="openCustomerForm(customer)">
+                    <Pencil :size="16" />
+                  </button>
                   <button class="btn-icon">
                     <MoreVertical :size="18" />
                   </button>
@@ -140,15 +143,136 @@
         </div>
       </div>
     </div>
+
+    <!-- ===================== CUSTOMER DETAIL DRAWER ===================== -->
+    <CustomerDetailDrawer
+      v-if="selectedCustomer"
+      :customer="selectedCustomer"
+      :open="detailOpen"
+      @close="closeDetail"
+      @edit="(c) => { closeDetail(); openCustomerForm(c) }"
+      @new-invoice="handleNewInvoice"
+    />
+
+    <!-- ===================== CREATE / EDIT MODAL ===================== -->
+    <CustomerFormModal
+      :open="formModalOpen"
+      :customer="formCustomer"
+      @close="closeCustomerForm"
+      @save="handleCustomerSave"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Plus, Search, ArrowUpDown, MoreVertical, Download,
-  Building2, User
+  Building2, User, Pencil
 } from 'lucide-vue-next'
+import CustomerDetailDrawer from '@/components/CustomerDetailDrawer.vue'
+import CustomerFormModal from '@/components/CustomerFormModal.vue'
+
+const router = useRouter()
+
+/* ── Drawer state ── */
+const detailOpen = ref(false)
+const selectedCustomer = ref(null)
+
+function openDetail(customer) {
+  selectedCustomer.value = customer
+  detailOpen.value = true
+}
+
+function closeDetail() {
+  detailOpen.value = false
+}
+
+/* ── Form modal state ── */
+const formModalOpen = ref(false)
+const formCustomer = ref(null)
+
+function openCustomerForm(customer = null) {
+  formCustomer.value = customer
+  formModalOpen.value = true
+}
+
+function closeCustomerForm() {
+  formModalOpen.value = false
+  formCustomer.value = null
+}
+
+function handleCustomerSave(formData) {
+  if (formCustomer.value) {
+    // Editing existing customer
+    const c = formCustomer.value
+    c.name = formData.name
+    c.email = formData.email
+    c.type = formData.type
+    c.status = formData.status
+    c.city = formData.city || c.city
+    c.vatId = formData.vatId || null
+    c.initials = formData.initials
+    c.avatarColor = formData.avatarColor
+    c.detail.phone = formData.phone
+    c.detail.website = formData.website
+    c.detail.address = formData.address
+    c.detail.province = formData.province
+    c.detail.postalCode = formData.postalCode
+    c.detail.country = formData.country
+    c.detail.legalName = formData.legalName
+    c.detail.paymentMethod = formData.paymentMethod
+    c.detail.bankAccount = formData.bankAccount
+    c.detail.internalNotes = formData.internalNotes
+    c.detail.tags = [...formData.tags]
+    c.detail.isCustomer = formData.isCustomer
+    c.detail.isSupplier = formData.isSupplier
+  } else {
+    // Creating new customer
+    const newId = Math.max(...customers.value.map(c => c.id)) + 1
+    customers.value.push({
+      id: newId,
+      name: formData.name,
+      type: formData.type,
+      email: formData.email,
+      city: formData.city || '',
+      status: formData.status,
+      vatId: formData.vatId || null,
+      avatarColor: formData.avatarColor,
+      initials: formData.initials,
+      linked: [],
+      detail: {
+        phone: formData.phone,
+        website: formData.website,
+        address: formData.address,
+        province: formData.province,
+        postalCode: formData.postalCode,
+        country: formData.country,
+        legalName: formData.legalName,
+        paymentMethod: formData.paymentMethod,
+        bankAccount: formData.bankAccount,
+        internalNotes: formData.internalNotes,
+        tags: [...formData.tags],
+        isCustomer: formData.isCustomer,
+        isSupplier: formData.isSupplier,
+        totalInvoiced: 0,
+        pendingBalance: 0,
+        totalDocuments: 0,
+        notes: [],
+        quotes: [],
+        invoices: [],
+        activities: [],
+        purchases: []
+      }
+    })
+  }
+}
+
+function handleNewInvoice(customer) {
+  closeDetail()
+  router.push({ name: 'Invoices', query: { newInvoice: 'true', customerId: customer.id } })
+}
 
 /* ── Table state ── */
 const searchQuery = ref('')
@@ -170,7 +294,46 @@ const customers = ref([
     vatId: 'B-12345678',
     avatarColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     initials: 'AC',
-    linked: ['María López', 'Pedro Ruiz']
+    linked: ['María López', 'Pedro Ruiz'],
+    detail: {
+      phone: '+34 911 234 567',
+      website: 'https://acmecorp.com',
+      address: 'Calle Gran Vía 42, 3ºA',
+      province: 'Madrid',
+      postalCode: '28013',
+      country: 'España',
+      legalName: 'Acme Corporation S.L.',
+      paymentMethod: 'Transferencia 30 días',
+      bankAccount: 'ES12 0049 1234 5678 9012 3456',
+      internalNotes: 'Cliente preferente. Descuento negociado del 5%.',
+      tags: ['Preferente', 'Tecnología'],
+      isCustomer: true,
+      isSupplier: false,
+      totalInvoiced: 24850.00,
+      pendingBalance: 3200.00,
+      totalDocuments: 12,
+      notes: [
+        { id: 1, date: '2026-02-10', author: 'Admin', content: 'Reunión de seguimiento trimestral completada. Satisfechos con el servicio.' },
+        { id: 2, date: '2026-01-15', author: 'Admin', content: 'Solicitan ampliación de línea de crédito.' }
+      ],
+      quotes: [
+        { id: 1, number: 'PRES-001', concept: 'Migración infraestructura cloud', amount: 12500, date: '2026-02-05', validDays: 30, notes: '', status: 'Enviado' },
+        { id: 2, number: 'PRES-002', concept: 'Mantenimiento anual servidores', amount: 4800, date: '2026-01-20', validDays: 15, notes: '', status: 'Aceptado' }
+      ],
+      invoices: [
+        { id: 1, number: 'FAC-2026-001', date: '2026-02-01', amount: 4800, status: 'Pagada' },
+        { id: 2, number: 'FAC-2026-005', date: '2026-02-12', amount: 3200, status: 'Aprobada' }
+      ],
+      activities: [
+        { id: 1, type: 'Reunión', date: '2026-02-10', subject: 'Revisión trimestral Q1', notes: 'Asistieron el CEO y el CTO. Contentos con resultados.' },
+        { id: 2, type: 'Email', date: '2026-02-03', subject: 'Envío propuesta migración cloud', notes: '' },
+        { id: 3, type: 'Llamada', date: '2026-01-28', subject: 'Seguimiento factura pendiente', notes: 'Confirman pago para la semana que viene.' }
+      ],
+      purchases: [
+        { id: 1, product: 'Licencia ERP Premium', amount: 4800, date: '2026-02-01', quantity: 1, status: 'Completada' },
+        { id: 2, product: 'Pack soporte 50h', amount: 2500, date: '2026-01-10', quantity: 1, status: 'Completada' }
+      ]
+    }
   },
   {
     id: 2,
@@ -182,7 +345,17 @@ const customers = ref([
     vatId: null,
     avatarColor: 'linear-gradient(135deg, #EC4899 0%, #F59E0B 100%)',
     initials: 'ML',
-    linked: ['Acme Corp.']
+    linked: ['Acme Corp.'],
+    detail: {
+      phone: '+34 612 345 678', website: '', address: 'Calle Serrano 15', province: 'Madrid', postalCode: '28001', country: 'España',
+      legalName: '', paymentMethod: 'Transferencia', bankAccount: '', internalNotes: '', tags: ['Contacto Acme'],
+      isCustomer: true, isSupplier: false, totalInvoiced: 1200, pendingBalance: 0, totalDocuments: 2,
+      notes: [], quotes: [], invoices: [
+        { id: 3, number: 'FAC-2025-042', date: '2025-12-10', amount: 1200, status: 'Pagada' }
+      ], activities: [
+        { id: 4, type: 'Llamada', date: '2026-01-20', subject: 'Consulta sobre renovación', notes: '' }
+      ], purchases: []
+    }
   },
   {
     id: 3,
@@ -194,7 +367,28 @@ const customers = ref([
     vatId: 'B-87654321',
     avatarColor: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
     initials: 'OM',
-    linked: ['Carlos Méndez', 'Laura Martín', 'Elena Vidal']
+    linked: ['Carlos Méndez', 'Laura Martín', 'Elena Vidal'],
+    detail: {
+      phone: '+34 933 456 789', website: 'https://oficinasmodernas.es', address: 'Avinguda Diagonal 520', province: 'Barcelona', postalCode: '08006', country: 'España',
+      legalName: 'Oficinas Modernas S.L.', paymentMethod: 'Domiciliación', bankAccount: 'ES98 2100 0813 6101 2345 6789', internalNotes: 'Facturación mensual. Revisar tarifa en abril.',
+      tags: ['Mobiliario', 'B2B'], isCustomer: true, isSupplier: true, totalInvoiced: 18400, pendingBalance: 2100, totalDocuments: 8,
+      notes: [
+        { id: 3, date: '2026-01-30', author: 'Admin', content: 'Negociación nuevo contrato mobiliario Q2.' }
+      ],
+      quotes: [
+        { id: 3, number: 'PRES-003', concept: 'Equipamiento sala reuniones', amount: 6200, date: '2026-01-25', validDays: 30, notes: '', status: 'Borrador' }
+      ],
+      invoices: [
+        { id: 4, number: 'FAC-2026-003', date: '2026-01-15', amount: 2100, status: 'Vencida' },
+        { id: 5, number: 'FAC-2025-098', date: '2025-12-01', amount: 5400, status: 'Pagada' }
+      ],
+      activities: [
+        { id: 5, type: 'Visita', date: '2026-01-30', subject: 'Presentación catálogo nuevo', notes: 'Interesados en la línea premium.' }
+      ],
+      purchases: [
+        { id: 3, product: 'Escritorio Ergonómico Pro', amount: 890, date: '2025-12-01', quantity: 6, status: 'Completada' }
+      ]
+    }
   },
   {
     id: 4,
@@ -206,7 +400,13 @@ const customers = ref([
     vatId: null,
     avatarColor: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)',
     initials: 'PR',
-    linked: ['Acme Corp.']
+    linked: ['Acme Corp.'],
+    detail: {
+      phone: '+34 645 678 901', website: '', address: 'Calle Colón 28', province: 'Valencia', postalCode: '46004', country: 'España',
+      legalName: '', paymentMethod: 'Transferencia', bankAccount: '', internalNotes: '', tags: [],
+      isCustomer: true, isSupplier: false, totalInvoiced: 850, pendingBalance: 0, totalDocuments: 1,
+      notes: [], quotes: [], invoices: [], activities: [], purchases: []
+    }
   },
   {
     id: 5,
@@ -218,7 +418,13 @@ const customers = ref([
     vatId: null,
     avatarColor: 'linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)',
     initials: 'CM',
-    linked: ['Oficinas Modernas S.L.']
+    linked: ['Oficinas Modernas S.L.'],
+    detail: {
+      phone: '+34 654 321 098', website: '', address: '', province: 'Barcelona', postalCode: '', country: 'España',
+      legalName: '', paymentMethod: 'Transferencia', bankAccount: '', internalNotes: '', tags: [],
+      isCustomer: true, isSupplier: false, totalInvoiced: 0, pendingBalance: 0, totalDocuments: 0,
+      notes: [], quotes: [], invoices: [], activities: [], purchases: []
+    }
   },
   {
     id: 6,
@@ -230,7 +436,13 @@ const customers = ref([
     vatId: null,
     avatarColor: 'linear-gradient(135deg, #06B6D4 0%, #8B5CF6 100%)',
     initials: 'LM',
-    linked: ['Oficinas Modernas S.L.']
+    linked: ['Oficinas Modernas S.L.'],
+    detail: {
+      phone: '', website: '', address: '', province: 'Sevilla', postalCode: '', country: 'España',
+      legalName: '', paymentMethod: 'Transferencia', bankAccount: '', internalNotes: '', tags: [],
+      isCustomer: true, isSupplier: false, totalInvoiced: 0, pendingBalance: 0, totalDocuments: 0,
+      notes: [], quotes: [], invoices: [], activities: [], purchases: []
+    }
   },
   {
     id: 7,
@@ -242,7 +454,22 @@ const customers = ref([
     vatId: 'B-11223344',
     avatarColor: 'linear-gradient(135deg, #F59E0B 0%, #10B981 100%)',
     initials: 'CM',
-    linked: ['Jorge Pérez']
+    linked: ['Jorge Pérez'],
+    detail: {
+      phone: '+34 955 123 456', website: 'https://cafemolino.es', address: 'Plaza Nueva 6', province: 'Sevilla', postalCode: '41001', country: 'España',
+      legalName: 'Café Molino S.L.', paymentMethod: 'Efectivo', bankAccount: '', internalNotes: 'Pago al contado.',
+      tags: ['Hostelería'], isCustomer: true, isSupplier: false, totalInvoiced: 3600, pendingBalance: 600, totalDocuments: 4,
+      notes: [], quotes: [],
+      invoices: [
+        { id: 6, number: 'FAC-2026-008', date: '2026-02-14', amount: 600, status: 'Aprobada' }
+      ],
+      activities: [
+        { id: 6, type: 'Visita', date: '2026-02-14', subject: 'Entrega de producto', notes: '' }
+      ],
+      purchases: [
+        { id: 4, product: 'Cafetera Industrial X200', amount: 2400, date: '2025-11-20', quantity: 1, status: 'Completada' }
+      ]
+    }
   },
   {
     id: 8,
@@ -254,7 +481,13 @@ const customers = ref([
     vatId: null,
     avatarColor: 'linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)',
     initials: 'JP',
-    linked: ['Café Molino']
+    linked: ['Café Molino'],
+    detail: {
+      phone: '+34 678 901 234', website: '', address: '', province: 'Sevilla', postalCode: '', country: 'España',
+      legalName: '', paymentMethod: 'Transferencia', bankAccount: '', internalNotes: '', tags: [],
+      isCustomer: true, isSupplier: false, totalInvoiced: 0, pendingBalance: 0, totalDocuments: 0,
+      notes: [], quotes: [], invoices: [], activities: [], purchases: []
+    }
   },
   {
     id: 9,
@@ -266,7 +499,16 @@ const customers = ref([
     vatId: null,
     avatarColor: 'linear-gradient(135deg, #EF4444 0%, #F59E0B 100%)',
     initials: 'LF',
-    linked: []
+    linked: [],
+    detail: {
+      phone: '+34 699 876 543', website: '', address: 'Alameda Mazarredo 12', province: 'Vizcaya', postalCode: '48001', country: 'España',
+      legalName: '', paymentMethod: 'Transferencia', bankAccount: '', internalNotes: '', tags: ['Freelance'],
+      isCustomer: true, isSupplier: false, totalInvoiced: 2200, pendingBalance: 0, totalDocuments: 3,
+      notes: [
+        { id: 4, date: '2026-02-01', author: 'Admin', content: 'Interesado en servicios de consultoría.' }
+      ],
+      quotes: [], invoices: [], activities: [], purchases: []
+    }
   },
   {
     id: 10,
@@ -278,7 +520,18 @@ const customers = ref([
     vatId: 'A-99887766',
     avatarColor: 'linear-gradient(135deg, #667eea 0%, #10B981 100%)',
     initials: 'TI',
-    linked: ['Ana García']
+    linked: ['Ana García'],
+    detail: {
+      phone: '+34 914 567 890', website: 'https://techparts.es', address: 'Polígono Industrial Sur, Nave 14', province: 'Madrid', postalCode: '28906', country: 'España',
+      legalName: 'TechParts Ibérica S.A.', paymentMethod: 'Transferencia 30 días', bankAccount: 'ES55 0182 2345 6789 0123 4567', internalNotes: 'Proveedor principal de componentes electrónicos.',
+      tags: ['Proveedor', 'Electrónica'], isCustomer: false, isSupplier: true, totalInvoiced: 0, pendingBalance: 0, totalDocuments: 5,
+      notes: [], quotes: [],
+      invoices: [],
+      activities: [
+        { id: 7, type: 'Email', date: '2026-02-08', subject: 'Solicitud catálogo actualizado 2026', notes: '' }
+      ],
+      purchases: []
+    }
   },
   {
     id: 11,
@@ -290,7 +543,13 @@ const customers = ref([
     vatId: null,
     avatarColor: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
     initials: 'AG',
-    linked: ['TechParts Ibérica S.A.']
+    linked: ['TechParts Ibérica S.A.'],
+    detail: {
+      phone: '+34 622 333 444', website: '', address: '', province: 'Madrid', postalCode: '', country: 'España',
+      legalName: '', paymentMethod: 'Transferencia', bankAccount: '', internalNotes: '', tags: [],
+      isCustomer: true, isSupplier: false, totalInvoiced: 0, pendingBalance: 0, totalDocuments: 0,
+      notes: [], quotes: [], invoices: [], activities: [], purchases: []
+    }
   },
   {
     id: 12,
@@ -302,7 +561,13 @@ const customers = ref([
     vatId: null,
     avatarColor: 'linear-gradient(135deg, #06B6D4 0%, #10B981 100%)',
     initials: 'EV',
-    linked: ['Oficinas Modernas S.L.']
+    linked: ['Oficinas Modernas S.L.'],
+    detail: {
+      phone: '', website: '', address: '', province: 'Zaragoza', postalCode: '', country: 'España',
+      legalName: '', paymentMethod: 'Transferencia', bankAccount: '', internalNotes: '', tags: [],
+      isCustomer: true, isSupplier: false, totalInvoiced: 0, pendingBalance: 0, totalDocuments: 0,
+      notes: [], quotes: [], invoices: [], activities: [], purchases: []
+    }
   }
 ])
 
