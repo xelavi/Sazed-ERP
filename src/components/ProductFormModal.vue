@@ -292,6 +292,7 @@
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
 import { X, Upload, Globe, Store, Check } from 'lucide-vue-next'
+import Swal from 'sweetalert2'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -398,6 +399,26 @@ function removeTag(index) {
 
 /* ── Save ── */
 function handleSave() {
+  const errors = []
+  if (!form.name.trim()) errors.push('Product name is required')
+  if (form.price !== null && form.price < 0) errors.push('Price cannot be negative')
+  if (form.cost !== null && form.cost < 0) errors.push('Cost cannot be negative')
+
+  if (errors.length) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Required fields missing',
+      html: `<ul style="text-align:left;margin:0;padding-left:1.2em">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`,
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#667eea',
+      customClass: { popup: 'swal-erp-popup' },
+      backdrop: `rgba(0,0,0,0.15)`,
+      target: document.body,
+      heightAuto: false
+    })
+    return
+  }
+
   const channels = []
   if (channelWeb.value) channels.push('Web')
   if (channelMarketplace.value) channels.push('Marketplace')

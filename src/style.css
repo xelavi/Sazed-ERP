@@ -484,3 +484,8 @@ button:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
+
+/* SweetAlert2 — above modals (z-index 9000) */
+.swal2-container {
+  z-index: 10000 !important;
+}
