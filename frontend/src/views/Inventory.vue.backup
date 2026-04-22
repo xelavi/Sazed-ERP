@@ -1,0 +1,1483 @@
+<template>
+  <div class="inventory-view">
+    <!-- ── Page Header ─────────────────────────────── -->
+    <header class="view-header">
+      <div>
+        <h1 class="view-title">Inventory</h1>
+        <p class="view-subtitle">Stock overview, warehouses &amp; restocking</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" @click="showMovements = !showMovements">
+          <ArrowUpDown :size="16" />
+          <span>Movements</span>
+        </button>
+        <button class="btn btn-secondary" @click="showRulesPanel = !showRulesPanel">
+          <Settings :size="16" />
+          <span>Reorder Rules</span>
+        </button>
+        <button class="btn btn-primary" @click="openRestockModal(null)">
+          <PackagePlus :size="16" />
+          <span>Restock</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Loading state ───────────────────────────── -->
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading inventory data...</p>
+    </div>
+
+    <!-- ── Main content ────────────────────────────── -->
+    <div v-else class="inventory-content">
+      <!-- KPI Row -->
+      <section class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-blue">
+            <Package :size="22" />
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ stats.total_products }}</span>
+            <span class="kpi-label">Products</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-green">
+            <Boxes :size="22" />
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ formatNumber(stats.total_stock) }}</span>
+            <span class="kpi-label">Total Units</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-amber">
+            <AlertTriangle :size="22" />
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ stats.low_stock_count }}</span>
+            <span class="kpi-label">Low Stock</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-red">
+            <PackageX :size="22" />
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ stats.out_of_stock_count }}</span>
+            <span class="kpi-label">Out of Stock</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-purple">
+            <Euro :size="22" />
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ formatCurrency(stats.total_value) }}</span>
+            <span class="kpi-label">Inventory Value</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Two-column layout: Warehouses + Charts -->
+      <div class="inventory-grid">
+        <!-- ── Warehouses Panel ──────────────────── -->
+        <section class="warehouses-panel">
+          <h2 class="section-title">
+            <Warehouse :size="20" />
+            Warehouses
+          </h2>
+          <div class="warehouse-cards">
+            <div
+              v-for="wh in warehouses"
+              :key="wh.id ?? 'unassigned'"
+              class="warehouse-card"
+              :class="{ active: selectedWarehouse === wh.id, 'has-alert': wh.low_stock > 0 }"
+              @click="selectWarehouse(wh.id)"
+            >
+              <div class="wh-header">
+                <div class="wh-name">
+                  <div class="wh-avatar" :style="{ background: warehouseColor(wh.id) }">
+                    {{ wh.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <h3>{{ wh.name }}</h3>
+                    <span class="wh-address">{{ wh.address || 'No address' }}</span>
+                  </div>
+                </div>
+                <ChevronRight :size="16" class="wh-arrow" />
+              </div>
+
+              <div class="wh-stats">
+                <div class="wh-stat">
+                  <span class="wh-stat-val">{{ wh.product_count }}</span>
+                  <span class="wh-stat-lbl">Products</span>
+                </div>
+                <div class="wh-stat">
+                  <span class="wh-stat-val">{{ formatNumber(wh.total_stock) }}</span>
+                  <span class="wh-stat-lbl">Units</span>
+                </div>
+                <div class="wh-stat">
+                  <span class="wh-stat-val" :class="{ 'text-warning': wh.low_stock > 0 }">{{ wh.low_stock }}</span>
+                  <span class="wh-stat-lbl">Low Stock</span>
+                </div>
+                <div class="wh-stat">
+                  <span class="wh-stat-val">{{ formatCurrency(wh.value) }}</span>
+                  <span class="wh-stat-lbl">Value</span>
+                </div>
+              </div>
+
+              <!-- Capacity indicator bar -->
+              <div class="wh-capacity">
+                <div class="capacity-bar">
+                  <div
+                    class="capacity-fill"
+                    :style="{ width: warehouseCapacityPct(wh) + '%' }"
+                    :class="capacityClass(wh)"
+                  ></div>
+                </div>
+                <span class="capacity-label">
+                  {{ warehouseCapacityPct(wh) }}% capacity used
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Right Column: Charts ──────────────── -->
+        <div class="charts-column">
+          <!-- Stock Distribution by Category -->
+          <section class="chart-card">
+            <h2 class="section-title">
+              <BarChart3 :size="20" />
+              Stock by Category
+            </h2>
+            <div class="bar-chart">
+              <div
+                v-for="cat in stockByCategory"
+                :key="cat.category_name"
+                class="bar-row"
+              >
+                <span class="bar-label">{{ cat.category_name }}</span>
+                <div class="bar-track">
+                  <div
+                    class="bar-fill"
+                    :style="{
+                      width: categoryPct(cat.total_stock) + '%',
+                      background: categoryColor(cat.category_name),
+                    }"
+                  ></div>
+                </div>
+                <span class="bar-value">{{ formatNumber(cat.total_stock) }}</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Movement Summary (last 30d) -->
+          <section class="chart-card">
+            <h2 class="section-title">
+              <ArrowUpDown :size="20" />
+              Movements (30 days)
+            </h2>
+            <div class="movement-rings">
+              <div
+                v-for="mv in movementSummary"
+                :key="mv.movement_type"
+                class="ring-stat"
+              >
+                <div class="ring" :class="'ring-' + mv.movement_type.toLowerCase()">
+                  <svg viewBox="0 0 36 36" class="ring-svg">
+                    <path
+                      class="ring-bg"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      class="ring-fill"
+                      :stroke-dasharray="ringPct(mv) + ', 100'"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <span class="ring-number">{{ mv.count }}</span>
+                </div>
+                <span class="ring-label">{{ movementLabel(mv.movement_type) }}</span>
+                <span class="ring-qty">{{ formatNumber(mv.total_qty) }} units</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- ── Warehouse Stock Detail ──────────────── -->
+      <section v-if="selectedWarehouse !== null" class="stock-detail">
+        <div class="detail-header">
+          <h2 class="section-title">
+            <ClipboardList :size="20" />
+            {{ selectedWarehouseName }} — Stock Detail
+          </h2>
+          <button class="btn btn-ghost" @click="selectedWarehouse = null">
+            <X :size="16" /> Close
+          </button>
+        </div>
+
+        <div v-if="warehouseProducts.length === 0" class="empty-detail">
+          <PackageOpen :size="48" />
+          <p>No products in this warehouse</p>
+        </div>
+
+        <div v-else class="product-grid">
+          <div
+            v-for="p in warehouseProducts"
+            :key="p.id"
+            class="product-stock-card"
+            :class="'status-' + p.stock_status"
+          >
+            <div class="psc-top">
+              <div class="psc-badge" :class="'badge-' + p.stock_status">
+                {{ stockStatusLabel(p.stock_status) }}
+              </div>
+              <button
+                class="psc-restock-btn"
+                @click="openRestockModal(p)"
+                title="Restock"
+              >
+                <PackagePlus :size="14" />
+              </button>
+            </div>
+            <h4 class="psc-name">{{ p.name }}</h4>
+            <span class="psc-sku">{{ p.sku }}</span>
+            <div class="psc-stock-ring">
+              <svg viewBox="0 0 36 36" class="stock-ring-svg">
+                <path
+                  class="ring-bg"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  class="ring-fill"
+                  :class="'ring-' + p.stock_status"
+                  :stroke-dasharray="productRingPct(p) + ', 100'"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <div class="stock-ring-center">
+                <span class="stock-ring-val">{{ p.stock ?? 0 }}</span>
+                <span class="stock-ring-lbl">units</span>
+              </div>
+            </div>
+            <div class="psc-meta">
+              <div class="psc-meta-item">
+                <span>Min</span>
+                <strong>{{ p.min_stock ?? '—' }}</strong>
+              </div>
+              <div class="psc-meta-item">
+                <span>Reserved</span>
+                <strong>{{ p.reserved ?? 0 }}</strong>
+              </div>
+              <div class="psc-meta-item">
+                <span>Category</span>
+                <strong>{{ p.category__name || '—' }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Movements Drawer ────────────────────── -->
+      <section v-if="showMovements" class="side-panel movements-panel">
+        <div class="panel-header">
+          <h2 class="section-title">
+            <ArrowUpDown :size="20" />
+            Recent Movements
+          </h2>
+          <button class="btn btn-ghost" @click="showMovements = false"><X :size="16" /></button>
+        </div>
+        <div class="movements-feed">
+          <div v-for="m in movements" :key="m.id" class="movement-item">
+            <div class="mv-icon" :class="'mv-' + m.movement_type.toLowerCase()">
+              <ArrowDownToLine v-if="m.movement_type === 'In'" :size="14" />
+              <ArrowUpFromLine v-else-if="m.movement_type === 'Out'" :size="14" />
+              <RefreshCw v-else-if="m.movement_type === 'Adjust'" :size="14" />
+              <CornerDownLeft v-else :size="14" />
+            </div>
+            <div class="mv-content">
+              <span class="mv-product">{{ m.product_name }}</span>
+              <span class="mv-detail">
+                {{ m.movement_type }} · {{ m.quantity }} units
+                <template v-if="m.document_ref"> · {{ m.document_ref }}</template>
+              </span>
+            </div>
+            <span class="mv-time">{{ formatRelativeTime(m.created_at) }}</span>
+          </div>
+          <div v-if="movements.length === 0" class="empty-detail">
+            <p>No recent movements</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Reorder Rules Panel ─────────────────── -->
+      <section v-if="showRulesPanel" class="side-panel rules-panel">
+        <div class="panel-header">
+          <h2 class="section-title">
+            <Settings :size="20" />
+            Reorder Rules
+          </h2>
+          <button class="btn btn-ghost" @click="showRulesPanel = false"><X :size="16" /></button>
+        </div>
+        <div class="rules-list">
+          <div
+            v-for="rule in reorderRulesList"
+            :key="rule.id"
+            class="rule-card"
+            :class="{ 'needs-reorder': rule.needs_reorder }"
+          >
+            <div class="rule-top">
+              <div>
+                <h4>{{ rule.product_name }}</h4>
+                <span class="rule-sku">{{ rule.product_sku }} · {{ rule.warehouse_name }}</span>
+              </div>
+              <span class="rule-toggle" :class="{ active: rule.enabled }">
+                {{ rule.enabled ? 'Active' : 'Off' }}
+              </span>
+            </div>
+            <div class="rule-params">
+              <div class="rule-param">
+                <span>Current</span>
+                <strong :class="{ 'text-warning': rule.needs_reorder }">{{ rule.product_stock ?? 0 }}</strong>
+              </div>
+              <div class="rule-param">
+                <span>Min</span>
+                <strong>{{ rule.min_stock }}</strong>
+              </div>
+              <div class="rule-param">
+                <span>Reorder</span>
+                <strong>+{{ rule.reorder_qty }}</strong>
+              </div>
+              <div class="rule-param">
+                <span>Max</span>
+                <strong>{{ rule.max_stock ?? '—' }}</strong>
+              </div>
+            </div>
+            <button
+              v-if="rule.needs_reorder"
+              class="btn btn-primary btn-sm rule-restock-btn"
+              @click="quickRestock(rule)"
+            >
+              <PackagePlus :size="14" />
+              Restock {{ rule.reorder_qty }} units
+            </button>
+          </div>
+          <div v-if="reorderRulesList.length === 0" class="empty-detail">
+            <Settings :size="48" />
+            <p>No reorder rules configured</p>
+            <button class="btn btn-primary btn-sm" @click="showNewRuleForm = true">
+              Create Rule
+            </button>
+          </div>
+        </div>
+
+        <!-- New Rule Form -->
+        <div v-if="showNewRuleForm" class="new-rule-form">
+          <h3>New Reorder Rule</h3>
+          <div class="form-group">
+            <label>Product</label>
+            <select v-model="newRule.product_id" class="input">
+              <option value="">Select product...</option>
+              <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Warehouse</label>
+            <select v-model="newRule.warehouse_id" class="input">
+              <option value="">Select warehouse...</option>
+              <option v-for="wh in warehouses.filter(w => w.id)" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Min Stock</label>
+              <input v-model.number="newRule.min_stock" type="number" class="input" min="0" />
+            </div>
+            <div class="form-group">
+              <label>Reorder Qty</label>
+              <input v-model.number="newRule.reorder_qty" type="number" class="input" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Max Stock</label>
+              <input v-model.number="newRule.max_stock" type="number" class="input" min="0" placeholder="Optional" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-secondary btn-sm" @click="showNewRuleForm = false">Cancel</button>
+            <button class="btn btn-primary btn-sm" @click="saveReorderRule" :disabled="!canSaveRule">Save Rule</button>
+          </div>
+        </div>
+        <button v-if="!showNewRuleForm && reorderRulesList.length > 0" class="btn btn-secondary btn-sm add-rule-btn" @click="showNewRuleForm = true">
+          <Plus :size="14" /> Add Rule
+        </button>
+      </section>
+    </div>
+
+    <!-- ── Restock Modal ─────────────────────────── -->
+    <div v-if="restockModal" class="modal-overlay" @click.self="restockModal = false">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>Restock Product</h2>
+          <button class="btn btn-ghost" @click="restockModal = false"><X :size="18" /></button>
+        </div>
+        <div class="modal-body">
+          <div v-if="!restockData.product_id" class="form-group">
+            <label>Product</label>
+            <select v-model="restockData.product_id" class="input">
+              <option value="">Select product...</option>
+              <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }} (stock: {{ p.stock ?? 0 }})</option>
+            </select>
+          </div>
+          <div v-else class="restock-product-info">
+            <Package :size="20" />
+            <div>
+              <strong>{{ restockData.product_name }}</strong>
+              <span>Current stock: {{ restockData.current_stock ?? 0 }}</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Quantity to add</label>
+            <input v-model.number="restockData.quantity" type="number" class="input" min="1" placeholder="e.g. 50" />
+          </div>
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <input v-model="restockData.notes" type="text" class="input" placeholder="e.g. Supplier delivery #1234" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="restockModal = false">Cancel</button>
+          <button class="btn btn-primary" @click="doRestock" :disabled="!restockData.product_id || !restockData.quantity || restockData.quantity <= 0">
+            <PackagePlus :size="16" />
+            Restock
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import {
+  Package, Boxes, AlertTriangle, PackageX, Euro,
+  Warehouse, ChevronRight, BarChart3, ArrowUpDown,
+  ClipboardList, X, PackagePlus, PackageOpen, Settings,
+  ArrowDownToLine, ArrowUpFromLine, RefreshCw, CornerDownLeft,
+  Plus,
+} from 'lucide-vue-next'
+import inventoryApi from '@/services/inventory'
+import productsApi from '@/services/products'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
+
+// ── State ──────────────────────────────────────────
+const loading = ref(true)
+const stats = ref({})
+const warehouses = ref([])
+const stockByCategory = ref([])
+const movementSummary = ref([])
+const selectedWarehouse = ref(null)
+const warehouseProducts = ref([])
+const showMovements = ref(false)
+const movements = ref([])
+const showRulesPanel = ref(false)
+const reorderRulesList = ref([])
+const showNewRuleForm = ref(false)
+const restockModal = ref(false)
+const allProducts = ref([])
+
+const newRule = ref({ product_id: '', warehouse_id: '', min_stock: 10, reorder_qty: 25, max_stock: null })
+const restockData = ref({ product_id: '', product_name: '', current_stock: 0, quantity: null, notes: '' })
+
+// ── Computed ───────────────────────────────────────
+const selectedWarehouseName = computed(() => {
+  const wh = warehouses.value.find(w => w.id === selectedWarehouse.value)
+  return wh ? wh.name : 'Warehouse'
+})
+
+const canSaveRule = computed(() =>
+  newRule.value.product_id && newRule.value.warehouse_id
+  && newRule.value.min_stock >= 0 && newRule.value.reorder_qty > 0
+)
+
+const maxCategoryStock = computed(() =>
+  Math.max(...stockByCategory.value.map(c => c.total_stock), 1)
+)
+
+const totalMovements = computed(() =>
+  Math.max(movementSummary.value.reduce((s, m) => s + m.count, 0), 1)
+)
+
+// ── Lifecycle ──────────────────────────────────────
+onMounted(async () => {
+  await loadOverview()
+})
+
+// ── Data loading ───────────────────────────────────
+async function loadOverview() {
+  loading.value = true
+  try {
+    const data = await inventoryApi.getOverview()
+    stats.value = data.global_stats
+    warehouses.value = data.warehouses
+    stockByCategory.value = data.stock_by_category
+    movementSummary.value = data.movement_summary
+  } catch (e) {
+    toast.error('Failed to load inventory data')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function selectWarehouse(id) {
+  if (selectedWarehouse.value === id) {
+    selectedWarehouse.value = null
+    warehouseProducts.value = []
+    return
+  }
+  selectedWarehouse.value = id
+  try {
+    warehouseProducts.value = await inventoryApi.getWarehouseStock(id ?? 0)
+  } catch (e) {
+    toast.error('Failed to load warehouse stock')
+  }
+}
+
+async function loadMovements() {
+  try {
+    movements.value = await inventoryApi.getMovements(50)
+  } catch (e) {
+    toast.error('Failed to load movements')
+  }
+}
+
+async function loadReorderRules() {
+  try {
+    reorderRulesList.value = await inventoryApi.getReorderRules()
+  } catch (e) {
+    toast.error('Failed to load reorder rules')
+  }
+}
+
+async function loadAllProducts() {
+  if (allProducts.value.length) return
+  try {
+    const res = await productsApi.getAll({ page_size: 500, status: 'Active', product_type: 'Product' })
+    allProducts.value = res.results || res
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+// ── Watch panels ───────────────────────────────────
+import { watch } from 'vue'
+
+watch(showMovements, (v) => { if (v) loadMovements() })
+watch(showRulesPanel, (v) => { if (v) { loadReorderRules(); loadAllProducts() } })
+watch(restockModal, (v) => { if (v) loadAllProducts() })
+
+// ── Actions ────────────────────────────────────────
+function openRestockModal(product) {
+  restockData.value = {
+    product_id: product?.id || '',
+    product_name: product?.name || '',
+    current_stock: product?.stock ?? 0,
+    quantity: null,
+    notes: '',
+  }
+  restockModal.value = true
+}
+
+async function doRestock() {
+  try {
+    await inventoryApi.restockProduct({
+      product_id: restockData.value.product_id,
+      quantity: restockData.value.quantity,
+      notes: restockData.value.notes,
+    })
+    toast.success(`Restocked ${restockData.value.quantity} units`)
+    restockModal.value = false
+    await loadOverview()
+    if (selectedWarehouse.value !== null) {
+      warehouseProducts.value = await inventoryApi.getWarehouseStock(selectedWarehouse.value ?? 0)
+    }
+  } catch (e) {
+    toast.error('Restock failed')
+  }
+}
+
+async function saveReorderRule() {
+  try {
+    await inventoryApi.createReorderRule(newRule.value)
+    toast.success('Reorder rule saved')
+    showNewRuleForm.value = false
+    newRule.value = { product_id: '', warehouse_id: '', min_stock: 10, reorder_qty: 25, max_stock: null }
+    await loadReorderRules()
+  } catch (e) {
+    toast.error('Failed to save rule')
+  }
+}
+
+async function quickRestock(rule) {
+  try {
+    await inventoryApi.restockProduct({
+      product_id: rule.product_id,
+      quantity: rule.reorder_qty,
+      notes: `Auto-restock via rule #${rule.id}`,
+    })
+    toast.success(`Restocked ${rule.reorder_qty} units of ${rule.product_name}`)
+    await loadReorderRules()
+    await loadOverview()
+  } catch (e) {
+    toast.error('Restock failed')
+  }
+}
+
+// ── Helpers ────────────────────────────────────────
+function formatNumber(n) {
+  return (n ?? 0).toLocaleString('es-ES')
+}
+
+function formatCurrency(n) {
+  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n ?? 0)
+}
+
+const whColors = ['#667eea', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444', '#06b6d4']
+function warehouseColor(id) {
+  if (id === null) return '#94a3b8'
+  return whColors[(id - 1) % whColors.length]
+}
+
+function warehouseCapacityPct(wh) {
+  const total = stats.value.total_stock || 1
+  return Math.min(Math.round((wh.total_stock / total) * 100), 100)
+}
+
+function capacityClass(wh) {
+  const pct = warehouseCapacityPct(wh)
+  if (pct >= 80) return 'cap-high'
+  if (pct >= 50) return 'cap-med'
+  return 'cap-low'
+}
+
+function categoryPct(stock) {
+  return Math.round((stock / maxCategoryStock.value) * 100)
+}
+
+const catColors = ['#667eea', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444', '#06b6d4', '#84cc16']
+function categoryColor(name) {
+  let hash = 0
+  for (const ch of name) hash = ch.charCodeAt(0) + ((hash << 5) - hash)
+  return catColors[Math.abs(hash) % catColors.length]
+}
+
+function ringPct(mv) {
+  return Math.round((mv.count / totalMovements.value) * 100)
+}
+
+function movementLabel(type) {
+  return { In: 'Entries', Out: 'Exits', Adjust: 'Adjustments', Return: 'Returns' }[type] || type
+}
+
+function stockStatusLabel(s) {
+  return { ok: 'OK', low: 'Low', out_of_stock: 'Out' }[s] || s
+}
+
+function productRingPct(p) {
+  const max = p.min_stock ? p.min_stock * 3 : 100
+  return Math.min(Math.round(((p.stock ?? 0) / max) * 100), 100)
+}
+
+function formatRelativeTime(iso) {
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+</script>
+
+<style scoped>
+/* ── Layout ─────────────────────────────────────── */
+.inventory-view {
+  padding: var(--spacing-lg);
+  max-width: 1440px;
+}
+
+.view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+.view-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.view-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.header-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+.header-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Loading ────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: var(--text-secondary);
+  gap: var(--spacing-md);
+}
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── KPI Row ────────────────────────────────────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+.kpi-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  transition: box-shadow var(--transition-fast);
+}
+.kpi-card:hover {
+  box-shadow: var(--shadow-md);
+}
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.kpi-blue { background: var(--info-light); color: var(--info-color); }
+.kpi-green { background: var(--success-light); color: var(--success-color); }
+.kpi-amber { background: var(--warning-light); color: var(--warning-color); }
+.kpi-red { background: var(--error-light); color: var(--error-color); }
+.kpi-purple { background: #ede9fe; color: var(--accent-purple); }
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+}
+.kpi-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.kpi-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Grid ───────────────────────────────────────── */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+@media (max-width: 1024px) {
+  .inventory-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Section Title ──────────────────────────────── */
+.section-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--spacing-md);
+}
+
+/* ── Warehouse Cards ────────────────────────────── */
+.warehouse-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.warehouse-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.warehouse-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+.warehouse-card.active {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+}
+.warehouse-card.has-alert {
+  border-left: 3px solid var(--warning-color);
+}
+.wh-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+.wh-name {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+.wh-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: white;
+  flex-shrink: 0;
+}
+.wh-name h3 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+.wh-address {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+.wh-arrow {
+  color: var(--text-tertiary);
+  transition: transform var(--transition-fast);
+}
+.warehouse-card.active .wh-arrow { transform: rotate(90deg); color: var(--primary-color); }
+.wh-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
+}
+.wh-stat {
+  text-align: center;
+}
+.wh-stat-val {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.wh-stat-lbl {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.text-warning { color: var(--warning-color) !important; }
+
+/* Capacity bar */
+.wh-capacity { margin-top: 4px; }
+.capacity-bar {
+  height: 4px;
+  background: var(--bg-secondary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.capacity-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+.cap-low { background: var(--success-color); }
+.cap-med { background: var(--warning-color); }
+.cap-high { background: var(--error-color); }
+.capacity-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  display: block;
+}
+
+/* ── Charts Column ──────────────────────────────── */
+.charts-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+.chart-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+}
+
+/* Bar chart */
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 50px;
+  align-items: center;
+  gap: 8px;
+}
+.bar-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-track {
+  height: 20px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+  min-width: 4px;
+}
+.bar-value {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+/* Movement rings */
+.movement-rings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: var(--spacing-md);
+  text-align: center;
+}
+.ring {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  margin: 0 auto;
+}
+.ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.ring-svg .ring-bg {
+  fill: none;
+  stroke: var(--bg-secondary);
+  stroke-width: 3;
+}
+.ring-svg .ring-fill {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s ease;
+}
+.ring-in .ring-fill { stroke: var(--success-color); }
+.ring-out .ring-fill { stroke: var(--error-color); }
+.ring-adjust .ring-fill { stroke: var(--warning-color); }
+.ring-return .ring-fill { stroke: var(--info-color); }
+.ring-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.ring-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+.ring-qty {
+  display: block;
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+/* ── Stock Detail (product grid) ────────────────── */
+.stock-detail {
+  margin-top: var(--spacing-lg);
+}
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--spacing-md);
+}
+.product-stock-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  transition: box-shadow var(--transition-fast);
+}
+.product-stock-card:hover { box-shadow: var(--shadow-md); }
+.product-stock-card.status-low { border-left: 3px solid var(--warning-color); }
+.product-stock-card.status-out_of_stock { border-left: 3px solid var(--error-color); }
+.psc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.psc-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.badge-ok { background: var(--success-light); color: var(--success-color); }
+.badge-low { background: var(--warning-light); color: var(--warning-color); }
+.badge-out_of_stock { background: var(--error-light); color: var(--error-color); }
+.psc-restock-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+.psc-restock-btn:hover { background: var(--primary-light); color: var(--primary-color); border-color: var(--primary-color); }
+.psc-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.psc-sku {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Product ring */
+.psc-stock-ring {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--spacing-sm);
+  position: relative;
+}
+.stock-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.stock-ring-svg .ring-bg {
+  fill: none;
+  stroke: var(--bg-secondary);
+  stroke-width: 3;
+}
+.stock-ring-svg .ring-fill {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s ease;
+}
+.stock-ring-svg .ring-ok { stroke: var(--success-color); }
+.stock-ring-svg .ring-low { stroke: var(--warning-color); }
+.stock-ring-svg .ring-out_of_stock { stroke: var(--error-color); }
+.stock-ring-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  line-height: 1.1;
+}
+.stock-ring-val {
+  display: block;
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.stock-ring-lbl {
+  display: block;
+  font-size: 9px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.psc-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+.psc-meta-item span {
+  display: block;
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+.psc-meta-item strong {
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+}
+
+/* Empty state */
+.empty-detail {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-tertiary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* ── Side Panels (Movements & Rules) ────────────── */
+.side-panel {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Movements feed */
+.movements-feed {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.movement-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bg-secondary);
+}
+.movement-item:last-child { border-bottom: none; }
+.mv-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mv-in { background: var(--success-light); color: var(--success-color); }
+.mv-out { background: var(--error-light); color: var(--error-color); }
+.mv-adjust { background: var(--warning-light); color: var(--warning-color); }
+.mv-return { background: var(--info-light); color: var(--info-color); }
+.mv-content {
+  flex: 1;
+  min-width: 0;
+}
+.mv-product {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mv-detail {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+.mv-time {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* ── Reorder Rules ──────────────────────────────── */
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 400px;
+  overflow-y: auto;
+}
+.rule-card {
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+.rule-card.needs-reorder {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+.rule-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.rule-top h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+.rule-sku {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+.rule-toggle {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+}
+.rule-toggle.active { background: var(--success-light); color: var(--success-color); }
+.rule-params {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.rule-param span {
+  display: block;
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+.rule-param strong {
+  font-size: var(--font-size-xs);
+}
+.rule-restock-btn {
+  width: 100%;
+  margin-top: 4px;
+}
+.add-rule-btn {
+  margin-top: var(--spacing-md);
+  width: 100%;
+}
+
+/* New rule form */
+.new-rule-form {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+}
+.new-rule-form h3 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+}
+.form-group {
+  margin-bottom: var(--spacing-sm);
+}
+.form-group label {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+/* ── Modal ──────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+.modal-box {
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-lg);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+.modal-header h2 {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+.modal-body {
+  padding: var(--spacing-lg);
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+}
+.restock-product-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  margin-bottom: var(--spacing-md);
+}
+.restock-product-info div {
+  display: flex;
+  flex-direction: column;
+}
+.restock-product-info strong {
+  font-size: var(--font-size-sm);
+}
+.restock-product-info span {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+/* ── Buttons ────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+  font-family: var(--font-family);
+}
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+.btn-secondary:hover { background: var(--bg-hover); }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+}
+.btn-ghost:hover { color: var(--text-primary); background: var(--bg-hover); }
+.btn-sm {
+  padding: 6px 12px;
+  font-size: var(--font-size-xs);
+}
+
+/* ── Input ──────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  transition: border-color var(--transition-fast);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+}
+select.input {
+  appearance: none;
+  cursor: pointer;
+}
+</style>
