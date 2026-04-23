@@ -132,10 +132,34 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         read_only=True, max_digits=12, decimal_places=2,
     )
     tax = serializers.CharField(source='tax_rate.name', read_only=True, default=None)
+    recent_sales = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = '__all__'
+
+    def get_recent_sales(self, obj):
+        from invoices.models import InvoiceLine
+        qs = (
+            InvoiceLine.objects
+            .filter(product=obj)
+            .exclude(invoice__status__in=['Draft', 'Voided'])
+            .select_related('invoice', 'invoice__customer')
+            .order_by('-invoice__issue_date', '-invoice_id')[:50]
+        )
+        return [
+            {
+                'document': line.invoice.number or f'DRAFT-{line.invoice_id}',
+                'invoice_id': line.invoice_id,
+                'customer': line.invoice.customer.name if line.invoice.customer else '',
+                'date': line.invoice.issue_date,
+                'qty': str(line.quantity),
+                'unit_price': str(line.unit_price),
+                'total': str(line.subtotal),
+                'status': line.invoice.status,
+            }
+            for line in qs
+        ]
 
 
 class ProductWriteSerializer(serializers.ModelSerializer):

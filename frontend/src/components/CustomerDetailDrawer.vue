@@ -613,7 +613,14 @@ function quoteBadgeClass(status) {
 }
 
 function invoiceBadgeClass(status) {
-  const map = { Borrador: 'badge-gray', Aprobada: 'badge-primary', Pagada: 'badge-success', Parcial: 'badge-warning', Vencida: 'badge-error', Anulada: 'badge-gray' }
+  const map = {
+    Draft: 'badge-gray',
+    Approved: 'badge-primary',
+    PartiallyPaid: 'badge-warning',
+    Paid: 'badge-success',
+    Voided: 'badge-gray',
+    Rectified: 'badge-gray',
+  }
   return map[status] || 'badge-gray'
 }
 

@@ -64,7 +64,7 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
     activities = CustomerActivitySerializer(many=True, read_only=True)
     quotes = QuoteSerializer(many=True, read_only=True)
 
-    # Campos calculados
+    # Campos calculados desde la tabla de facturas
     total_invoiced = serializers.DecimalField(
         max_digits=12, decimal_places=2, read_only=True,
     )
@@ -72,6 +72,7 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
         max_digits=12, decimal_places=2, read_only=True,
     )
     total_documents = serializers.IntegerField(read_only=True)
+    invoices = serializers.SerializerMethodField()
 
     class Meta:
         model = Customer
@@ -82,7 +83,7 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
             'payment_method', 'bank_account', 'is_customer', 'is_supplier',
             'avatar_color', 'initials', 'internal_notes',
             'tags', 'tag_ids', 'linked', 'linked_contact_ids',
-            'notes', 'activities', 'quotes',
+            'notes', 'activities', 'quotes', 'invoices',
             'total_invoiced', 'pending_balance', 'total_documents',
             'created_at', 'updated_at',
         ]
@@ -90,6 +91,22 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
 
     def get_linked(self, obj):
         return list(obj.linked_contacts.values_list('name', flat=True))
+
+    def get_invoices(self, obj):
+        qs = obj.invoices.select_related('series').order_by('-issue_date', '-id')
+        return [
+            {
+                'id': inv.id,
+                'number': inv.number or f'DRAFT-{inv.id}',
+                'date': inv.issue_date,
+                'due_date': inv.due_date,
+                'amount': str(inv.total_amount),
+                'balance_due': str(inv.balance_due),
+                'status': inv.status,
+                'series': inv.series.prefix if inv.series else '',
+            }
+            for inv in qs
+        ]
 
 
 class CustomerWriteSerializer(serializers.ModelSerializer):

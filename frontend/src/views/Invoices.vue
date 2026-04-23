@@ -276,6 +276,8 @@
       :invoice="formInvoice"
       :invoices="invoices"
       :series-list="invoiceSeriesList"
+      :customers="customersList"
+      :preselected-customer-id="preselectedCustomerId"
       @close="closeInvoiceForm"
       @save="handleInvoiceSave"
     />
@@ -334,6 +336,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   Plus, Search, ArrowUpDown, MoreVertical, Download,
   Pencil, Eye, Copy, CheckCircle2, Send,
@@ -342,10 +345,12 @@ import {
 import InvoiceDetailDrawer from '@/components/InvoiceDetailDrawer.vue'
 import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
 import invoicesApi from '@/services/invoices'
-import { mapInvoiceFromApi, mapInvoiceDetailFromApi, mapInvoiceToApi, parseDrfErrors } from '@/services/mappers'
+import customersApi from '@/services/customers'
+import { mapInvoiceFromApi, mapInvoiceDetailFromApi, mapInvoiceToApi, mapCustomerFromApi, parseDrfErrors } from '@/services/mappers'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
+const route = useRoute()
 const loading = ref(false)
 
 /* ══════════════════════════════════════════
@@ -360,6 +365,22 @@ async function fetchSeries() {
   } catch (err) {
     console.error('Failed to load series:', err)
     toast.error('Error al cargar las series de facturación')
+  }
+}
+
+/* ══════════════════════════════════════════
+   LOAD CUSTOMERS FROM API (for invoice form)
+   ══════════════════════════════════════════ */
+const customersList = ref([])
+
+async function fetchCustomers() {
+  try {
+    const data = await customersApi.getAll()
+    const items = Array.isArray(data) ? data : (data.results || [])
+    customersList.value = items.map(mapCustomerFromApi)
+  } catch (err) {
+    console.error('Failed to load customers:', err)
+    toast.error('Error al cargar clientes')
   }
 }
 
@@ -380,9 +401,19 @@ async function fetchInvoices() {
   }
 }
 
-onMounted(() => {
-  fetchInvoices()
-  fetchSeries()
+onMounted(async () => {
+  await fetchInvoices()
+  await fetchSeries()
+  await fetchCustomers()
+
+  // Check if coming from Customers page to create new invoice for a specific customer
+  if (route.query.newInvoice === 'true' && route.query.customerId) {
+    const customerId = parseInt(route.query.customerId)
+    const customer = customersList.value.find(c => c.id === customerId)
+    if (customer) {
+      openInvoiceForm(null, customerId)
+    }
+  }
 })
 
 /* ══════════════════════════════════════════
@@ -412,15 +443,18 @@ function closeDetail() {
    ══════════════════════════════════════════ */
 const formModalOpen = ref(false)
 const formInvoice = ref(null)
+const preselectedCustomerId = ref(null)
 
-function openInvoiceForm(invoice = null) {
+function openInvoiceForm(invoice = null, customerId = null) {
   formInvoice.value = invoice
+  preselectedCustomerId.value = customerId
   formModalOpen.value = true
 }
 
 function closeInvoiceForm() {
   formModalOpen.value = false
   formInvoice.value = null
+  preselectedCustomerId.value = null
 }
 
 async function handleInvoiceSave(data) {

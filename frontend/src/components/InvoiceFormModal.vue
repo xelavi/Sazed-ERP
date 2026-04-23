@@ -276,12 +276,16 @@ import {
 } from 'lucide-vue-next'
 import Swal from 'sweetalert2'
 import invoicesApi from '@/services/invoices'
+import customersApi from '@/services/customers'
+import { mapCustomerFromApi } from '@/services/mappers'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
   invoice: { type: Object, default: null },
   invoices: { type: Array, default: () => [] },
   seriesList: { type: Array, default: () => [] },
+  customers: { type: Array, default: () => [] },
+  preselectedCustomerId: { type: [Number, String], default: null },
 })
 
 const emit = defineEmits(['close', 'save'])
@@ -311,17 +315,23 @@ const activeSeries = computed(() =>
   props.seriesList.length > 0 ? props.seriesList : fallbackSeriesList.value
 )
 
-/* ── Customer Options ── */
-const customerOptions = ref([
-  { id: 1, name: 'Acme Corp.', vatId: 'B-12345678', email: 'contact@acmecorp.com', avatarColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', initials: 'AC' },
-  { id: 2, name: 'María López', vatId: null, email: 'maria.lopez@email.com', avatarColor: 'linear-gradient(135deg, #EC4899 0%, #F59E0B 100%)', initials: 'ML' },
-  { id: 3, name: 'Oficinas Modernas S.L.', vatId: 'B-87654321', email: 'admin@oficinasmodernas.es', avatarColor: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)', initials: 'OM' },
-  { id: 4, name: 'Pedro Ruiz', vatId: null, email: 'pruiz@gmail.com', avatarColor: 'linear-gradient(135deg, #F59E0B 0%, #EF4444 100%)', initials: 'PR' },
-  { id: 7, name: 'Café Molino', vatId: 'B-11223344', email: 'info@cafemolino.es', avatarColor: 'linear-gradient(135deg, #F59E0B 0%, #10B981 100%)', initials: 'CM' },
-  { id: 9, name: 'Luis Fernández', vatId: null, email: 'lfernandez@outlook.com', avatarColor: 'linear-gradient(135deg, #EF4444 0%, #F59E0B 100%)', initials: 'LF' },
-  { id: 10, name: 'TechParts Ibérica S.A.', vatId: 'A-99887766', email: 'ventas@techparts.es', avatarColor: 'linear-gradient(135deg, #667eea 0%, #10B981 100%)', initials: 'TI' },
-  { id: 12, name: 'Elena Vidal', vatId: null, email: 'elena.vidal@email.com', avatarColor: 'linear-gradient(135deg, #06B6D4 0%, #10B981 100%)', initials: 'EV' }
-])
+/* ── Customer Options (loaded from API, or provided by parent) ── */
+const fallbackCustomers = ref([])
+
+const customerOptions = computed(() =>
+  props.customers.length > 0 ? props.customers : fallbackCustomers.value
+)
+
+async function loadCustomers() {
+  try {
+    const data = await customersApi.getAll()
+    const items = Array.isArray(data) ? data : (data.results || [])
+    fallbackCustomers.value = items.map(mapCustomerFromApi)
+  } catch (err) {
+    console.error('[InvoiceFormModal] failed to load customers:', err)
+    fallbackCustomers.value = []
+  }
+}
 
 const selectedCustomer = computed(() => {
   if (!form.customerId) return null
@@ -387,6 +397,13 @@ watch(() => props.open, async (isOpen) => {
     fallbackSeriesList.value = []
   }
 
+  // Fallback: load customers if parent didn't provide them
+  if (props.customers.length === 0) {
+    await loadCustomers()
+  } else {
+    fallbackCustomers.value = []
+  }
+
   if (props.invoice) {
     const inv = props.invoice
     Object.assign(form, {
@@ -414,6 +431,10 @@ watch(() => props.open, async (isOpen) => {
     // Set default series for new invoice
     const def = activeSeries.value.find(s => s.is_default) || activeSeries.value[0]
     if (def) form.seriesId = def.id
+    // Set preselected customer if provided
+    if (props.preselectedCustomerId) {
+      form.customerId = props.preselectedCustomerId
+    }
   }
 })
 

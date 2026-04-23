@@ -65,6 +65,16 @@ class RegisterSerializer(serializers.Serializer):
                 address='',
             )
 
+            # Create default invoice series
+            from invoices.models import InvoiceSeries
+            InvoiceSeries.objects.create(
+                company=company,
+                name='Facturas generales',
+                prefix='FAC',
+                pattern='{PREFIX}-{YEAR}-{SEQ:4}',
+                is_default=True,
+            )
+
         return user
 
 
@@ -177,6 +187,16 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
             company=company,
             name='Main Warehouse',
             address='',
+        )
+
+        # Create default invoice series
+        from invoices.models import InvoiceSeries
+        InvoiceSeries.objects.create(
+            company=company,
+            name='Facturas generales',
+            prefix='FAC',
+            pattern='{PREFIX}-{YEAR}-{SEQ:4}',
+            is_default=True,
         )
 
         return company
