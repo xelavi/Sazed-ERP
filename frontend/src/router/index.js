@@ -91,6 +91,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/providers',
+    name: 'Providers',
+    component: () => import('../views/Providers.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/marketing',
     name: 'Marketing',
     component: () => import('../views/About.vue'), // Placeholder

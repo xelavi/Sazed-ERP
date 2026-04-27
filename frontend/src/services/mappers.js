@@ -398,3 +398,91 @@ export function mapInvoiceToApi(formData) {
     })),
   }
 }
+
+// ── Providers ────────────────────────────────────────
+
+export function mapProviderFromApi(p) {
+  return {
+    id: p.id,
+    name: p.name,
+    type: p.contact_type,
+    email: p.email,
+    city: p.city || '',
+    status: p.status,
+    vatId: p.vat_id || null,
+    avatarColor: p.avatar_color || 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+    initials: p.initials || p.name?.substring(0, 2).toUpperCase() || '?',
+    linked: p.linked || [],
+    createdAt: p.created_at,
+    updatedAt: p.updated_at,
+  }
+}
+
+export function mapProviderDetailFromApi(p) {
+  const base = mapProviderFromApi(p)
+  return {
+    ...base,
+    detail: {
+      phone: p.phone || '',
+      website: p.website || '',
+      address: p.address || '',
+      province: p.province || '',
+      postalCode: p.postal_code || '',
+      country: p.country || 'España',
+      legalName: p.legal_name || '',
+      paymentMethod: p.payment_method || 'Transferencia 30 días',
+      bankAccount: p.bank_account || '',
+      internalNotes: p.internal_notes || '',
+      tags: (p.tags || []).map(t => t.name || t),
+      totalPurchased: parseFloat(p.total_purchased) || 0,
+      pendingBalance: parseFloat(p.pending_balance) || 0,
+      totalDocuments: p.total_documents || 0,
+      notes: (p.notes || []).map(n => ({
+        id: n.id,
+        date: n.created_at,
+        author: n.author,
+        content: n.content,
+      })),
+      purchaseOrders: (p.purchase_orders || []).map(po => ({
+        id: po.id,
+        number: po.number,
+        concept: po.concept,
+        totalAmount: parseFloat(po.total_amount),
+        balanceDue: parseFloat(po.balance_due),
+        date: po.date,
+        notes: po.notes || '',
+        status: po.status,
+      })),
+      activities: (p.activities || []).map(a => ({
+        id: a.id,
+        type: a.activity_type,
+        date: a.date,
+        subject: a.subject,
+        notes: a.notes || '',
+      })),
+    },
+  }
+}
+
+export function mapProviderToApi(formData) {
+  return {
+    name: formData.name,
+    contact_type: formData.type,
+    email: formData.email,
+    phone: formData.phone || '',
+    website: formData.website || '',
+    status: formData.status || 'Active',
+    vat_id: formData.vatId || '',
+    legal_name: formData.legalName || '',
+    address: formData.address || '',
+    city: formData.city || '',
+    province: formData.province || '',
+    postal_code: formData.postalCode || '',
+    country: formData.country || 'España',
+    payment_method: formData.paymentMethod || 'Transferencia 30 días',
+    bank_account: formData.bankAccount || '',
+    avatar_color: formData.avatarColor || '',
+    initials: formData.initials || '',
+    internal_notes: formData.internalNotes || '',
+  }
+}

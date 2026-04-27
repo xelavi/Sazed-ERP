@@ -7,7 +7,7 @@ import {
   Menu, Search, Bell, HelpCircle, Eye, ShoppingBag, Archive,
   ClipboardList, Wallet, CreditCard, TrendingUp, FolderOpen, Plus,
   Receipt, FileText, Share2, AtSign, Image, Target, Star,
-  Upload, ExternalLink, BarChart2, AlertTriangle, UserCheck
+  Upload, ExternalLink, BarChart2, AlertTriangle, UserCheck, Truck
 } from 'lucide-vue-next'
 import CompanySwitcher from '@/components/CompanySwitcher.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
@@ -60,11 +60,17 @@ const menuItems = [
       { label: 'Payout', route: '/payout', icon: TrendingUp }
     ]
   },
-  { 
-    id: 'customers', 
-    label: 'Customers', 
-    icon: Users, 
-    route: '/customers' 
+  {
+    id: 'customers',
+    label: 'Customers',
+    icon: Users,
+    route: '/customers'
+  },
+  {
+    id: 'providers',
+    label: 'Providers',
+    icon: Truck,
+    route: '/providers'
   },
   { 
     id: 'marketing', 
