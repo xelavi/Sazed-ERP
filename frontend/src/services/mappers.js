@@ -486,3 +486,117 @@ export function mapProviderToApi(formData) {
     internal_notes: formData.internalNotes || '',
   }
 }
+
+// ── Purchase Invoices ────────────────────────────────
+
+export function mapPurchaseInvoiceFromApi(inv) {
+  return {
+    id: inv.id,
+    type: inv.invoice_type || 'Standard',
+    status: inv.status,
+    series: inv.series_prefix || inv.series || '',
+    number: inv.number,
+    provider: {
+      id: inv.provider,
+      name: inv.provider_name || '',
+      vatId: inv.provider_vat_id || null,
+      email: '',
+      avatarColor: inv.provider_avatar_color || 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+      initials: inv.provider_initials || '?',
+    },
+    issueDate: inv.issue_date,
+    dueDate: inv.due_date,
+    paymentMethod: inv.payment_method || '',
+    currency: inv.currency || 'EUR',
+    subtotal: parseFloat(inv.subtotal) || 0,
+    totalTax: parseFloat(inv.total_tax) || 0,
+    totalAmount: parseFloat(inv.total_amount) || 0,
+    paidAmount: parseFloat(inv.paid_amount) || 0,
+    balanceDue: parseFloat(inv.balance_due) || 0,
+    isOverdue: inv.is_overdue || false,
+    createdAt: inv.created_at,
+  }
+}
+
+export function mapPurchaseInvoiceDetailFromApi(inv) {
+  const providerData = inv.provider_data || {}
+  return {
+    id: inv.id,
+    type: inv.invoice_type || 'Standard',
+    status: inv.status,
+    series: inv.series_data?.prefix || '',
+    seriesId: inv.series_data?.id || null,
+    number: inv.number,
+    provider: {
+      id: providerData.id || inv.provider,
+      name: providerData.name || '',
+      vatId: providerData.vat_id || null,
+      email: providerData.email || '',
+      avatarColor: providerData.avatar_color || 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+      initials: providerData.initials || '?',
+    },
+    issueDate: inv.issue_date,
+    dueDate: inv.due_date,
+    paymentMethod: inv.payment_method || '',
+    currency: inv.currency || 'EUR',
+    lines: (inv.lines || []).map(l => ({
+      id: l.id,
+      description: l.description,
+      quantity: l.quantity,
+      unitPrice: parseFloat(l.unit_price),
+      discount: l.discount_value ? `${l.discount_value}%` : null,
+      tax: (l.taxes || []).map(t => t.tax_name).join(', ') || '—',
+      subtotal: parseFloat(l.subtotal),
+    })),
+    subtotal: parseFloat(inv.subtotal) || 0,
+    discountAmount: parseFloat(inv.discount_amount) || 0,
+    taxSummary: (inv.tax_summary || []),
+    totalTax: parseFloat(inv.total_tax) || 0,
+    totalAmount: parseFloat(inv.total_amount) || 0,
+    paidAmount: parseFloat(inv.paid_amount) || 0,
+    balanceDue: parseFloat(inv.balance_due) || 0,
+    payments: (inv.payments || []).map(p => ({
+      id: p.id,
+      date: p.date,
+      amount: parseFloat(p.amount),
+      method: p.method,
+      reference: p.reference || null,
+      notes: p.notes || null,
+    })),
+    providerNotes: inv.provider_notes || '',
+    internalNotes: inv.internal_notes || '',
+    lockedAt: inv.locked_at || null,
+    timeline: (inv.timeline || []).map(t => ({
+      type: t.event_type,
+      action: t.action,
+      actor: t.actor,
+      date: t.date,
+    })),
+  }
+}
+
+export function mapPurchaseInvoiceToApi(formData) {
+  const seriesRaw = formData.seriesId || formData.series
+  const series = Number.isFinite(Number(seriesRaw)) && seriesRaw !== '' ? Number(seriesRaw) : null
+  const providerRaw = formData.providerId || formData.provider?.id
+  const provider = Number.isFinite(Number(providerRaw)) && providerRaw !== '' ? Number(providerRaw) : null
+
+  return {
+    invoice_type: formData.type || 'Standard',
+    series,
+    provider,
+    issue_date: formData.issueDate,
+    due_date: formData.dueDate,
+    payment_method: formData.paymentMethod || 'Transfer 30 days',
+    currency: formData.currency || 'EUR',
+    provider_notes: formData.providerNotes || '',
+    internal_notes: formData.internalNotes || '',
+    lines: (formData.lines || []).map(l => ({
+      description: l.description,
+      quantity: l.quantity,
+      unit_price: l.unitPrice,
+      discount_type: l.discountType || 'Percent',
+      discount_value: l.discountValue || 0,
+    })),
+  }
+}

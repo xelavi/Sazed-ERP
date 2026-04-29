@@ -42,12 +42,20 @@ const menuItems = [
       { label: 'Orders', route: '/orders', icon: ClipboardList }
     ]
   },
-  { 
-    id: 'sales', 
-    label: 'Sales', 
-    icon: Receipt, 
+  {
+    id: 'sales',
+    label: 'Sales',
+    icon: Receipt,
     submenu: [
       { label: 'Invoices', route: '/invoices', icon: FileText }
+    ]
+  },
+  {
+    id: 'purchases',
+    label: 'Purchases',
+    icon: ShoppingBag,
+    submenu: [
+      { label: 'Purchase Invoices', route: '/purchase-invoices', icon: FileText }
     ]
   },
   { 

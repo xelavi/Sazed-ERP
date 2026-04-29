@@ -97,6 +97,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/purchase-invoices',
+    name: 'PurchaseInvoices',
+    component: () => import('../views/PurchaseInvoices.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/marketing',
     name: 'Marketing',
     component: () => import('../views/About.vue'), // Placeholder

@@ -4,6 +4,11 @@ from core.models import Tag
 from core.serializers import TagSerializer
 from .models import Provider, ProviderNote, ProviderActivity, PurchaseOrder
 
+try:
+    from purchases.models import PurchaseQuote
+except ImportError:
+    PurchaseQuote = None
+
 
 class ProviderNoteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,6 +66,7 @@ class ProviderDetailSerializer(serializers.ModelSerializer):
     notes = ProviderNoteSerializer(many=True, read_only=True)
     activities = ProviderActivitySerializer(many=True, read_only=True)
     purchase_orders = PurchaseOrderSerializer(many=True, read_only=True)
+    purchase_invoices_count = serializers.SerializerMethodField()
 
     total_purchased = serializers.DecimalField(
         max_digits=12, decimal_places=2, read_only=True,
@@ -79,7 +85,7 @@ class ProviderDetailSerializer(serializers.ModelSerializer):
             'payment_method', 'bank_account',
             'avatar_color', 'initials', 'internal_notes',
             'tags', 'tag_ids', 'linked', 'linked_contact_ids',
-            'notes', 'activities', 'purchase_orders',
+            'notes', 'activities', 'purchase_orders', 'purchase_invoices_count',
             'total_purchased', 'pending_balance', 'total_documents',
             'created_at', 'updated_at',
         ]
@@ -87,6 +93,11 @@ class ProviderDetailSerializer(serializers.ModelSerializer):
 
     def get_linked(self, obj):
         return list(obj.linked_contacts.values_list('name', flat=True))
+
+    def get_purchase_invoices_count(self, obj):
+        if hasattr(obj, 'purchase_invoices'):
+            return obj.purchase_invoices.count()
+        return 0
 
 
 class ProviderWriteSerializer(serializers.ModelSerializer):

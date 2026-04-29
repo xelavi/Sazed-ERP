@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/invoices/', include('invoices.urls')),
     path('api/tasks/', include('tasks.urls')),
     path('api/providers/', include('providers.urls')),
+    path('api/purchases/', include('purchases.urls')),
     path('api/dashboard/summary/', dashboard_summary, name='dashboard-summary'),
     path('api/dashboard/wallet/', dashboard_wallet, name='dashboard-wallet'),
     # Mock AEAT — VeriFactu
