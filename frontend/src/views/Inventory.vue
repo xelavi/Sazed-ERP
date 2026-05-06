@@ -121,7 +121,17 @@
                       <span class="wh-address">{{ wh.address || 'No address' }}</span>
                     </div>
                   </div>
-                  <ChevronRight :size="16" class="wh-arrow" />
+                  <div class="wh-actions">
+                    <button
+                      v-if="isAdmin && wh.id !== null"
+                      class="btn-icon btn-danger-ghost"
+                      title="Delete warehouse"
+                      @click.stop="confirmDeleteWarehouse(wh)"
+                    >
+                      <Trash2 :size="15" />
+                    </button>
+                    <ChevronRight :size="16" class="wh-arrow" />
+                  </div>
                 </div>
                 <div class="wh-stats">
                   <div class="wh-stat">
@@ -445,6 +455,25 @@
     <!-- ════════════════════════════════════════════════
          MODAL: New Warehouse
          ════════════════════════════════════════════════ -->
+    <div v-if="deleteWarehouseModal" class="modal-overlay" @click.self="deleteWarehouseModal = false">
+      <div class="modal-box modal-sm">
+        <div class="modal-header">
+          <h2>Delete Warehouse</h2>
+          <button class="btn-icon" @click="deleteWarehouseModal = false"><X :size="18" /></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete <strong>{{ warehouseToDelete?.name }}</strong>?</p>
+          <p class="text-muted" style="font-size:0.85rem; margin-top:0.5rem;">Products assigned to this warehouse will become unassigned.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="deleteWarehouseModal = false">Cancel</button>
+          <button class="btn btn-danger" @click="doDeleteWarehouse">
+            <Trash2 :size="16" /> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="warehouseModal" class="modal-overlay" @click.self="warehouseModal = false">
       <div class="modal-box modal-sm">
         <div class="modal-header">
@@ -654,7 +683,7 @@ import {
   Warehouse, ChevronRight, BarChart3, ArrowUpDown,
   ClipboardList, X, PackagePlus, PackageOpen, Settings, Plus,
   ArrowDownToLine, ArrowUpFromLine, RefreshCw, CornerDownLeft,
-  Search, SlidersHorizontal, ArrowLeftRight, ArrowRight,
+  Search, SlidersHorizontal, ArrowLeftRight, ArrowRight, Trash2,
 } from 'lucide-vue-next'
 import inventoryApi from '@/services/inventory'
 import productsApi from '@/services/products'
@@ -705,6 +734,8 @@ const transferData = ref({ product_id: '', product_name: '', current_stock: 0, f
 // Warehouse modal
 const warehouseModal = ref(false)
 const warehouseData = ref({ name: '', address: '' })
+const deleteWarehouseModal = ref(false)
+const warehouseToDelete = ref(null)
 
 // User role (admin check)
 const isAdmin = ref(true) // defaults true; will be set from membership data
@@ -989,6 +1020,26 @@ async function saveReorderRule() {
   }
 }
 
+// ── Warehouse Delete ───────────────────────────────
+function confirmDeleteWarehouse(wh) {
+  warehouseToDelete.value = wh
+  deleteWarehouseModal.value = true
+}
+
+async function doDeleteWarehouse() {
+  const wh = warehouseToDelete.value
+  if (!wh) return
+  try {
+    await coreApi.warehouses.delete(wh.id)
+    toast.success(`Warehouse "${wh.name}" deleted`)
+    deleteWarehouseModal.value = false
+    warehouseToDelete.value = null
+    await loadOverview()
+  } catch {
+    toast.error('Failed to delete warehouse')
+  }
+}
+
 // ── Warehouse Creation ─────────────────────────────
 function openWarehouseModal() {
   warehouseData.value = { name: '', address: '' }
@@ -1187,8 +1238,13 @@ function fmtRelTime(iso) {
 }
 .wh-name h3 { font-size: var(--font-size-sm); font-weight: 600; }
 .wh-address { font-size: var(--font-size-xs); color: var(--text-tertiary); }
+.wh-actions { display: flex; align-items: center; gap: 4px; }
 .wh-arrow { color: var(--text-tertiary); transition: transform var(--transition-fast); }
 .warehouse-card:hover .wh-arrow { transform: translateX(3px); color: var(--primary-color); }
+.btn-danger { background: #ef4444; color: #fff; border: none; }
+.btn-danger:hover { background: #dc2626; }
+.btn-danger-ghost { background: transparent; border: none; cursor: pointer; padding: 4px; border-radius: var(--radius-sm); color: var(--text-tertiary); display: flex; align-items: center; transition: color var(--transition-fast), background var(--transition-fast); }
+.btn-danger-ghost:hover { color: var(--danger-color, #ef4444); background: rgba(239,68,68,0.1); }
 .wh-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-xs); margin-bottom: var(--spacing-sm); }
 .wh-stat { text-align: center; }
 .wh-stat-val { display: block; font-size: var(--font-size-sm); font-weight: 700; color: var(--text-primary); }
