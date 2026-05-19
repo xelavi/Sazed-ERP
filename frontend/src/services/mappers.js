@@ -575,6 +575,178 @@ export function mapPurchaseInvoiceDetailFromApi(inv) {
   }
 }
 
+// ── Sales Quotes (Presupuestos) ─────────────────────
+
+export function mapSalesQuoteFromApi(q) {
+  return {
+    id: q.id,
+    name: q.name,
+    status: q.status,
+    customer: {
+      id: q.customer,
+      name: q.customer_name || '',
+      avatarColor: q.customer_avatar_color || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      initials: q.customer_initials || '?',
+    },
+    issueDate: q.issue_date,
+    validUntil: q.valid_until,
+    currency: q.currency || 'EUR',
+    subtotal: parseFloat(q.subtotal) || 0,
+    totalTax: parseFloat(q.total_tax) || 0,
+    totalAmount: parseFloat(q.total_amount) || 0,
+    convertedInvoiceId: q.converted_invoice || null,
+    convertedInvoiceNumber: q.converted_invoice_number || null,
+    createdAt: q.created_at,
+  }
+}
+
+export function mapSalesQuoteDetailFromApi(q) {
+  const c = q.customer_data || {}
+  return {
+    id: q.id,
+    name: q.name,
+    status: q.status,
+    customer: {
+      id: c.id || q.customer,
+      name: c.name || '',
+      vatId: c.vat_id || null,
+      email: c.email || '',
+      avatarColor: c.avatar_color || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      initials: c.initials || '?',
+    },
+    issueDate: q.issue_date,
+    validUntil: q.valid_until,
+    currency: q.currency || 'EUR',
+    customerNotes: q.customer_notes || '',
+    internalNotes: q.internal_notes || '',
+    lines: (q.lines || []).map(l => ({
+      id: l.id,
+      position: l.position,
+      description: l.description,
+      quantity: parseFloat(l.quantity),
+      unitPrice: parseFloat(l.unit_price),
+      taxPercent: parseFloat(l.tax_percent) || 0,
+      subtotal: parseFloat(l.subtotal) || 0,
+      taxAmount: parseFloat(l.tax_amount) || 0,
+    })),
+    subtotal: parseFloat(q.subtotal) || 0,
+    totalTax: parseFloat(q.total_tax) || 0,
+    totalAmount: parseFloat(q.total_amount) || 0,
+    convertedInvoiceId: q.converted_invoice || null,
+    convertedInvoiceNumber: q.converted_invoice_number || null,
+    createdAt: q.created_at,
+  }
+}
+
+export function mapSalesQuoteToApi(form) {
+  const customerRaw = form.customerId || form.customer?.id
+  const customer = Number.isFinite(Number(customerRaw)) && customerRaw !== '' ? Number(customerRaw) : null
+
+  return {
+    name: form.name,
+    customer,
+    issue_date: form.issueDate,
+    valid_until: form.validUntil || null,
+    currency: form.currency || 'EUR',
+    status: form.status || 'Draft',
+    customer_notes: form.customerNotes || '',
+    internal_notes: form.internalNotes || '',
+    lines: (form.lines || []).map((l, i) => ({
+      position: l.position ?? i,
+      description: l.description || '',
+      quantity: l.quantity || 0,
+      unit_price: l.unitPrice || 0,
+      tax_percent: l.taxPercent || 0,
+    })),
+  }
+}
+
+// ── Purchase Quotes (Presupuestos de compra) ───────
+
+export function mapPurchaseQuoteFromApi(q) {
+  return {
+    id: q.id,
+    name: q.name,
+    status: q.status,
+    provider: {
+      id: q.provider,
+      name: q.provider_name || '',
+      avatarColor: q.provider_avatar_color || 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+      initials: q.provider_initials || '?',
+    },
+    issueDate: q.issue_date,
+    validUntil: q.valid_until,
+    currency: q.currency || 'EUR',
+    subtotal: parseFloat(q.subtotal) || 0,
+    totalTax: parseFloat(q.total_tax) || 0,
+    totalAmount: parseFloat(q.total_amount) || 0,
+    convertedInvoiceId: q.converted_invoice || null,
+    convertedInvoiceNumber: q.converted_invoice_number || null,
+    createdAt: q.created_at,
+  }
+}
+
+export function mapPurchaseQuoteDetailFromApi(q) {
+  const p = q.provider_data || {}
+  return {
+    id: q.id,
+    name: q.name,
+    status: q.status,
+    provider: {
+      id: p.id || q.provider,
+      name: p.name || '',
+      vatId: p.vat_id || null,
+      email: p.email || '',
+      avatarColor: p.avatar_color || 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+      initials: p.initials || '?',
+    },
+    issueDate: q.issue_date,
+    validUntil: q.valid_until,
+    currency: q.currency || 'EUR',
+    providerNotes: q.provider_notes || '',
+    internalNotes: q.internal_notes || '',
+    lines: (q.lines || []).map(l => ({
+      id: l.id,
+      position: l.position,
+      description: l.description,
+      quantity: parseFloat(l.quantity),
+      unitPrice: parseFloat(l.unit_price),
+      taxPercent: parseFloat(l.tax_percent) || 0,
+      subtotal: parseFloat(l.subtotal) || 0,
+      taxAmount: parseFloat(l.tax_amount) || 0,
+    })),
+    subtotal: parseFloat(q.subtotal) || 0,
+    totalTax: parseFloat(q.total_tax) || 0,
+    totalAmount: parseFloat(q.total_amount) || 0,
+    convertedInvoiceId: q.converted_invoice || null,
+    convertedInvoiceNumber: q.converted_invoice_number || null,
+    createdAt: q.created_at,
+  }
+}
+
+export function mapPurchaseQuoteToApi(form) {
+  const providerRaw = form.providerId || form.provider?.id
+  const provider = Number.isFinite(Number(providerRaw)) && providerRaw !== '' ? Number(providerRaw) : null
+
+  return {
+    name: form.name,
+    provider,
+    issue_date: form.issueDate,
+    valid_until: form.validUntil || null,
+    currency: form.currency || 'EUR',
+    status: form.status || 'Draft',
+    provider_notes: form.providerNotes || '',
+    internal_notes: form.internalNotes || '',
+    lines: (form.lines || []).map((l, i) => ({
+      position: l.position ?? i,
+      description: l.description || '',
+      quantity: l.quantity || 0,
+      unit_price: l.unitPrice || 0,
+      tax_percent: l.taxPercent || 0,
+    })),
+  }
+}
+
 export function mapPurchaseInvoiceToApi(formData) {
   const seriesRaw = formData.seriesId || formData.series
   const series = Number.isFinite(Number(seriesRaw)) && seriesRaw !== '' ? Number(seriesRaw) : null

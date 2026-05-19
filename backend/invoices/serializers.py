@@ -4,6 +4,7 @@ from customers.serializers import CustomerListSerializer
 from .models import (
     InvoiceSeries, Invoice, InvoiceLine,
     InvoiceLineTax, Payment, InvoiceTimeline, EventLog,
+    Quote, QuoteLine,
 )
 
 
@@ -185,4 +186,87 @@ class InvoiceWriteSerializer(serializers.ModelSerializer):
                     )
             instance.recalculate_totals()
 
+        return instance
+
+
+# ---------- Quote (Sales) serializers ----------
+
+class QuoteLineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuoteLine
+        fields = [
+            'id', 'position', 'product', 'description',
+            'quantity', 'unit_price', 'tax_percent',
+            'subtotal', 'tax_amount',
+        ]
+        read_only_fields = ['id', 'subtotal', 'tax_amount']
+
+
+class QuoteListSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    customer_avatar_color = serializers.CharField(
+        source='customer.avatar_color', read_only=True,
+    )
+    customer_initials = serializers.CharField(
+        source='customer.initials', read_only=True,
+    )
+    converted_invoice_number = serializers.CharField(
+        source='converted_invoice.number', read_only=True, default=None,
+    )
+
+    class Meta:
+        model = Quote
+        fields = [
+            'id', 'name', 'status', 'customer', 'customer_name',
+            'customer_avatar_color', 'customer_initials',
+            'issue_date', 'valid_until', 'currency',
+            'subtotal', 'total_tax', 'total_amount',
+            'converted_invoice', 'converted_invoice_number',
+            'created_at',
+        ]
+
+
+class QuoteDetailSerializer(serializers.ModelSerializer):
+    customer_data = CustomerListSerializer(source='customer', read_only=True)
+    lines = QuoteLineSerializer(many=True, read_only=True)
+    converted_invoice_number = serializers.CharField(
+        source='converted_invoice.number', read_only=True, default=None,
+    )
+
+    class Meta:
+        model = Quote
+        fields = '__all__'
+
+
+class QuoteWriteSerializer(serializers.ModelSerializer):
+    lines = QuoteLineSerializer(many=True, required=False)
+
+    class Meta:
+        model = Quote
+        fields = [
+            'id', 'name', 'customer', 'issue_date', 'valid_until',
+            'currency', 'status', 'customer_notes', 'internal_notes',
+            'created_by', 'lines',
+        ]
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        lines_data = validated_data.pop('lines', [])
+        quote = Quote.objects.create(**validated_data)
+        for line_data in lines_data:
+            QuoteLine.objects.create(quote=quote, **line_data)
+        if lines_data:
+            quote.recalculate_totals()
+        return quote
+
+    def update(self, instance, validated_data):
+        lines_data = validated_data.pop('lines', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if lines_data is not None:
+            instance.lines.all().delete()
+            for line_data in lines_data:
+                QuoteLine.objects.create(quote=instance, **line_data)
+            instance.recalculate_totals()
         return instance

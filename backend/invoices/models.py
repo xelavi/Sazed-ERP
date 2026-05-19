@@ -369,6 +369,102 @@ class InvoiceTimeline(models.Model):
         return f'{self.event_type}: {self.action}'
 
 
+class Quote(models.Model):
+    """Presupuesto de venta — borrador previo a una factura."""
+
+    class Status(models.TextChoices):
+        DRAFT = 'Draft', 'Borrador'
+        SENT = 'Sent', 'Enviado'
+        ACCEPTED = 'Accepted', 'Aceptado'
+        REJECTED = 'Rejected', 'Rechazado'
+        EXPIRED = 'Expired', 'Expirado'
+        CONVERTED = 'Converted', 'Convertido'
+
+    company = models.ForeignKey(
+        'accounts.Company', on_delete=models.CASCADE,
+        related_name='sales_quotes', null=True, blank=True,
+    )
+    name = models.CharField(max_length=200)
+    customer = models.ForeignKey(
+        'customers.Customer', on_delete=models.PROTECT,
+        related_name='sales_quotes',
+    )
+    issue_date = models.DateField()
+    valid_until = models.DateField(null=True, blank=True)
+    currency = models.CharField(max_length=3, default='EUR')
+    status = models.CharField(
+        max_length=15, choices=Status.choices, default='Draft',
+    )
+
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_tax = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_amount = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+    )
+
+    customer_notes = models.TextField(blank=True)
+    internal_notes = models.TextField(blank=True)
+
+    converted_invoice = models.ForeignKey(
+        'Invoice', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='source_quotes',
+    )
+
+    created_by = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-issue_date', '-id']
+
+    def __str__(self):
+        return f'Q-{self.pk} {self.name}'
+
+    def recalculate_totals(self):
+        lines = self.lines.all()
+        subtotal = Decimal('0.00')
+        total_tax = Decimal('0.00')
+        for ln in lines:
+            subtotal += ln.subtotal
+            total_tax += ln.tax_amount
+        self.subtotal = subtotal
+        self.total_tax = total_tax
+        self.total_amount = subtotal + total_tax
+        self.save(update_fields=['subtotal', 'total_tax', 'total_amount'])
+
+
+class QuoteLine(models.Model):
+    quote = models.ForeignKey(
+        Quote, on_delete=models.CASCADE, related_name='lines',
+    )
+    position = models.IntegerField(default=0)
+    product = models.ForeignKey(
+        'products.Product', null=True, blank=True,
+        on_delete=models.SET_NULL,
+    )
+    description = models.TextField()
+    quantity = models.DecimalField(
+        max_digits=10, decimal_places=3, default=1,
+    )
+    unit_price = models.DecimalField(max_digits=12, decimal_places=4)
+    tax_percent = models.DecimalField(
+        max_digits=5, decimal_places=2, default=0,
+    )
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+    )
+
+    class Meta:
+        ordering = ['position']
+
+    def save(self, *args, **kwargs):
+        gross = (self.quantity or Decimal('0')) * (self.unit_price or Decimal('0'))
+        self.subtotal = gross.quantize(Decimal('0.01'))
+        self.tax_amount = (gross * (self.tax_percent or Decimal('0')) / Decimal('100')).quantize(Decimal('0.01'))
+        super().save(*args, **kwargs)
+
+
 class EventLog(models.Model):
     """Registro de auditoría de acciones sobre facturas (VeriFactu / AEAT)."""
 

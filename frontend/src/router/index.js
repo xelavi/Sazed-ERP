@@ -85,6 +85,18 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/quotes',
+    name: 'SalesQuotes',
+    component: () => import('../views/SalesQuotes.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/purchase-quotes',
+    name: 'PurchaseQuotes',
+    component: () => import('../views/PurchaseQuotes.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/customers',
     name: 'Customers',
     component: () => import('../views/Customers.vue'),
@@ -94,6 +106,12 @@ const routes = [
     path: '/providers',
     name: 'Providers',
     component: () => import('../views/Providers.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/personnel',
+    name: 'Personnel',
+    component: () => import('../views/Personnel.vue'),
     meta: { requiresAuth: true },
   },
   {

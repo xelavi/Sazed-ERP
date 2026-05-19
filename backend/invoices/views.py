@@ -3,11 +3,19 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
+from datetime import timedelta
+
+from django.utils import timezone
+
 from accounts.mixins import CompanyMixin
-from .models import Invoice, InvoiceSeries, Payment, EventLog
+from .models import (
+    Invoice, InvoiceSeries, Payment, EventLog,
+    Quote, InvoiceLine, InvoiceTimeline,
+)
 from .serializers import (
     InvoiceListSerializer, InvoiceDetailSerializer, InvoiceWriteSerializer,
     InvoiceSeriesSerializer, PaymentSerializer,
+    QuoteListSerializer, QuoteDetailSerializer, QuoteWriteSerializer,
 )
 from .filters import InvoiceFilter
 from .services import InvoiceService
@@ -265,6 +273,110 @@ class InvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
 # ──────────────────────────────────────────────────────────────────────────────
 #  FASE 4 — Mock AEAT endpoint (POST /api/mock-aeat/verifactu/alta)
 # ──────────────────────────────────────────────────────────────────────────────
+
+class QuoteViewSet(CompanyMixin, viewsets.ModelViewSet):
+    queryset = Quote.objects.select_related('customer').prefetch_related('lines').all()
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = Quote.objects.select_related('customer').prefetch_related('lines').all()
+        if hasattr(self.request, 'company') and self.request.company:
+            return qs.filter(company=self.request.company)
+        return qs.none()
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return QuoteListSerializer
+        if self.action in ('create', 'update', 'partial_update'):
+            return QuoteWriteSerializer
+        return QuoteDetailSerializer
+
+    def perform_create(self, serializer):
+        company = getattr(self.request, 'company', None)
+        if company:
+            serializer.save(company=company)
+        else:
+            serializer.save()
+
+    @action(detail=True, methods=['post'], url_path='convert-to-invoice')
+    def convert_to_invoice(self, request, pk=None):
+        from rest_framework.exceptions import ValidationError
+        quote = self.get_object()
+        if quote.converted_invoice_id:
+            return Response(
+                {'error': 'Este presupuesto ya se convirtió en factura.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        default_series = InvoiceSeries.objects.filter(
+            company=getattr(request, 'company', None),
+            is_default=True, active=True,
+        ).first()
+        if not default_series:
+            default_series = InvoiceSeries.objects.filter(
+                company=getattr(request, 'company', None), active=True,
+            ).first()
+        if not default_series:
+            raise ValidationError('No hay serie de facturas configurada.')
+
+        today = timezone.now().date()
+        invoice = Invoice.objects.create(
+            invoice_type='Standard',
+            status='Draft',
+            series=default_series,
+            customer=quote.customer,
+            issue_date=today,
+            due_date=today + timedelta(days=30),
+            currency=quote.currency,
+            customer_notes=quote.customer_notes,
+            internal_notes=quote.internal_notes,
+        )
+
+        for ln in quote.lines.all():
+            new_line = InvoiceLine.objects.create(
+                invoice=invoice,
+                position=ln.position,
+                product=ln.product,
+                description=ln.description,
+                quantity=ln.quantity,
+                unit_price=ln.unit_price,
+            )
+            # Aplicar IVA si la línea tenía tax_percent
+            if ln.tax_percent and ln.tax_percent > 0:
+                from core.models import TaxRate
+                rate = TaxRate.objects.filter(
+                    rate=ln.tax_percent, is_retention=False,
+                ).first()
+                if rate:
+                    from .models import InvoiceLineTax
+                    InvoiceLineTax.objects.create(
+                        invoice_line=new_line,
+                        tax_rate=rate,
+                        tax_name=rate.name,
+                        tax_percent=rate.rate,
+                        is_retention=False,
+                        tax_amount=ln.tax_amount,
+                    )
+
+        invoice.recalculate_totals()
+
+        InvoiceTimeline.objects.create(
+            invoice=invoice,
+            event_type='created',
+            action=f'Factura creada desde presupuesto «{quote.name}» (Q-{quote.id})',
+            actor=getattr(request.user, 'email', 'System'),
+            date=today,
+        )
+
+        quote.status = 'Converted'
+        quote.converted_invoice = invoice
+        quote.save(update_fields=['status', 'converted_invoice'])
+
+        return Response(
+            QuoteDetailSerializer(quote).data,
+            status=status.HTTP_201_CREATED,
+        )
+
 
 @api_view(['POST'])
 def mock_aeat_alta(request):

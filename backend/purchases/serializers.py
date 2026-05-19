@@ -4,7 +4,7 @@ from providers.serializers import ProviderListSerializer
 from .models import (
     PurchaseSeries, PurchaseInvoice, PurchaseInvoiceLine,
     PurchaseInvoiceLineTax, PurchasePayment, PurchaseInvoiceTimeline,
-    PurchaseQuote,
+    PurchaseQuote, PurchaseQuoteDoc, PurchaseQuoteDocLine,
 )
 
 
@@ -176,4 +176,87 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
                     )
             instance.recalculate_totals()
 
+        return instance
+
+
+# ---------- Quote (Purchase) serializers ----------
+
+class PurchaseQuoteDocLineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseQuoteDocLine
+        fields = [
+            'id', 'position', 'product', 'description',
+            'quantity', 'unit_price', 'tax_percent',
+            'subtotal', 'tax_amount',
+        ]
+        read_only_fields = ['id', 'subtotal', 'tax_amount']
+
+
+class PurchaseQuoteDocListSerializer(serializers.ModelSerializer):
+    provider_name = serializers.CharField(source='provider.name', read_only=True)
+    provider_avatar_color = serializers.CharField(
+        source='provider.avatar_color', read_only=True,
+    )
+    provider_initials = serializers.CharField(
+        source='provider.initials', read_only=True,
+    )
+    converted_invoice_number = serializers.CharField(
+        source='converted_invoice.number', read_only=True, default=None,
+    )
+
+    class Meta:
+        model = PurchaseQuoteDoc
+        fields = [
+            'id', 'name', 'status', 'provider', 'provider_name',
+            'provider_avatar_color', 'provider_initials',
+            'issue_date', 'valid_until', 'currency',
+            'subtotal', 'total_tax', 'total_amount',
+            'converted_invoice', 'converted_invoice_number',
+            'created_at',
+        ]
+
+
+class PurchaseQuoteDocDetailSerializer(serializers.ModelSerializer):
+    provider_data = ProviderListSerializer(source='provider', read_only=True)
+    lines = PurchaseQuoteDocLineSerializer(many=True, read_only=True)
+    converted_invoice_number = serializers.CharField(
+        source='converted_invoice.number', read_only=True, default=None,
+    )
+
+    class Meta:
+        model = PurchaseQuoteDoc
+        fields = '__all__'
+
+
+class PurchaseQuoteDocWriteSerializer(serializers.ModelSerializer):
+    lines = PurchaseQuoteDocLineSerializer(many=True, required=False)
+
+    class Meta:
+        model = PurchaseQuoteDoc
+        fields = [
+            'id', 'name', 'provider', 'issue_date', 'valid_until',
+            'currency', 'status', 'provider_notes', 'internal_notes',
+            'created_by', 'lines',
+        ]
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        lines_data = validated_data.pop('lines', [])
+        quote = PurchaseQuoteDoc.objects.create(**validated_data)
+        for line_data in lines_data:
+            PurchaseQuoteDocLine.objects.create(quote=quote, **line_data)
+        if lines_data:
+            quote.recalculate_totals()
+        return quote
+
+    def update(self, instance, validated_data):
+        lines_data = validated_data.pop('lines', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if lines_data is not None:
+            instance.lines.all().delete()
+            for line_data in lines_data:
+                PurchaseQuoteDocLine.objects.create(quote=instance, **line_data)
+            instance.recalculate_totals()
         return instance

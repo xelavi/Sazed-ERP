@@ -276,10 +276,18 @@ class CompanyViewSet(viewsets.ModelViewSet):
             target.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        # PATCH — update role
+        # PATCH — update role and/or user profile fields
         new_role = request.data.get('role')
         if new_role and new_role in dict(Membership.Role.choices):
             target.role = new_role
             target.save(update_fields=['role'])
+
+        # Allow admins to edit user fields of the member
+        user_fields = ['first_name', 'last_name']
+        user_updates = {f: request.data[f] for f in user_fields if f in request.data}
+        if user_updates:
+            for k, v in user_updates.items():
+                setattr(target.user, k, v)
+            target.user.save(update_fields=list(user_updates.keys()))
 
         return Response(MembershipSerializer(target).data)

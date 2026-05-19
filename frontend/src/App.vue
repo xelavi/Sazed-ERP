@@ -47,7 +47,8 @@ const menuItems = [
     label: 'Sales',
     icon: Receipt,
     submenu: [
-      { label: 'Invoices', route: '/invoices', icon: FileText }
+      { label: 'Invoices', route: '/invoices', icon: FileText },
+      { label: 'Presupuestos', route: '/quotes', icon: ClipboardList }
     ]
   },
   {
@@ -55,7 +56,8 @@ const menuItems = [
     label: 'Purchases',
     icon: ShoppingBag,
     submenu: [
-      { label: 'Purchase Invoices', route: '/purchase-invoices', icon: FileText }
+      { label: 'Purchase Invoices', route: '/purchase-invoices', icon: FileText },
+      { label: 'Presupuestos', route: '/purchase-quotes', icon: ClipboardList }
     ]
   },
   { 
@@ -79,6 +81,12 @@ const menuItems = [
     label: 'Providers',
     icon: Truck,
     route: '/providers'
+  },
+  {
+    id: 'personnel',
+    label: 'Personal',
+    icon: UserCheck,
+    route: '/personnel'
   },
   { 
     id: 'marketing', 

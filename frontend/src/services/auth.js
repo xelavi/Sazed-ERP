@@ -66,4 +66,14 @@ export default {
   async inviteMember(companyId, email, role) {
     return post(`/companies/${companyId}/members/`, { email, role })
   },
+
+  async updateMember(companyId, memberId, data) {
+    return patch(`/companies/${companyId}/members/${memberId}/`, data)
+  },
+
+  async removeMember(companyId, memberId) {
+    return apiFetch(`/companies/${companyId}/members/${memberId}/`, {
+      method: 'DELETE',
+    })
+  },
 }
