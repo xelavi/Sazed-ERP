@@ -43,21 +43,9 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/collections',
-    name: 'Collections',
-    component: () => import('../views/About.vue'), // Placeholder
-    meta: { requiresAuth: true },
-  },
-  {
     path: '/inventory',
     name: 'Inventory',
     component: () => import('../views/Inventory.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/orders',
-    name: 'Orders',
-    component: () => import('../views/About.vue'), // Placeholder
     meta: { requiresAuth: true },
   },
   {
@@ -121,33 +109,31 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/marketing',
-    name: 'Marketing',
-    component: () => import('../views/About.vue'), // Placeholder
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/online-store',
-    name: 'OnlineStore',
-    component: () => import('../views/About.vue'), // Placeholder
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/sell-link',
-    name: 'SellLink',
-    component: () => import('../views/About.vue'), // Placeholder
-    meta: { requiresAuth: true },
-  },
-  {
     path: '/settings',
     name: 'Settings',
     component: () => import('../views/About.vue'), // Placeholder
     meta: { requiresAuth: true },
   },
   {
+    path: '/account',
+    name: 'Account',
+    component: () => import('../views/AccountView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/inbox',
+    name: 'Inbox',
+    component: () => import('../views/InboxView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/profile',
-    name: 'Profile',
-    component: () => import('../views/ProfileView.vue'),
+    redirect: '/account',
+  },
+  {
+    path: '/companies',
+    name: 'Companies',
+    component: () => import('../views/CompaniesView.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -158,12 +144,46 @@ const routes = [
   },
 
   // ── Social CRM ───────────────────────────────
+  // Top-level hubs (5)
   {
     path: '/social-crm',
     name: 'SocialCrmDashboard',
     component: () => import('../views/social-crm/SocialCrmDashboard.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/social-crm/content',
+    name: 'SocialContentHub',
+    component: () => import('../views/social-crm/hubs/ContentHub.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/social-crm/campaigns',
+    name: 'SocialCampaignsHub',
+    component: () => import('../views/social-crm/hubs/CampaignsHub.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/social-crm/influencers',
+    name: 'SocialInfluencersHub',
+    component: () => import('../views/social-crm/hubs/InfluencersHub.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/social-crm/attribution',
+    name: 'SocialAttributionHub',
+    component: () => import('../views/social-crm/hubs/AttributionHub.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/social-crm/settings',
+    name: 'SocialSettingsHub',
+    component: () => import('../views/social-crm/hubs/ComingSoonHub.vue'),
+    props: { hubKey: 'settings' },
+    meta: { requiresAuth: true },
+  },
+
+  // Legacy / direct-access routes (kept for compatibility & deep-linking)
   {
     path: '/social-crm/accounts',
     name: 'SocialAccounts',
@@ -183,21 +203,9 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/social-crm/campaigns',
-    name: 'SocialCampaigns',
-    component: () => import('../views/social-crm/SocialCampaigns.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
     path: '/social-crm/campaigns/:id',
     name: 'SocialCampaignDetail',
     component: () => import('../views/social-crm/SocialCampaignDetail.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/social-crm/influencers',
-    name: 'SocialInfluencers',
-    component: () => import('../views/social-crm/SocialInfluencers.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -252,12 +260,6 @@ const routes = [
     path: '/social-crm/alerts',
     name: 'SocialAlerts',
     component: () => import('../views/social-crm/SocialAlerts.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/social-crm/settings',
-    name: 'SocialCrmSettings',
-    component: () => import('../views/social-crm/SocialCrmSettings.vue'),
     meta: { requiresAuth: true },
   },
 ]

@@ -151,6 +151,55 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
             'skipped': len(ids) - deleted[0],
         })
 
+    # ---------- Export ----------
+
+    @action(detail=False, methods=['get'])
+    def export(self, request):
+        """Descarga el listado de facturas de compra en XLSX."""
+        qs = self.filter_queryset(self.get_queryset())
+        ids_param = request.query_params.get('ids')
+        if ids_param:
+            try:
+                ids = [int(x) for x in ids_param.split(',') if x.strip()]
+                qs = qs.filter(id__in=ids)
+            except ValueError:
+                pass
+
+        headers = [
+            'Número', 'Serie', 'Estado',
+            'Proveedor', 'NIF Proveedor',
+            'Fecha emisión', 'Fecha vencimiento',
+            'Subtotal', 'IVA', 'Retención', 'Total',
+            'Pagado', 'Pendiente', 'Moneda',
+        ]
+        rows = []
+        for inv in qs:
+            provider_name = (
+                inv.provider.name if inv.provider_id else ''
+            ) or inv.provider_name_snapshot
+            provider_vat = inv.provider_vat_snapshot or (
+                inv.provider.vat_id if inv.provider_id else ''
+            )
+            rows.append([
+                inv.number or f'(Borrador #{inv.pk})',
+                inv.series.prefix if inv.series_id else '',
+                inv.get_status_display() if inv.status else '',
+                provider_name,
+                provider_vat,
+                inv.issue_date,
+                inv.due_date,
+                inv.subtotal,
+                inv.total_tax,
+                inv.total_retention,
+                inv.total_amount,
+                inv.paid_amount,
+                inv.balance_due,
+                inv.currency,
+            ])
+        return build_xlsx_response(
+            'facturas-compra', 'Facturas compra', headers, rows,
+        )
+
 
 class PurchaseQuoteViewSet(CompanyMixin, viewsets.ModelViewSet):
     queryset = PurchaseQuote.objects.all()

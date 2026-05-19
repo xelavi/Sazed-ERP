@@ -7,9 +7,9 @@
           <span class="count-badge">{{ invoices.length }}</span>
         </div>
         <div class="header-actions">
-          <button class="btn btn-secondary">
+          <button class="btn btn-secondary" :disabled="exporting" @click="handleExport">
             <Download :size="18" />
-            <span>Export</span>
+            <span>{{ exporting ? 'Exportando…' : 'Export' }}</span>
           </button>
           <button class="btn btn-primary" @click="openInvoiceForm()">
             <Plus :size="18" />
@@ -45,10 +45,6 @@
           <select class="select filter-select" v-model="customerFilter">
             <option value="all">All customers</option>
             <option v-for="cust in customers" :key="cust" :value="cust">{{ cust }}</option>
-          </select>
-          <select class="select filter-select" v-model="seriesFilter">
-            <option value="all">All series</option>
-            <option v-for="s in seriesList" :key="s" :value="s">{{ s }}</option>
           </select>
           <button class="btn btn-secondary" @click="sortInvoices">
             <ArrowUpDown :size="18" />
@@ -346,12 +342,30 @@ import InvoiceDetailDrawer from '@/components/InvoiceDetailDrawer.vue'
 import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
 import invoicesApi from '@/services/invoices'
 import customersApi from '@/services/customers'
+import { saveBlob } from '@/services/api'
 import { mapInvoiceFromApi, mapInvoiceDetailFromApi, mapInvoiceToApi, mapCustomerFromApi, parseDrfErrors } from '@/services/mappers'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
+const exporting = ref(false)
+
+async function handleExport() {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    const blob = await invoicesApi.export()
+    const stamp = new Date().toISOString().slice(0, 10)
+    saveBlob(blob, `facturas-${stamp}.xlsx`)
+    toast.success('Exportación generada')
+  } catch (err) {
+    console.error('Export failed:', err)
+    toast.error(err.message || 'Error al exportar facturas')
+  } finally {
+    exporting.value = false
+  }
+}
 
 /* ══════════════════════════════════════════
    LOAD SERIES FROM API
@@ -541,7 +555,6 @@ function closeDropdown() {
 const searchQuery = ref('')
 const statusFilter = ref('all')
 const customerFilter = ref('all')
-const seriesFilter = ref('all')
 const selectedInvoices = ref([])
 const sortAsc = ref(false)
 
@@ -665,9 +678,18 @@ async function bulkSend() {
   selectedInvoices.value = []
 }
 
-function bulkExport() {
-  console.log('Export invoices:', selectedInvoices.value)
-  selectedInvoices.value = []
+async function bulkExport() {
+  if (!selectedInvoices.value.length) return
+  try {
+    const blob = await invoicesApi.export({ ids: selectedInvoices.value.join(',') })
+    const stamp = new Date().toISOString().slice(0, 10)
+    saveBlob(blob, `facturas-seleccion-${stamp}.xlsx`)
+    toast.success(`${selectedInvoices.value.length} facturas exportadas`)
+    selectedInvoices.value = []
+  } catch (err) {
+    console.error('Bulk export failed:', err)
+    toast.error(err.message || 'Error al exportar facturas')
+  }
 }
 
 async function bulkDelete() {
@@ -698,11 +720,6 @@ const customers = computed(() => {
   return names.sort()
 })
 
-const seriesList = computed(() => {
-  const s = [...new Set(invoices.value.map(i => i.series))]
-  return s.sort()
-})
-
 const allSelected = computed(() => {
   return filteredInvoices.value.length > 0 && selectedInvoices.value.length === filteredInvoices.value.length
 })
@@ -731,10 +748,6 @@ const filteredInvoices = computed(() => {
 
   if (customerFilter.value !== 'all') {
     result = result.filter(i => i.customer.name === customerFilter.value)
-  }
-
-  if (seriesFilter.value !== 'all') {
-    result = result.filter(i => i.series === seriesFilter.value)
   }
 
   // Sort by issue date

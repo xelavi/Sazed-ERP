@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User, Company, Membership
+from .models import User, Company, Membership, SystemSettings
 
 
 class MembershipInline(admin.TabularInline):
@@ -51,3 +51,21 @@ class MembershipAdmin(admin.ModelAdmin):
     list_display = ['user', 'company', 'role', 'is_default', 'joined_at']
     list_filter = ['role', 'is_default']
     search_fields = ['user__email', 'company__name']
+
+
+@admin.register(SystemSettings)
+class SystemSettingsAdmin(admin.ModelAdmin):
+    list_display = ['key', '__str__', 'updated_at']
+    search_fields = ['key']
+    readonly_fields = ['updated_at']
+
+    fieldsets = (
+        (None, {
+            'fields': ('key', 'value'),
+            'description': 'Configuración del sistema. Cambios sin necesidad de reiniciar.'
+        }),
+        ('Metadata', {
+            'fields': ('updated_at',),
+            'classes': ('collapse',),
+        }),
+    )

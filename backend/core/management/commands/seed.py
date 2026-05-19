@@ -83,17 +83,17 @@ class Command(BaseCommand):
         self.stdout.write('  -> Demo user & company...')
 
         self.user = User.objects.create_user(
-            email='demo@sazed.dev',
+            email='demo@Seshat.dev',
             password='demo1234',
             first_name='Demo',
             last_name='User',
         )
         self.company = Company.objects.create(
-            name='Sazed Demo S.L.',
-            slug='sazed-demo',
+            name='Seshat Demo S.L.',
+            slug='Seshat-demo',
             tax_id='B-00000001',
-            legal_name='Sazed Demo S.L.',
-            email='info@sazed-demo.es',
+            legal_name='Seshat Demo S.L.',
+            email='info@Seshat-demo.es',
             phone='+34 900 000 000',
             address='Calle Principal 1',
             city='Madrid',
@@ -109,7 +109,7 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(
-            f'    User: demo@sazed.dev / demo1234  |  Company: {self.company.name}',
+            f'    User: demo@Seshat.dev / demo1234  |  Company: {self.company.name}',
         )
     # ──────────────────────────────────────────────
     # Core

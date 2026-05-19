@@ -8,6 +8,7 @@
 import { ref, readonly, computed } from 'vue'
 import authApi from '@/services/auth'
 import { setActiveCompany } from '@/services/api'
+import { useFacebookSdk } from '@/composables/useFacebookSdk'
 
 // ── Singleton state (shared across all components) ────
 const user = ref(null)
@@ -58,6 +59,12 @@ export function useAuth() {
       companies.value = me.companies
     } catch { /* non-critical */ }
     return data
+  }
+
+  async function connectFacebook() {
+    const { login: fbLogin } = useFacebookSdk()
+    const auth = await fbLogin()
+    return authApi.connectFacebook(auth.accessToken)
   }
 
   async function register(payload) {
@@ -128,6 +135,7 @@ export function useAuth() {
       payload = new FormData()
       if (data.first_name !== undefined) payload.append('first_name', data.first_name)
       if (data.last_name !== undefined) payload.append('last_name', data.last_name)
+      if (data.phone !== undefined) payload.append('phone', data.phone)
       payload.append('avatar', data.avatar)
     }
     const updated = await authApi.updateProfile(payload)
@@ -153,6 +161,7 @@ export function useAuth() {
 
     // Methods
     login,
+    connectFacebook,
     register,
     logout,
     fetchMe,

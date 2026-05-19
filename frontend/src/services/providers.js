@@ -1,4 +1,4 @@
-import { createResource, get, post } from './api'
+import { createResource, get, post, getBlob } from './api'
 
 const providersResource = createResource('/providers/')
 
@@ -31,5 +31,9 @@ export default {
 
   async search(query, filters = {}) {
     return get('/providers/', { search: query, ...filters })
+  },
+
+  async export(filters = {}) {
+    return getBlob('/providers/export/', filters)
   },
 }

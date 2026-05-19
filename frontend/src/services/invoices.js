@@ -93,10 +93,10 @@ export default {
   },
 
   /**
-   * Export invoices to CSV
+   * Export invoices to XLSX (returns Blob)
    */
   async export(filters = {}) {
-    return get('/invoices/export/', filters)
+    return getBlob('/invoices/export/', filters)
   },
 
   /**

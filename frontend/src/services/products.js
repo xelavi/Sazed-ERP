@@ -1,7 +1,7 @@
 /**
  * Products API service
  */
-import { createResource, get, post } from './api'
+import { createResource, get, post, getBlob } from './api'
 
 const productsResource = createResource('/products/')
 
@@ -23,10 +23,10 @@ export default {
   },
 
   /**
-   * Export products to CSV
+   * Export products to XLSX (returns Blob)
    */
   async export(filters = {}) {
-    return get('/products/export/', filters)
+    return getBlob('/products/export/', filters)
   },
 
   /**

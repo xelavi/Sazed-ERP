@@ -138,3 +138,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
+
+# ── Facebook / Graph API ──────────────────────────────
+FACEBOOK_APP_ID = config('FACEBOOK_APP_ID', default='')
+FACEBOOK_APP_SECRET = config('FACEBOOK_APP_SECRET', default='')
+FACEBOOK_GRAPH_VERSION = config('FACEBOOK_GRAPH_VERSION', default='v19.0')

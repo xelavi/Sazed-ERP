@@ -7,9 +7,9 @@
           <span class="count-badge">{{ providers.length }}</span>
         </div>
         <div class="header-actions">
-          <button class="btn btn-secondary">
+          <button class="btn btn-secondary" :disabled="exporting" @click="handleExport">
             <Download :size="18" />
-            <span>Export</span>
+            <span>{{ exporting ? 'Exportando…' : 'Export' }}</span>
           </button>
           <button class="btn btn-primary" @click="openProviderForm()">
             <Plus :size="18" />
@@ -170,11 +170,29 @@ import {
 import ProviderDetailDrawer from '@/components/ProviderDetailDrawer.vue'
 import ProviderFormModal from '@/components/ProviderFormModal.vue'
 import providersApi from '@/services/providers'
+import { saveBlob } from '@/services/api'
 import { mapProviderFromApi, mapProviderDetailFromApi, mapProviderToApi, parseDrfErrors } from '../services/mappers'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
 const loading = ref(false)
+const exporting = ref(false)
+
+async function handleExport() {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    const blob = await providersApi.export()
+    const stamp = new Date().toISOString().slice(0, 10)
+    saveBlob(blob, `proveedores-${stamp}.xlsx`)
+    toast.success('Exportación generada')
+  } catch (err) {
+    console.error('Export failed:', err)
+    toast.error(err.message || 'Error al exportar proveedores')
+  } finally {
+    exporting.value = false
+  }
+}
 
 async function fetchProviders() {
   loading.value = true

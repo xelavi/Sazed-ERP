@@ -73,10 +73,6 @@
                 Details
               </h4>
               <div class="detail-row">
-                <span class="detail-label">Series</span>
-                <span class="detail-value">{{ invoice.series }}</span>
-              </div>
-              <div class="detail-row">
                 <span class="detail-label">Issue date</span>
                 <span class="detail-value">{{ formatDateShort(invoice.issueDate) }}</span>
               </div>

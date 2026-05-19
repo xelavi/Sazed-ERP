@@ -23,6 +23,8 @@ class CompanyMiddleware:
     EXEMPT_PREFIXES = (
         '/api/auth/',
         '/api/companies/',
+        '/api/integrations/',
+        '/api/settings/',
         '/admin/',
         '/static/',
         '/media/',

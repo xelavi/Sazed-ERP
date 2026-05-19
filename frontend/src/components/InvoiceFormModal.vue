@@ -31,33 +31,18 @@
                 <h3 class="section-title">Invoice details</h3>
                 <p class="section-desc">Set the customer, dates, and payment terms for this invoice.</p>
 
-                <div class="field-row">
-                  <div class="field">
-                    <label class="field-label">Customer <span class="required">*</span></label>
-                    <select
-                      class="select"
-                      :class="{ 'input-error': touched.customer && !form.customerId }"
-                      v-model="form.customerId"
-                      @blur="touched.customer = true"
-                    >
-                      <option value="">Select customer...</option>
-                      <option v-for="c in customerOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
-                    </select>
-                    <span v-if="touched.customer && !form.customerId" class="field-error">Customer is required</span>
-                  </div>
-                  <div class="field">
-                    <label class="field-label">Series <span class="required">*</span></label>
-                    <select
-                      class="select"
-                      :class="{ 'input-error': touched.series && !form.seriesId }"
-                      v-model="form.seriesId"
-                      @blur="touched.series = true"
-                    >
-                      <option :value="null" disabled>Select series...</option>
-                      <option v-for="s in activeSeries" :key="s.id" :value="s.id">{{ s.prefix }} — {{ s.name }}</option>
-                    </select>
-                    <span v-if="touched.series && !form.seriesId" class="field-error">Series is required</span>
-                  </div>
+                <div class="field">
+                  <label class="field-label">Customer <span class="required">*</span></label>
+                  <select
+                    class="select"
+                    :class="{ 'input-error': touched.customer && !form.customerId }"
+                    v-model="form.customerId"
+                    @blur="touched.customer = true"
+                  >
+                    <option value="">Select customer...</option>
+                    <option v-for="c in customerOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
+                  </select>
+                  <span v-if="touched.customer && !form.customerId" class="field-error">Customer is required</span>
                 </div>
 
                 <div class="field-row field-row-3">
@@ -300,7 +285,6 @@ function findSeriesIdByPrefix(prefix) {
 /* ── Touched state for inline validation ── */
 const touched = reactive({
   customer: false,
-  series: false,
   issueDate: false,
   dueDate: false,
 })
@@ -525,7 +509,6 @@ const calcTotal = computed(() => {
 /* ── Validation ── */
 const isFormValid = computed(() => {
   if (!form.customerId) return false
-  if (!form.seriesId) return false
   if (!form.issueDate || !form.dueDate) return false
   if (form.lines.length === 0) return false
   return form.lines.some(l => l.description && l.quantity > 0 && l.unitPrice >= 0)
@@ -534,7 +517,6 @@ const isFormValid = computed(() => {
 const approvalMissing = computed(() => {
   const missing = []
   if (!form.customerId) missing.push('Customer is required')
-  if (!form.seriesId) missing.push('Series is required')
   if (!form.issueDate) missing.push('Issue date is required')
   if (!form.dueDate) missing.push('Due date is required')
   const validLines = form.lines.filter(l => l.description && l.quantity > 0 && l.unitPrice >= 0)
@@ -550,7 +532,6 @@ const approvalTooltip = computed(() => {
 function getValidationErrors(requireAll = false) {
   const errors = []
   if (!form.customerId) errors.push('Customer is required')
-  if (!form.seriesId) errors.push('Series is required')
   if (!form.issueDate) errors.push('Issue date is required')
   if (!form.dueDate) errors.push('Due date is required')
   const validLines = form.lines.filter(l => l.description && l.quantity > 0 && l.unitPrice >= 0)

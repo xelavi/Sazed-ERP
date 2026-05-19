@@ -9,13 +9,13 @@
             <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
-        <span class="logo-text">Sazed ERP</span>
+        <span class="logo-text">Seshat ERP</span>
       </div>
 
       <div class="onboarding-header">
         <h2>Configura tus empresas</h2>
         <p class="onboarding-subtitle">
-          Crea al menos una empresa para empezar a usar Sazed ERP.
+          Crea al menos una empresa para empezar a usar Seshat ERP.
           Si alguien te ha invitado a una empresa existente, aparecerá automáticamente.
         </p>
       </div>

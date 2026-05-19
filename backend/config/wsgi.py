@@ -1,5 +1,5 @@
 """
-WSGI config for Sazed ERP project.
+WSGI config for Seshat ERP project.
 """
 import os
 

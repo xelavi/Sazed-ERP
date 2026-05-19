@@ -9,7 +9,7 @@
             <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
-        <span class="logo-text">Sazed ERP</span>
+        <span class="logo-text">Seshat ERP</span>
       </div>
 
       <h2 class="auth-title">Iniciar sesión</h2>
@@ -79,7 +79,7 @@
       </router-link>
 
       <p class="auth-footer-text">
-        © {{ new Date().getFullYear() }} Sazed ERP
+        © {{ new Date().getFullYear() }} Seshat ERP
       </p>
     </div>
   </div>
@@ -133,6 +133,7 @@ async function handleLogin() {
     isSubmitting.value = false
   }
 }
+
 </script>
 
 <style scoped>
@@ -301,6 +302,7 @@ async function handleLogin() {
   margin-top: 1.5rem;
   margin-bottom: 0;
 }
+
 
 /* ============================
    RESPONSIVE

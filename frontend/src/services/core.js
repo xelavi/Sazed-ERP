@@ -2,7 +2,7 @@
  * Core/Config API service
  * For tax rates, warehouses, sales channels, tags, etc.
  */
-import { createResource, get, post } from './api'
+import { createResource, get, post, del } from './api'
 
 export default {
   /**
@@ -26,6 +26,9 @@ export default {
     },
     async create(data) {
       return post('/warehouses/', data)
+    },
+    async delete(id) {
+      return del(`/warehouses/${id}/`)
     },
   },
 
