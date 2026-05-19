@@ -1,11 +1,31 @@
 /**
  * Auth API service
  */
-import { get, post, patch, apiFetch } from './api'
+import { get, post, patch, del, apiFetch } from './api'
 
 export default {
   async login(email, password) {
     return post('/auth/login/', { email, password })
+  },
+
+  async connectFacebook(accessToken) {
+    return post('/integrations/facebook/connect/', { access_token: accessToken })
+  },
+
+  async facebookStatus() {
+    return get('/integrations/facebook/status/')
+  },
+
+  async facebookPages() {
+    return get('/integrations/facebook/pages/')
+  },
+
+  async facebookInstagram(pageId) {
+    return get('/integrations/facebook/instagram/', { page_id: pageId })
+  },
+
+  async facebookDisconnect() {
+    return post('/integrations/facebook/disconnect/', {})
   },
 
   async register(data) {
@@ -57,6 +77,10 @@ export default {
 
   async createCompany(data) {
     return post('/companies/', data)
+  },
+
+  async deleteCompany(id) {
+    return del(`/companies/${id}/`)
   },
 
   async getMembers(companyId) {

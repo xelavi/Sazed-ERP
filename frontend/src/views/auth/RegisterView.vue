@@ -9,7 +9,7 @@
             <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
-        <span class="logo-text">Sazed ERP</span>
+        <span class="logo-text">Seshat ERP</span>
       </div>
 
       <h2 class="auth-title">Crear cuenta</h2>
@@ -133,7 +133,7 @@
       </p>
 
       <p class="auth-footer-text">
-        © {{ new Date().getFullYear() }} Sazed ERP
+        © {{ new Date().getFullYear() }} Seshat ERP
       </p>
     </div>
   </div>

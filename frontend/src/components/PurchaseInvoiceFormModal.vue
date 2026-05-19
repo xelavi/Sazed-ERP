@@ -31,33 +31,18 @@
                 <h3 class="section-title">Purchase invoice details</h3>
                 <p class="section-desc">Set the provider, dates, and payment terms.</p>
 
-                <div class="field-row">
-                  <div class="field">
-                    <label class="field-label">Provider <span class="required">*</span></label>
-                    <select
-                      class="select"
-                      :class="{ 'input-error': touched.provider && !form.providerId }"
-                      v-model="form.providerId"
-                      @blur="touched.provider = true"
-                    >
-                      <option value="">Select provider...</option>
-                      <option v-for="p in providerOptions" :key="p.id" :value="p.id">{{ p.name }}</option>
-                    </select>
-                    <span v-if="touched.provider && !form.providerId" class="field-error">Provider is required</span>
-                  </div>
-                  <div class="field">
-                    <label class="field-label">Series <span class="required">*</span></label>
-                    <select
-                      class="select"
-                      :class="{ 'input-error': touched.series && !form.seriesId }"
-                      v-model="form.seriesId"
-                      @blur="touched.series = true"
-                    >
-                      <option :value="null" disabled>Select series...</option>
-                      <option v-for="s in activeSeries" :key="s.id" :value="s.id">{{ s.prefix }} — {{ s.name }}</option>
-                    </select>
-                    <span v-if="touched.series && !form.seriesId" class="field-error">Series is required</span>
-                  </div>
+                <div class="field">
+                  <label class="field-label">Provider <span class="required">*</span></label>
+                  <select
+                    class="select"
+                    :class="{ 'input-error': touched.provider && !form.providerId }"
+                    v-model="form.providerId"
+                    @blur="touched.provider = true"
+                  >
+                    <option value="">Select provider...</option>
+                    <option v-for="p in providerOptions" :key="p.id" :value="p.id">{{ p.name }}</option>
+                  </select>
+                  <span v-if="touched.provider && !form.providerId" class="field-error">Provider is required</span>
                 </div>
 
                 <div class="field-row field-row-3">
@@ -262,7 +247,6 @@ function findSeriesIdByPrefix(prefix) {
 
 const touched = reactive({
   provider: false,
-  series: false,
   issueDate: false,
   dueDate: false,
 })
@@ -463,7 +447,6 @@ const calcTotal = computed(() => calcTaxBase.value + calcTotalTax.value - calcTo
 const approvalMissing = computed(() => {
   const missing = []
   if (!form.providerId) missing.push('Provider is required')
-  if (!form.seriesId) missing.push('Series is required')
   if (!form.issueDate) missing.push('Issue date is required')
   if (!form.dueDate) missing.push('Due date is required')
   const validLines = form.lines.filter(l => l.description && l.quantity > 0 && l.unitPrice >= 0)
@@ -479,7 +462,6 @@ const approvalTooltip = computed(() => {
 function getValidationErrors(requireAll = false) {
   const errors = []
   if (!form.providerId) errors.push('Provider is required')
-  if (!form.seriesId) errors.push('Series is required')
   if (!form.issueDate) errors.push('Issue date is required')
   if (!form.dueDate) errors.push('Due date is required')
   const validLines = form.lines.filter(l => l.description && l.quantity > 0 && l.unitPrice >= 0)

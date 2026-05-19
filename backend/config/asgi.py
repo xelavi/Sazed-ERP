@@ -1,5 +1,5 @@
 """
-ASGI config for Sazed ERP project.
+ASGI config for Seshat ERP project.
 """
 import os
 

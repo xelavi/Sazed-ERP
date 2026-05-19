@@ -1,23 +1,37 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { 
-  Home, Package, DollarSign, Users, Megaphone, 
-  Globe, Link, Settings, ChevronDown, ChevronRight,
-  Menu, Search, Bell, HelpCircle, Eye, ShoppingBag, Archive,
-  ClipboardList, Wallet, CreditCard, TrendingUp, FolderOpen, Plus,
+import { useAuth } from '@/composables/useAuth'
+import { useInbox } from '@/composables/useInbox'
+import {
+  Home, Package, Users,
+  Globe, Settings, ChevronDown, ChevronRight,
+  Menu, Search, Bell, HelpCircle, ShoppingBag,
+  ClipboardList, TrendingUp,
   Receipt, FileText, Share2, AtSign, Image, Target, Star,
   Upload, ExternalLink, BarChart2, AlertTriangle, UserCheck, Truck
 } from 'lucide-vue-next'
-import CompanySwitcher from '@/components/CompanySwitcher.vue'
+import UserMenu from '@/components/UserMenu.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
 
 const route = useRoute()
+const { isAuthenticated } = useAuth()
+const { unreadTotal, refresh: refreshInbox } = useInbox()
 const isSidebarCollapsed = ref(false)
 const expandedMenus = ref({})
 const searchQuery = ref('')
 
 const isAuthPage = computed(() => route.meta.layout === 'empty')
+
+onMounted(() => {
+  if (isAuthenticated.value) refreshInbox()
+})
+watch(isAuthenticated, (v) => {
+  if (v) refreshInbox()
+})
+watch(() => route.fullPath, () => {
+  if (isAuthenticated.value) refreshInbox()
+})
 
 const currentDate = computed(() => {
   const now = new Date()
@@ -37,9 +51,7 @@ const menuItems = [
     icon: Package, 
     submenu: [
       { label: 'Products', route: '/products', icon: ShoppingBag },
-      { label: 'Collections', route: '/collections', icon: Archive },
-      { label: 'Inventory', route: '/inventory', icon: ClipboardList },
-      { label: 'Orders', route: '/orders', icon: ClipboardList }
+      { label: 'Inventory', route: '/inventory', icon: ClipboardList }
     ]
   },
   {
@@ -58,16 +70,6 @@ const menuItems = [
       { label: 'Purchase Invoices', route: '/purchase-invoices', icon: FileText }
     ]
   },
-  { 
-    id: 'finances', 
-    label: 'Finances', 
-    icon: DollarSign, 
-    submenu: [
-      { label: 'Wallet', route: '/wallet', icon: Wallet },
-      { label: 'Uvodo Card', route: '/card', icon: CreditCard },
-      { label: 'Payout', route: '/payout', icon: TrendingUp }
-    ]
-  },
   {
     id: 'customers',
     label: 'Customers',
@@ -80,43 +82,19 @@ const menuItems = [
     icon: Truck,
     route: '/providers'
   },
-  { 
-    id: 'marketing', 
-    label: 'Marketing', 
-    icon: Megaphone, 
-    route: '/marketing' 
-  },
   {
     id: 'social-crm',
     label: 'Social CRM',
     icon: Share2,
     submenu: [
-      { label: 'Dashboard',      route: '/social-crm',                icon: BarChart2 },
-      { label: 'Cuentas',        route: '/social-crm/accounts',       icon: AtSign },
-      { label: 'Publicaciones',  route: '/social-crm/posts',          icon: Image },
-      { label: 'Campañas',       route: '/social-crm/campaigns',      icon: Target },
-      { label: 'Influencers',    route: '/social-crm/influencers',    icon: Star },
-      { label: 'Colaboraciones', route: '/social-crm/collaborations', icon: UserCheck },
-      { label: 'Métricas',       route: '/social-crm/metrics',        icon: Upload },
-      { label: 'Enlaces',        route: '/social-crm/links',          icon: ExternalLink },
-      { label: 'Analítica',      route: '/social-crm/analytics',      icon: TrendingUp },
-      { label: 'Informes',       route: '/social-crm/reports',        icon: FileText },
-      { label: 'Alertas',        route: '/social-crm/alerts',         icon: AlertTriangle },
-      { label: 'Configuración',  route: '/social-crm/settings',       icon: Settings },
+      { label: 'Dashboard',   route: '/social-crm',             icon: BarChart2 },
+      { label: 'Contenido',   route: '/social-crm/content',     icon: Image },
+      { label: 'Campañas',    route: '/social-crm/campaigns',   icon: Target },
+      { label: 'Influencers', route: '/social-crm/influencers', icon: Star },
+      { label: 'Atribución',  route: '/social-crm/attribution', icon: TrendingUp },
+      { label: 'Ajustes',     route: '/social-crm/settings',    icon: Settings },
     ]
   }
-]
-
-const salesChannels = [
-  { id: 'online-store', label: 'Online Store', icon: Globe, route: '/online-store' },
-  { id: 'sell-link', label: 'Sell Via Link', icon: Link, route: '/sell-link' }
-]
-
-const projects = [
-  { id: '1', name: 'Website Redesign', color: '#8B5CF6' },
-  { id: '2', name: 'Mobile App', color: '#EC4899' },
-  { id: '3', name: 'Marketing Campaign', color: '#10B981' },
-  { id: '4', name: 'Product Launch', color: '#F59E0B' },
 ]
 
 const toggleMenu = (menuId) => {
@@ -157,16 +135,23 @@ const toggleSidebar = () => {
         <button class="topbar-btn" aria-label="Help">
           <HelpCircle :size="20" />
         </button>
-        <button class="topbar-btn notification-btn" aria-label="Notifications">
+        <router-link
+          to="/inbox"
+          class="topbar-btn notification-btn"
+          aria-label="Buzón"
+          :class="{ 'has-unread': unreadTotal > 0 }"
+        >
           <Bell :size="20" />
-          <span class="notification-dot"></span>
-        </button>
+          <span v-if="unreadTotal > 0" class="notification-badge">
+            {{ unreadTotal > 9 ? '9+' : unreadTotal }}
+          </span>
+        </router-link>
         <button class="topbar-btn lang-btn">
           <Globe :size="16" />
           <span class="lang-label">EN</span>
         </button>
         <div class="topbar-divider"></div>
-        <CompanySwitcher />
+        <UserMenu />
       </div>
     </header>
 
@@ -182,7 +167,7 @@ const toggleSidebar = () => {
                 <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
               </svg>
             </div>
-            <span v-if="!isSidebarCollapsed" class="logo-text">Sazed ERP</span>
+            <span v-if="!isSidebarCollapsed" class="logo-text">Seshat ERP</span>
           </div>
         </div>
 
@@ -225,38 +210,7 @@ const toggleSidebar = () => {
             </li>
           </ul>
 
-          <div class="nav-divider">
-            <span v-if="!isSidebarCollapsed" class="divider-label">Sales channels</span>
-          </div>
-
-          <ul class="nav-list">
-            <li v-for="channel in salesChannels" :key="channel.id" class="nav-item">
-              <router-link :to="channel.route" class="nav-link" active-class="active">
-                <component :is="channel.icon" :size="20" class="nav-icon" />
-                <span v-if="!isSidebarCollapsed" class="nav-label">{{ channel.label }}</span>
-                <Eye v-if="!isSidebarCollapsed" :size="16" class="channel-eye" />
-              </router-link>
-            </li>
-          </ul>
         </nav>
-
-        <!-- Projects section -->
-        <div v-if="!isSidebarCollapsed" class="sidebar-projects">
-          <div class="projects-header">
-            <span class="divider-label">Projects</span>
-            <button class="projects-add-btn">
-              <Plus :size="16" />
-            </button>
-          </div>
-          <ul class="projects-list">
-            <li v-for="project in projects" :key="project.id">
-              <button class="project-item">
-                <span class="project-dot" :style="{ backgroundColor: project.color }"></span>
-                <span class="project-name">{{ project.name }}</span>
-              </button>
-            </li>
-          </ul>
-        </div>
 
         <div class="sidebar-footer">
           <router-link to="/settings" class="nav-link" active-class="active">
@@ -386,16 +340,30 @@ const toggleSidebar = () => {
 
 .notification-btn {
   position: relative;
+  text-decoration: none;
 }
 
-.notification-dot {
+.notification-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.3rem;
   background: var(--accent-orange);
-  border-radius: 50%;
+  color: white;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border: 2px solid var(--topbar-bg);
+}
+
+.notification-btn.has-unread {
+  color: #fff;
 }
 
 .lang-btn {
@@ -563,98 +531,6 @@ const toggleSidebar = () => {
 
 .submenu-icon {
   flex-shrink: 0;
-}
-
-.nav-divider {
-  padding: 1.25rem 1.25rem 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.divider-label {
-  font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.35);
-  text-transform: uppercase;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-}
-
-.channel-eye {
-  margin-left: auto;
-  opacity: 0.35;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* ============================
-   PROJECTS SECTION
-   ============================ */
-.sidebar-projects {
-  padding: 0 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.projects-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 0.75rem;
-  margin-bottom: 0.375rem;
-}
-
-.projects-add-btn {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.35);
-  padding: 0.25rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  display: flex;
-  align-items: center;
-}
-
-.projects-add-btn:hover {
-  color: #fff;
-}
-
-.projects-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.project-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: var(--font-size-sm);
-  background: none;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  font-family: var(--font-family);
-  text-align: left;
-}
-
-.project-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-}
-
-.project-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.project-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ============================

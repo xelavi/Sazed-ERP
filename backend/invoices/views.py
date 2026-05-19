@@ -4,6 +4,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from accounts.mixins import CompanyMixin
+from core.excel import build_xlsx_response
 from .models import Invoice, InvoiceSeries, Payment, EventLog
 from .serializers import (
     InvoiceListSerializer, InvoiceDetailSerializer, InvoiceWriteSerializer,
@@ -260,6 +261,58 @@ class InvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
             'deleted': deleted[0],
             'skipped': len(ids) - deleted[0],
         })
+
+    # ---------- Export ----------
+
+    @action(detail=False, methods=['get'])
+    def export(self, request):
+        """Descarga el listado de facturas en XLSX (respeta filtros)."""
+        qs = self.filter_queryset(self.get_queryset())
+        ids_param = request.query_params.get('ids')
+        if ids_param:
+            try:
+                ids = [int(x) for x in ids_param.split(',') if x.strip()]
+                qs = qs.filter(id__in=ids)
+            except ValueError:
+                pass
+
+        headers = [
+            'Número', 'Serie', 'Tipo', 'Estado',
+            'Cliente', 'NIF Cliente',
+            'Fecha emisión', 'Fecha vencimiento',
+            'Subtotal', 'IVA', 'Retención', 'Total',
+            'Pagado', 'Pendiente', 'Moneda',
+            'Estado AEAT', 'CSV VeriFactu',
+        ]
+        rows = []
+        for inv in qs:
+            customer_name = (
+                inv.customer.name if inv.customer_id
+                else ''
+            ) or inv.customer_name_snapshot
+            customer_vat = inv.customer_vat_snapshot or (
+                inv.customer.vat_id if inv.customer_id else ''
+            )
+            rows.append([
+                inv.number or f'(Borrador #{inv.pk})',
+                inv.series.prefix if inv.series_id else '',
+                inv.get_invoice_type_display() if inv.invoice_type else '',
+                inv.get_status_display() if inv.status else '',
+                customer_name,
+                customer_vat,
+                inv.issue_date,
+                inv.due_date,
+                inv.subtotal,
+                inv.total_tax,
+                inv.total_retention,
+                inv.total_amount,
+                inv.paid_amount,
+                inv.balance_due,
+                inv.currency,
+                inv.get_estado_aeat_display() if inv.estado_aeat else '',
+                inv.verifactu_csv or '',
+            ])
+        return build_xlsx_response('facturas', 'Facturas', headers, rows)
 
 
 # ──────────────────────────────────────────────────────────────────────────────

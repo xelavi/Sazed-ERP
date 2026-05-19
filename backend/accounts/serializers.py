@@ -5,7 +5,7 @@ Serializers for accounts app.
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from .models import User, Company, Membership
+from .models import User, Company, Membership, Notification, Message, Invitation
 
 
 # ── Auth ───────────────────────────────────────────────
@@ -109,10 +109,10 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'first_name', 'last_name',
-            'full_name', 'initials', 'avatar', 'date_joined',
+            'id', 'email', 'first_name', 'last_name', 'phone',
+            'full_name', 'initials', 'avatar', 'date_joined', 'is_staff',
         ]
-        read_only_fields = ['id', 'email', 'date_joined']
+        read_only_fields = ['id', 'email', 'date_joined', 'is_staff']
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -120,7 +120,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'avatar']
+        fields = ['first_name', 'last_name', 'phone', 'avatar']
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -243,3 +243,139 @@ class SwitchCompanySerializer(serializers.Serializer):
         if not Membership.objects.filter(user=user, company_id=value).exists():
             raise serializers.ValidationError('No perteneces a esta empresa.')
         return value
+
+
+# ── Inbox: user lookup ─────────────────────────────────
+
+
+class UserLiteSerializer(serializers.ModelSerializer):
+    """Minimal user info for search results / message previews."""
+
+    full_name = serializers.ReadOnlyField()
+    initials = serializers.ReadOnlyField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name', 'full_name', 'initials', 'avatar']
+
+
+# ── Inbox: Notifications ───────────────────────────────
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'kind', 'title', 'body', 'link', 'read', 'created_at']
+        read_only_fields = fields
+
+
+# ── Inbox: Messages ────────────────────────────────────
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender = UserLiteSerializer(read_only=True)
+    recipient = UserLiteSerializer(read_only=True)
+
+    class Meta:
+        model = Message
+        fields = [
+            'id', 'sender', 'recipient', 'company',
+            'subject', 'body', 'parent', 'read', 'created_at',
+        ]
+        read_only_fields = fields
+
+
+class MessageCreateSerializer(serializers.ModelSerializer):
+    recipient_id = serializers.IntegerField(write_only=True)
+    parent = serializers.PrimaryKeyRelatedField(
+        queryset=Message.objects.all(),
+        allow_null=True,
+        required=False,
+    )
+
+    class Meta:
+        model = Message
+        fields = ['recipient_id', 'subject', 'body', 'parent']
+
+    def validate(self, attrs):
+        request = self.context['request']
+        sender = request.user
+
+        # When replying, inherit the company from the parent message so the
+        # reply lands in the same company regardless of the user's active company.
+        parent = attrs.get('parent')
+        if parent:
+            company_id = parent.company_id
+        else:
+            company_id = request.headers.get('X-Company') or request.META.get('HTTP_X_COMPANY')
+
+        if not company_id:
+            raise serializers.ValidationError('Falta el contexto de empresa.')
+
+        # Sender must belong to company
+        if not Membership.objects.filter(user=sender, company_id=company_id).exists():
+            raise serializers.ValidationError('No perteneces a esta empresa.')
+
+        recipient_id = attrs['recipient_id']
+        if recipient_id == sender.id:
+            raise serializers.ValidationError('No puedes enviarte un mensaje a ti mismo.')
+
+        # Recipient must belong to the same company
+        if not Membership.objects.filter(
+            user_id=recipient_id, company_id=company_id,
+        ).exists():
+            raise serializers.ValidationError(
+                'El destinatario no pertenece a esta empresa.',
+            )
+
+        attrs['_sender'] = sender
+        attrs['_company_id'] = int(company_id)
+        return attrs
+
+    def create(self, validated_data):
+        sender = validated_data.pop('_sender')
+        company_id = validated_data.pop('_company_id')
+        recipient_id = validated_data.pop('recipient_id')
+
+        return Message.objects.create(
+            sender=sender,
+            recipient_id=recipient_id,
+            company_id=company_id,
+            subject=validated_data['subject'],
+            body=validated_data['body'],
+            parent=validated_data.get('parent'),
+        )
+
+
+# ── Inbox: Invitations ─────────────────────────────────
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    inviter = UserLiteSerializer(read_only=True)
+    invitee = UserLiteSerializer(read_only=True)
+    company_name = serializers.CharField(source='company.name', read_only=True)
+    company_logo = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Invitation
+        fields = [
+            'id', 'company', 'company_name', 'company_logo',
+            'inviter', 'invitee', 'role', 'status',
+            'created_at', 'responded_at',
+        ]
+        read_only_fields = fields
+
+    def get_company_logo(self, obj):
+        if obj.company.logo:
+            return obj.company.logo.url
+        return None
+
+
+class InvitationCreateSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    role = serializers.ChoiceField(
+        choices=Membership.Role.choices, default='editor',
+    )
+
+    def validate_email(self, value):
+        return value.lower()

@@ -1,8 +1,8 @@
 <template>
-  <div class="profile-view">
+  <div class="account-view">
     <div class="view-header">
-      <h1>Mi cuenta</h1>
-      <p class="view-subtitle">Gestiona tu perfil personal y preferencias</p>
+      <h1>Gestión de cuenta</h1>
+      <p class="view-subtitle">Tus datos personales y de seguridad</p>
     </div>
 
     <div class="content-wrapper">
@@ -11,7 +11,7 @@
         <div class="card-header flex items-center justify-between">
           <div>
             <h3 class="card-title">Información personal</h3>
-            <p class="card-subtitle">Tu nombre y avatar visibles para tu equipo</p>
+            <p class="card-subtitle">Datos visibles para tu equipo</p>
           </div>
           <button v-if="!editingProfile" class="btn btn-secondary btn-sm" @click="startEditProfile">
             <Pencil :size="14" />
@@ -50,9 +50,26 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Email</label>
-            <input :value="user?.email" class="input" disabled />
-            <span class="field-hint">El email no se puede cambiar</span>
+            <label class="form-label">Teléfono</label>
+            <input
+              v-model="profileForm.phone"
+              class="input"
+              placeholder="+34 600 000 000"
+              inputmode="tel"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input :value="user?.email" class="input" disabled />
+              <span class="field-hint">El email no se puede cambiar</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Jerarquía</label>
+              <input :value="roleDisplay" class="input" disabled />
+              <span class="field-hint">Definida por el propietario de la empresa</span>
+            </div>
           </div>
 
           <div class="form-actions">
@@ -73,6 +90,17 @@
             <p class="profile-name">{{ user?.full_name || 'Sin nombre' }}</p>
             <p class="profile-email">{{ user?.email }}</p>
             <p class="profile-joined">Miembro desde {{ formatDate(user?.date_joined) }}</p>
+          </div>
+        </div>
+
+        <div v-if="!editingProfile" class="info-grid">
+          <div class="info-row">
+            <span class="info-label">Teléfono</span>
+            <span class="info-value">{{ user?.phone || '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Jerarquía</span>
+            <span class="info-value">{{ roleDisplay }}</span>
           </div>
         </div>
       </div>
@@ -97,55 +125,83 @@
         </div>
       </div>
 
-      <!-- Companies Card -->
+      <!-- Connected Accounts Card -->
       <div class="card">
-        <div class="card-header flex items-center justify-between">
-          <div>
-            <h3 class="card-title">Mis empresas</h3>
-            <p class="card-subtitle">Empresas a las que perteneces</p>
-          </div>
-          <button class="btn btn-primary btn-sm" @click="showCreateCompanyModal = true">
-            <Plus :size="14" />
-            Crear empresa
-          </button>
+        <div class="card-header">
+          <h3 class="card-title">Cuentas vinculadas</h3>
+          <p class="card-subtitle">Conecta redes sociales para usar sus APIs desde el ERP</p>
         </div>
-        <div class="companies-list">
-          <div
-            v-for="company in companies"
-            :key="company.id"
-            class="company-row"
-            :class="{ active: company.id === activeCompany?.id }"
-          >
-            <div class="company-info">
-              <div class="company-logo-sm">
-                <img v-if="company.logo" :src="company.logo" :alt="company.name" />
-                <span v-else>{{ company.name?.charAt(0) }}</span>
+
+        <div class="connected-accounts">
+          <!-- Facebook -->
+          <div class="connected-row">
+            <div class="connected-info">
+              <div class="connected-icon connected-icon--facebook">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M22 12a10 10 0 1 0-11.6 9.9v-7H8v-3h2.4V9.7c0-2.4 1.4-3.7 3.6-3.7c1 0 2.1.2 2.1.2v2.3H15c-1.2 0-1.5.7-1.5 1.5V12H16l-.4 3h-2.1v7A10 10 0 0 0 22 12"/>
+                </svg>
               </div>
               <div>
-                <p class="company-name">{{ company.name }}</p>
-                <span class="badge" :class="roleBadgeClass(company.role)">{{ roleLabel(company.role) }}</span>
+                <p class="connected-label">Facebook / Instagram</p>
+                <p v-if="fbStatus.connected" class="connected-detail connected-detail--active">
+                  Conectado como {{ fbStatus.extra_data?.name || fbStatus.provider_user_id }}
+                </p>
+                <p v-else-if="!fbAppConfigured" class="connected-detail">
+                  No configurado por el administrador
+                </p>
+                <p v-else class="connected-detail">
+                  Conecta para acceder a tus Páginas e Instagram Business
+                </p>
               </div>
             </div>
-            <div class="company-actions">
-              <span v-if="company.id === activeCompany?.id" class="badge badge-success">Activa</span>
+
+            <div class="connected-actions">
+              <span v-if="fbStatus.connected" class="badge badge-success">Activo</span>
               <button
-                v-else
-                class="btn btn-ghost btn-sm"
-                @click="handleSwitch(company.id)"
-                :disabled="switching"
+                v-if="!fbStatus.connected && fbAppConfigured"
+                class="btn btn-primary btn-sm"
+                :disabled="fbLoading"
+                @click="handleFbConnect"
               >
-                Cambiar
+                <span v-if="fbLoading" class="loading-spinner loading-spinner-sm"></span>
+                <span>{{ fbLoading ? 'Conectando…' : 'Conectar' }}</span>
               </button>
-              <router-link
-                v-if="company.role === 'owner' || company.role === 'admin'"
-                :to="'/settings/company'"
-                class="btn btn-ghost btn-sm"
+              <button
+                v-else-if="fbStatus.connected"
+                class="btn btn-ghost btn-sm btn-danger"
+                :disabled="fbLoading"
+                @click="handleFbDisconnect"
               >
-                <Settings :size="14" />
-              </router-link>
+                {{ fbLoading ? 'Desconectando…' : 'Desconectar' }}
+              </button>
             </div>
           </div>
-          <p v-if="!companies.length" class="empty-text">No perteneces a ninguna empresa</p>
+
+          <!-- Staff config panel: shown only to staff when not configured -->
+          <div v-if="canConfigureFb && !fbAppConfigured" class="fb-config-panel">
+            <p class="fb-config-title">Configurar integración de Facebook</p>
+            <p class="fb-config-desc">
+              Introduce el App ID y App Secret de tu app en
+              <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Facebook for Developers</a>.
+            </p>
+            <div class="fb-config-form">
+              <div class="form-group">
+                <label class="form-label">App ID <span class="required">*</span></label>
+                <input v-model="fbConfig.app_id" class="input" placeholder="123456789012345" autocomplete="off" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">App Secret <span class="required">*</span></label>
+                <input v-model="fbConfig.app_secret" class="input" type="password" placeholder="abcdef1234…" autocomplete="new-password" />
+              </div>
+              <button
+                class="btn btn-primary btn-sm"
+                :disabled="fbConfigSaving || !fbConfig.app_id || !fbConfig.app_secret"
+                @click="saveFbConfig"
+              >
+                {{ fbConfigSaving ? 'Guardando…' : 'Guardar configuración' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -205,76 +261,46 @@
         </div>
       </div>
     </Teleport>
-
-    <!-- Create Company Modal -->
-    <Teleport to="body">
-      <div v-if="showCreateCompanyModal" class="modal-overlay" @click.self="showCreateCompanyModal = false">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3>Crear nueva empresa</h3>
-            <button class="modal-close" @click="showCreateCompanyModal = false">
-              <X :size="20" />
-            </button>
-          </div>
-          <form @submit.prevent="handleCreateCompany" class="modal-body">
-            <div class="form-group">
-              <label class="form-label">Nombre de la empresa <span class="required">*</span></label>
-              <input v-model="newCompanyForm.name" class="input" required placeholder="Mi Empresa SL" />
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">CIF / NIF</label>
-                <input v-model="newCompanyForm.tax_id" class="input" placeholder="B12345678" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Moneda</label>
-                <select v-model="newCompanyForm.currency" class="select">
-                  <option value="EUR">EUR - Euro</option>
-                  <option value="USD">USD - Dólar</option>
-                  <option value="GBP">GBP - Libra</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email de contacto</label>
-              <input v-model="newCompanyForm.email" type="email" class="input" placeholder="info@empresa.com" />
-            </div>
-            <div class="modal-actions">
-              <button type="button" class="btn btn-ghost" @click="showCreateCompanyModal = false">Cancelar</button>
-              <button type="submit" class="btn btn-primary" :disabled="creatingCompany">
-                {{ creatingCompany ? 'Creando...' : 'Crear empresa' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
-import { Pencil, Camera, Lock, Plus, Settings, X } from 'lucide-vue-next'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { Pencil, Camera, Lock, X } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
 import { useToast } from '@/composables/useToast'
 import authApi from '@/services/auth'
+import { get, patch } from '@/services/api'
 
 const {
-  user, companies, activeCompany,
-  updateProfile, changePassword, switchCompany, fetchMe,
+  user, activeCompany, activeRole,
+  updateProfile, changePassword, connectFacebook,
 } = useAuth()
 const toast = useToast()
 
-// ── Profile editing ─────────────────────────
 const editingProfile = ref(false)
 const savingProfile = ref(false)
-const profileForm = reactive({ first_name: '', last_name: '' })
+const profileForm = reactive({ first_name: '', last_name: '', phone: '' })
 const avatarFile = ref(null)
 const avatarPreview = ref(null)
+
+const roleDisplay = computed(() => {
+  if (!activeRole.value) return '—'
+  const label = roleLabel(activeRole.value)
+  return activeCompany.value?.name
+    ? `${label} en ${activeCompany.value.name}`
+    : label
+})
+
+function roleLabel(role) {
+  const map = { owner: 'Propietario', admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' }
+  return map[role] || role
+}
 
 function startEditProfile() {
   profileForm.first_name = user.value?.first_name || ''
   profileForm.last_name = user.value?.last_name || ''
+  profileForm.phone = user.value?.phone || ''
   avatarPreview.value = user.value?.avatar || null
   avatarFile.value = null
   editingProfile.value = true
@@ -303,6 +329,7 @@ async function saveProfile() {
     const data = {
       first_name: profileForm.first_name.trim(),
       last_name: profileForm.last_name.trim(),
+      phone: profileForm.phone.trim(),
     }
     if (avatarFile.value) data.avatar = avatarFile.value
     await updateProfile(data)
@@ -315,7 +342,7 @@ async function saveProfile() {
   }
 }
 
-// ── Password ────────────────────────────────
+// Password change
 const showPasswordModal = ref(false)
 const savingPassword = ref(false)
 const passwordForm = reactive({ current: '', newPassword: '', confirm: '' })
@@ -354,70 +381,90 @@ async function handleChangePassword() {
   }
 }
 
-// ── Companies ───────────────────────────────
-const switching = ref(false)
-
-async function handleSwitch(companyId) {
-  switching.value = true
-  try {
-    await switchCompany(companyId)
-    toast.success('Empresa cambiada')
-  } catch {
-    toast.error('Error al cambiar de empresa')
-  } finally {
-    switching.value = false
-  }
-}
-
-// ── Create Company ──────────────────────────
-const showCreateCompanyModal = ref(false)
-const creatingCompany = ref(false)
-const newCompanyForm = reactive({ name: '', tax_id: '', email: '', currency: 'EUR' })
-
-async function handleCreateCompany() {
-  if (!newCompanyForm.name.trim()) return
-  creatingCompany.value = true
-  try {
-    await authApi.createCompany({
-      name: newCompanyForm.name.trim(),
-      tax_id: newCompanyForm.tax_id.trim(),
-      email: newCompanyForm.email.trim(),
-      currency: newCompanyForm.currency,
-    })
-    toast.success('Empresa creada')
-    showCreateCompanyModal.value = false
-    newCompanyForm.name = ''
-    newCompanyForm.tax_id = ''
-    newCompanyForm.email = ''
-    newCompanyForm.currency = 'EUR'
-    // Refresh companies list
-    await fetchMe()
-  } catch (err) {
-    toast.error(err.message || 'Error al crear la empresa')
-  } finally {
-    creatingCompany.value = false
-  }
-}
-
-// ── Helpers ─────────────────────────────────
 function formatDate(dateStr) {
   if (!dateStr) return '—'
   return new Date(dateStr).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
 }
 
-function roleLabel(role) {
-  const map = { owner: 'Propietario', admin: 'Admin', editor: 'Editor', viewer: 'Lector' }
-  return map[role] || role
+// ── Facebook ──────────────────────────────────────────
+const fbStatus = reactive({ connected: false, provider_user_id: null, extra_data: {} })
+const fbAppConfigured = ref(false)
+const canConfigureFb = ref(false)
+const fbLoading = ref(false)
+const fbConfig = reactive({ app_id: '', app_secret: '' })
+const fbConfigSaving = ref(false)
+
+onMounted(async () => {
+  // Check public app-id config
+  try {
+    const configData = await get('/settings/facebook/app-id/')
+    fbAppConfigured.value = configData.configured
+  } catch { /* no crítico */ }
+
+  // Check FB link status
+  try {
+    const statusData = await authApi.facebookStatus()
+    Object.assign(fbStatus, statusData)
+  } catch { /* no crítico */ }
+
+  // Check if this user can configure settings (staff only endpoint)
+  try {
+    await get('/settings/facebook/')
+    canConfigureFb.value = true
+  } catch { /* 403 = not staff, silently ignored */ }
+})
+
+async function handleFbConnect() {
+  fbLoading.value = true
+  try {
+    const data = await connectFacebook()
+    fbStatus.connected = true
+    fbStatus.provider_user_id = data.provider_user_id
+    fbStatus.extra_data = { name: data.name, picture: data.picture }
+    toast.success('Facebook vinculado correctamente')
+  } catch (err) {
+    toast.error(err?.data?.detail || err.message || 'No se pudo conectar con Facebook.')
+  } finally {
+    fbLoading.value = false
+  }
 }
 
-function roleBadgeClass(role) {
-  const map = { owner: 'badge-primary', admin: 'badge-success', editor: 'badge-warning', viewer: 'badge-gray' }
-  return map[role] || 'badge-gray'
+async function handleFbDisconnect() {
+  fbLoading.value = true
+  try {
+    await authApi.facebookDisconnect()
+    fbStatus.connected = false
+    fbStatus.provider_user_id = null
+    fbStatus.extra_data = {}
+    toast.success('Facebook desconectado')
+  } catch (err) {
+    toast.error(err?.message || 'Error al desconectar Facebook.')
+  } finally {
+    fbLoading.value = false
+  }
+}
+
+async function saveFbConfig() {
+  fbConfigSaving.value = true
+  try {
+    await patch('/settings/facebook/', {
+      facebook_app_id: fbConfig.app_id.trim(),
+      facebook_app_secret: fbConfig.app_secret.trim(),
+    })
+    fbAppConfigured.value = true
+    fbConfig.app_id = ''
+    fbConfig.app_secret = ''
+    toast.success('Configuración de Facebook guardada')
+  } catch (err) {
+    toast.error(err?.data?.detail || 'Error al guardar la configuración.')
+  } finally {
+    fbConfigSaving.value = false
+  }
 }
 </script>
 
 <style scoped>
-.profile-view {
+.account-view {
   max-width: 800px;
 }
 
@@ -441,7 +488,6 @@ function roleBadgeClass(role) {
   gap: var(--spacing-lg);
 }
 
-/* Profile display */
 .profile-display {
   display: flex;
   align-items: center;
@@ -472,9 +518,7 @@ function roleBadgeClass(role) {
   font-weight: 700;
 }
 
-.profile-info {
-  flex: 1;
-}
+.profile-info { flex: 1; }
 
 .profile-name {
   font-size: var(--font-size-lg);
@@ -495,7 +539,32 @@ function roleBadgeClass(role) {
   margin: 0;
 }
 
-/* Profile form */
+.info-grid {
+  margin-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  padding: 0.25rem 0;
+}
+
+.info-label {
+  color: var(--text-tertiary);
+}
+
+.info-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 .profile-form {
   display: flex;
   flex-direction: column;
@@ -550,9 +619,7 @@ function roleBadgeClass(role) {
   opacity: 1;
 }
 
-.hidden-input {
-  display: none;
-}
+.hidden-input { display: none; }
 
 .form-row {
   display: grid;
@@ -572,9 +639,7 @@ function roleBadgeClass(role) {
   color: var(--text-primary);
 }
 
-.required {
-  color: var(--error-color);
-}
+.required { color: var(--error-color); }
 
 .field-hint {
   font-size: var(--font-size-xs);
@@ -591,11 +656,6 @@ function roleBadgeClass(role) {
   justify-content: flex-end;
   gap: 0.5rem;
   padding-top: 0.5rem;
-}
-
-/* Security */
-.security-content {
-  padding: 0;
 }
 
 .security-row {
@@ -618,80 +678,6 @@ function roleBadgeClass(role) {
   margin: 0;
 }
 
-/* Companies list */
-.companies-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.company-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.company-row:last-child {
-  border-bottom: none;
-}
-
-.company-row.active {
-  background: var(--primary-light);
-  margin: 0 calc(var(--spacing-lg) * -1);
-  padding-left: var(--spacing-lg);
-  padding-right: var(--spacing-lg);
-  border-radius: var(--border-radius-sm);
-}
-
-.company-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.company-logo-sm {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--border-radius-sm);
-  background: var(--bg-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.company-logo-sm img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.company-name {
-  font-weight: 500;
-  color: var(--text-primary);
-  margin: 0 0 0.25rem;
-  font-size: var(--font-size-sm);
-}
-
-.company-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.empty-text {
-  text-align: center;
-  color: var(--text-tertiary);
-  padding: var(--spacing-lg);
-  font-size: var(--font-size-sm);
-}
-
-/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -721,9 +707,7 @@ function roleBadgeClass(role) {
   border-bottom: 1px solid var(--border-color);
 }
 
-.modal-header h3 {
-  margin: 0;
-}
+.modal-header h3 { margin: 0; }
 
 .modal-close {
   background: none;
@@ -760,26 +744,142 @@ function roleBadgeClass(role) {
   border-width: 2px;
 }
 
+/* Connected accounts */
+.connected-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.connected-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) 0;
+}
+
+.connected-row + .connected-row {
+  border-top: 1px solid var(--border-color);
+}
+
+.connected-info {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.connected-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.connected-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.connected-icon--facebook {
+  background: #1877F2;
+  color: #fff;
+}
+
+.connected-label {
+  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  margin: 0 0 0.125rem;
+}
+
+.connected-detail {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.connected-detail--active {
+  color: var(--success-color, #22c55e);
+}
+
+.connected-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.badge {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.badge-success {
+  background: color-mix(in srgb, var(--success-color, #22c55e) 12%, transparent);
+  color: var(--success-color, #22c55e);
+}
+
+.btn-danger {
+  color: var(--error-color);
+}
+
+.btn-danger:hover {
+  background: var(--error-light);
+}
+
+/* Staff config panel */
+.fb-config-panel {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  border: 1px dashed var(--border-color);
+}
+
+.fb-config-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.fb-config-desc {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin: 0 0 var(--spacing-md);
+}
+
+.fb-config-desc a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.fb-config-desc a:hover {
+  text-decoration: underline;
+}
+
+.fb-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
 @media (max-width: 640px) {
   .profile-display {
     flex-direction: column;
     text-align: center;
   }
-  .form-row {
-    grid-template-columns: 1fr;
-  }
+  .form-row { grid-template-columns: 1fr; }
   .security-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
-  }
-  .company-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-  .company-actions {
-    align-self: flex-end;
   }
 }
 </style>

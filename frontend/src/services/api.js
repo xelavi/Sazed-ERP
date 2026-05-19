@@ -44,7 +44,7 @@ export async function apiFetch(endpoint, options = {}) {
   }
 
   // Add X-Company header for data endpoints
-  const exemptPaths = ['/auth/', '/companies/']
+  const exemptPaths = ['/auth/', '/companies/', '/integrations/', '/settings/']
   const companyId = getActiveCompanyId()
   if (companyId && !exemptPaths.some(p => endpoint.startsWith(p))) {
     headers['X-Company'] = companyId
@@ -70,7 +70,17 @@ export async function apiFetch(endpoint, options = {}) {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      const error = new Error(errorData.detail || errorData.message || `Error ${response.status}: ${response.statusText}`)
+      const msg = errorData.detail
+        || errorData.message
+        || errorData.non_field_errors?.[0]
+        || (() => {
+          const first = Object.keys(errorData)[0]
+          if (!first) return null
+          const val = errorData[first]
+          return `${first}: ${Array.isArray(val) ? val[0] : val}`
+        })()
+        || `Error ${response.status}: ${response.statusText}`
+      const error = new Error(msg)
       error.status = response.status
       error.data = errorData
       throw error
@@ -119,6 +129,20 @@ export async function getBlob(endpoint, params = {}) {
     throw error
   }
   return response.blob()
+}
+
+/**
+ * Trigger a browser download for a Blob (file save dialog or auto save).
+ */
+export function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename || 'download'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 /**

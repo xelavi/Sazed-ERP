@@ -7,9 +7,9 @@
           <span class="count-badge">{{ products.length }}</span>
         </div>
         <div class="header-actions">
-          <button class="btn btn-secondary">
+          <button class="btn btn-secondary" :disabled="exporting" @click="handleExport">
             <Download :size="18" />
-            <span>Export</span>
+            <span>{{ exporting ? 'Exportando…' : 'Export' }}</span>
           </button>
           <button class="btn btn-primary" @click="openProductForm()">
             <Plus :size="18" />
@@ -202,11 +202,29 @@ import {
 import ProductDetailDrawer from '@/components/ProductDetailDrawer.vue'
 import ProductFormModal from '@/components/ProductFormModal.vue'
 import productsApi from '@/services/products'
+import { saveBlob } from '@/services/api'
 import { mapProductFromApi, mapProductDetailFromApi, mapProductToApi, parseDrfErrors } from '../services/mappers'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
 const loading = ref(false)
+const exporting = ref(false)
+
+async function handleExport() {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    const blob = await productsApi.export()
+    const stamp = new Date().toISOString().slice(0, 10)
+    saveBlob(blob, `productos-${stamp}.xlsx`)
+    toast.success('Exportación generada')
+  } catch (err) {
+    console.error('Export failed:', err)
+    toast.error(err.message || 'Error al exportar productos')
+  } finally {
+    exporting.value = false
+  }
+}
 
 /* ── Load products from API ── */
 async function fetchProducts() {

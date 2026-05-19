@@ -56,4 +56,8 @@ export default {
   async search(query, filters = {}) {
     return get('/purchases/', { search: query, ...filters })
   },
+
+  async export(filters = {}) {
+    return getBlob('/purchases/export/', filters)
+  },
 }

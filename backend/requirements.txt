@@ -10,3 +10,5 @@ whitenoise>=6.5
 dj-database-url>=2.1
 reportlab>=4.0
 qrcode[pil]>=7.4
+requests>=2.31
+openpyxl>=3.1

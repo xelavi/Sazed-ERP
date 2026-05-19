@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from accounts.mixins import CompanyMixin
+from core.excel import build_xlsx_response
 from .models import (
     Category, Product, StockMovement, ProductVariant,
     ProductAttribute, ProductAttributeValue,
@@ -46,6 +47,40 @@ class ProductViewSet(CompanyMixin, viewsets.ModelViewSet):
         product.status = 'Archived'
         product.save(update_fields=['status'])
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # ---------- Export ----------
+
+    @action(detail=False, methods=['get'])
+    def export(self, request):
+        """Descarga el listado de productos en XLSX (respeta filtros y búsqueda)."""
+        qs = self.filter_queryset(self.get_queryset())
+        headers = [
+            'SKU', 'Nombre', 'Tipo', 'Estado', 'Categoría', 'Marca',
+            'Unidad', 'Precio', 'Precio sin IVA', 'Coste', 'Moneda',
+            'Stock', 'Reservado', 'Stock mínimo', 'Almacén',
+            'Actualizado',
+        ]
+        rows = []
+        for p in qs:
+            rows.append([
+                p.sku,
+                p.name,
+                p.get_product_type_display() if p.product_type else '',
+                p.get_status_display() if p.status else '',
+                p.category.name if p.category else '',
+                p.brand,
+                p.unit,
+                p.price,
+                p.price_excl_tax,
+                p.cost,
+                p.currency,
+                p.stock,
+                p.reserved,
+                p.min_stock,
+                p.warehouse.name if p.warehouse else '',
+                p.updated_at.replace(tzinfo=None) if p.updated_at else None,
+            ])
+        return build_xlsx_response('productos', 'Productos', headers, rows)
 
     # ---------- Nested routes ----------
 
