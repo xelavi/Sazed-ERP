@@ -41,6 +41,7 @@
                   >
                     <option value="">Select provider...</option>
                     <option v-for="p in providerOptions" :key="p.id" :value="p.id">{{ p.name }}</option>
+                    <option value="__new__">+ Crear nuevo proveedor…</option>
                   </select>
                   <span v-if="touched.provider && !form.providerId" class="field-error">Provider is required</span>
                 </div>
@@ -99,7 +100,15 @@
 
                   <div v-for="(line, idx) in form.lines" :key="line.id" class="le-row">
                     <div class="le-cell-desc">
-                      <input class="input input-sm" type="text" placeholder="Product or service..." v-model="line.description" />
+                      <ProductAutocomplete
+                        v-model="line.description"
+                        :products="products"
+                        :linked-product-id="line.productId"
+                        price-mode="purchase"
+                        placeholder="Producto o servicio..."
+                        @select="(p) => onProductSelect(line, p)"
+                        @clear="onProductClear(line)"
+                      />
                     </div>
                     <div class="le-cell-qty">
                       <input class="input input-sm input-number" type="number" min="0.01" step="1" v-model.number="line.quantity" />
@@ -191,6 +200,61 @@
                 </div>
               </div>
 
+              <!-- Recurrence -->
+              <div v-if="!isEditing" class="sidebar-card">
+                <label class="rec-toggle">
+                  <input type="checkbox" v-model="form.recurring" />
+                  <span class="rec-toggle-text">
+                    <Repeat :size="14" />
+                    Factura recurrente
+                  </span>
+                </label>
+                <p class="sidebar-card-desc" style="margin-top:0.5rem">
+                  Se generará y aprobará una factura automáticamente cada periodo.
+                </p>
+
+                <template v-if="form.recurring">
+                  <div class="field">
+                    <label class="field-label">Frecuencia</label>
+                    <div class="field-row-inline">
+                      <span class="rec-inline-prefix">Cada</span>
+                      <input class="input input-sm" style="width:64px;text-align:right" type="number" min="1" v-model.number="form.recInterval" />
+                      <select class="select select-sm" style="flex:1" v-model="form.recFrequency">
+                        <option value="weekly">semana(s)</option>
+                        <option value="monthly">mes(es)</option>
+                        <option value="quarterly">trimestre(s)</option>
+                        <option value="semiannual">semestre(s)</option>
+                        <option value="yearly">año(s)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="field-label">Primera emisión automática</label>
+                    <input class="input input-sm" type="date" v-model="form.recStartDate" />
+                  </div>
+
+                  <div class="field">
+                    <label class="field-label">Finalización</label>
+                    <select class="select select-sm" v-model="form.recEndMode">
+                      <option value="never">Sin fin</option>
+                      <option value="until">En una fecha</option>
+                      <option value="count">Tras N facturas</option>
+                    </select>
+                  </div>
+
+                  <div v-if="form.recEndMode === 'until'" class="field">
+                    <label class="field-label">Hasta el</label>
+                    <input class="input input-sm" type="date" v-model="form.recEndDate" />
+                  </div>
+
+                  <div v-if="form.recEndMode === 'count'" class="field">
+                    <label class="field-label">Nº de facturas</label>
+                    <input class="input input-sm" style="width:90px" type="number" min="1" v-model.number="form.recMaxOccurrences" />
+                  </div>
+                </template>
+              </div>
+
               <div class="sidebar-card">
                 <h4 class="sidebar-card-title">Currency</h4>
                 <select class="select select-sm" v-model="form.currency" disabled>
@@ -216,16 +280,26 @@
         </div>
       </div>
     </Transition>
+
+    <ProviderFormModal
+      :open="createProviderOpen"
+      @close="createProviderOpen = false"
+      @save="handleProviderCreated"
+    />
   </Teleport>
 </template>
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { Plus, Trash2, Save, CheckCircle2 } from 'lucide-vue-next'
+import { Plus, Trash2, Save, CheckCircle2, Repeat } from 'lucide-vue-next'
 import Swal from 'sweetalert2'
 import purchasesApi from '@/services/purchases'
 import providersApi from '@/services/providers'
-import { mapProviderFromApi } from '@/services/mappers'
+import productsApi from '@/services/products'
+import { mapProviderFromApi, mapProviderToApi, mapProductFromApi } from '@/services/mappers'
+import { lineTaxFromProduct, costPriceOf } from '@/services/productLine'
+import ProviderFormModal from '@/components/ProviderFormModal.vue'
+import ProductAutocomplete from '@/components/ProductAutocomplete.vue'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -234,9 +308,10 @@ const props = defineProps({
   seriesList: { type: Array, default: () => [] },
   providers: { type: Array, default: () => [] },
   preselectedProviderId: { type: [Number, String], default: null },
+  preselectedLine: { type: Object, default: null },
 })
 
-const emit = defineEmits(['close', 'save'])
+const emit = defineEmits(['close', 'save', 'provider-created'])
 
 const isEditing = computed(() => !!props.invoice)
 
@@ -261,10 +336,38 @@ const activeSeries = computed(() =>
 )
 
 const fallbackProviders = ref([])
+const extraProviders = ref([]) // providers created inline from this modal
 
-const providerOptions = computed(() =>
-  props.providers.length > 0 ? props.providers : fallbackProviders.value
-)
+const providerOptions = computed(() => {
+  const base = props.providers.length > 0 ? props.providers : fallbackProviders.value
+  if (!extraProviders.value.length) return base
+  const ids = new Set(base.map(p => p.id))
+  return [...base, ...extraProviders.value.filter(p => !ids.has(p.id))]
+})
+
+/* ── Inline provider creation ── */
+const createProviderOpen = ref(false)
+
+async function handleProviderCreated(formData) {
+  try {
+    const created = await providersApi.create(mapProviderToApi(formData))
+    const mapped = mapProviderFromApi(created)
+    extraProviders.value.push(mapped)
+    form.providerId = mapped.id
+    createProviderOpen.value = false
+    emit('provider-created', mapped)
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.message || 'No se pudo crear el proveedor',
+      confirmButtonColor: '#667eea',
+      customClass: { popup: 'swal-erp-popup' },
+      target: document.body,
+      heightAuto: false
+    })
+  }
+}
 
 async function loadProviders() {
   try {
@@ -277,6 +380,31 @@ async function loadProviders() {
   }
 }
 
+/* ── Product catalog (for line autocomplete) ── */
+const products = ref([])
+
+async function loadProducts() {
+  try {
+    const data = await productsApi.getAll({ page_size: 1000 })
+    const items = Array.isArray(data) ? data : (data.results || [])
+    products.value = items.map(mapProductFromApi).filter(p => p.status !== 'Archived')
+  } catch (err) {
+    console.error('[PurchaseInvoiceFormModal] failed to load products:', err)
+    products.value = []
+  }
+}
+
+/* Autorellena la línea al elegir un producto (compra → coste). */
+function onProductSelect(line, product) {
+  line.productId = product.id
+  line.unitPrice = costPriceOf(product)
+  line.tax = lineTaxFromProduct(product, line.tax)
+}
+
+function onProductClear(line) {
+  line.productId = null
+}
+
 const selectedProvider = computed(() => {
   if (!form.providerId) return null
   return providerOptions.value.find(p => p.id === form.providerId) || null
@@ -287,6 +415,7 @@ let lineCounter = 100
 function blankLine() {
   return {
     id: lineCounter++,
+    productId: null,
     description: '',
     quantity: 1,
     unitPrice: 0,
@@ -307,7 +436,15 @@ function blankForm() {
     discountType: 'percent',
     discountValue: null,
     providerNotes: '',
-    internalNotes: ''
+    internalNotes: '',
+    // Recurrence
+    recurring: false,
+    recFrequency: 'monthly',
+    recInterval: 1,
+    recStartDate: '',
+    recEndMode: 'never',
+    recEndDate: null,
+    recMaxOccurrences: null
   }
 }
 
@@ -317,7 +454,31 @@ function getDefaultDueDate() {
   return d.toISOString().split('T')[0]
 }
 
+function addPeriod(dateStr, frequency, interval = 1) {
+  const d = new Date(dateStr)
+  const n = Math.max(1, interval || 1)
+  if (frequency === 'weekly') {
+    d.setDate(d.getDate() + 7 * n)
+    return d.toISOString().split('T')[0]
+  }
+  const months = { monthly: 1, quarterly: 3, semiannual: 6, yearly: 12 }[frequency] || 1
+  const day = d.getDate()
+  d.setDate(1)
+  d.setMonth(d.getMonth() + months * n)
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+  d.setDate(Math.min(day, lastDay))
+  return d.toISOString().split('T')[0]
+}
+
 const form = reactive(blankForm())
+
+/* ── Open the inline "new provider" modal when sentinel option picked ── */
+watch(() => form.providerId, (val, prev) => {
+  if (val === '__new__') {
+    form.providerId = prev === '__new__' ? '' : (prev ?? '')
+    createProviderOpen.value = true
+  }
+})
 
 watch(() => props.open, async (isOpen) => {
   Object.keys(touched).forEach(k => { touched[k] = false })
@@ -342,6 +503,9 @@ watch(() => props.open, async (isOpen) => {
     fallbackProviders.value = []
   }
 
+  // Load product catalog for line autocomplete
+  await loadProducts()
+
   if (props.invoice) {
     const inv = props.invoice
     Object.assign(form, {
@@ -353,6 +517,7 @@ watch(() => props.open, async (isOpen) => {
       currency: inv.currency || 'EUR',
       lines: inv.lines.map(l => ({
         id: lineCounter++,
+        productId: l.productId || l.product || null,
         description: l.description,
         quantity: l.quantity,
         unitPrice: l.unitPrice,
@@ -371,6 +536,15 @@ watch(() => props.open, async (isOpen) => {
     if (props.preselectedProviderId) {
       form.providerId = props.preselectedProviderId
     }
+    if (props.preselectedLine) {
+      form.lines = [{ ...blankLine(), ...props.preselectedLine }]
+    }
+  }
+})
+
+watch(() => form.recurring, (on) => {
+  if (on && !form.recStartDate) {
+    form.recStartDate = addPeriod(form.issueDate, form.recFrequency, form.recInterval)
   }
 })
 
@@ -507,6 +681,7 @@ function buildInvoiceData(status) {
     currency: form.currency,
     lines: form.lines.filter(l => l.description).map(l => ({
       id: l.id,
+      productId: l.productId || null,
       description: l.description,
       quantity: l.quantity,
       unitPrice: l.unitPrice,
@@ -527,7 +702,20 @@ function buildInvoiceData(status) {
     providerNotes: form.providerNotes,
     internalNotes: form.internalNotes,
     lockedAt: status === 'Approved' ? new Date().toISOString() : (props.invoice?.lockedAt || null),
-    timeline: buildTimeline(status)
+    timeline: buildTimeline(status),
+    recurrence: buildRecurrence()
+  }
+}
+
+function buildRecurrence() {
+  if (isEditing.value || !form.recurring) return null
+  return {
+    frequency: form.recFrequency,
+    interval: form.recInterval || 1,
+    payment_term_days: 30,
+    start_date: form.recStartDate || form.issueDate,
+    end_date: form.recEndMode === 'until' ? form.recEndDate : null,
+    max_occurrences: form.recEndMode === 'count' ? form.recMaxOccurrences : null
   }
 }
 
@@ -846,6 +1034,30 @@ function formatCurrency(value) {
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
   margin: 0 0 0.75rem;
+}
+
+.rec-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.rec-toggle input { cursor: pointer; }
+
+.rec-toggle-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rec-inline-prefix {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .sidebar-totals {

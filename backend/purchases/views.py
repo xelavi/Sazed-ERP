@@ -10,7 +10,7 @@ from accounts.mixins import CompanyMixin
 from .models import (
     PurchaseInvoice, PurchaseSeries, PurchasePayment, PurchaseQuote,
     PurchaseQuoteDoc, PurchaseInvoiceLine, PurchaseInvoiceLineTax,
-    PurchaseInvoiceTimeline,
+    PurchaseInvoiceTimeline, RecurringPurchaseInvoice,
 )
 from .serializers import (
     PurchaseInvoiceListSerializer, PurchaseInvoiceDetailSerializer,
@@ -18,9 +18,11 @@ from .serializers import (
     PurchasePaymentSerializer, PurchaseQuoteSerializer,
     PurchaseQuoteDocListSerializer, PurchaseQuoteDocDetailSerializer,
     PurchaseQuoteDocWriteSerializer,
+    RecurringPurchaseInvoiceSerializer, RecurringPurchaseInvoiceCreateSerializer,
 )
 from .filters import PurchaseInvoiceFilter
-from .services import PurchaseInvoiceService
+from .services import PurchaseInvoiceService, RecurringPurchaseInvoiceService
+from core.excel import build_xlsx_response
 
 
 class PurchaseSeriesViewSet(CompanyMixin, viewsets.ModelViewSet):
@@ -47,7 +49,7 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
             'provider', 'series',
         ).prefetch_related(
             'lines', 'lines__taxes', 'payments', 'timeline',
-        ).all()
+        ).filter(is_template=False)
         if hasattr(self.request, 'company') and self.request.company:
             return qs.filter(series__company=self.request.company)
         return qs.none()
@@ -201,6 +203,59 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
         )
 
 
+class RecurringPurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
+    """Planes de facturación recurrente de compra."""
+
+    queryset = RecurringPurchaseInvoice.objects.select_related(
+        'template', 'template__provider',
+    ).all()
+    serializer_class = RecurringPurchaseInvoiceSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = RecurringPurchaseInvoice.objects.select_related(
+            'template', 'template__provider',
+        ).all()
+        if hasattr(self.request, 'company') and self.request.company:
+            return qs.filter(company=self.request.company)
+        return qs.none()
+
+    def create(self, request, *args, **kwargs):
+        ser = RecurringPurchaseInvoiceCreateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        data = ser.validated_data
+        source = data.pop('source_invoice')
+        plan = RecurringPurchaseInvoiceService.create_plan(
+            source, data, created_by=getattr(request.user, 'email', ''),
+        )
+        return Response(
+            RecurringPurchaseInvoiceSerializer(plan).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        plan = self.get_object()
+        template = plan.template
+        plan.delete()
+        if template and template.is_template:
+            template.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'])
+    def run(self, request, pk=None):
+        plan = self.get_object()
+        if not plan.active:
+            return Response(
+                {'error': 'Este plan de recurrencia no está activo.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        invoice = RecurringPurchaseInvoiceService.generate_one(plan)
+        return Response({
+            'plan': RecurringPurchaseInvoiceSerializer(plan).data,
+            'invoice': PurchaseInvoiceDetailSerializer(invoice).data,
+        }, status=status.HTTP_201_CREATED)
+
+
 class PurchaseQuoteViewSet(CompanyMixin, viewsets.ModelViewSet):
     queryset = PurchaseQuote.objects.all()
     serializer_class = PurchaseQuoteSerializer
@@ -285,14 +340,14 @@ class PurchaseQuoteDocViewSet(CompanyMixin, viewsets.ModelViewSet):
             if ln.tax_percent and ln.tax_percent > 0:
                 from core.models import TaxRate
                 rate = TaxRate.objects.filter(
-                    rate=ln.tax_percent, is_retention=False,
-                ).first()
+                    percent=ln.tax_percent, active=True,
+                ).exclude(tax_type='RETENTION').first()
                 if rate:
                     PurchaseInvoiceLineTax.objects.create(
                         invoice_line=new_line,
                         tax_rate=rate,
                         tax_name=rate.name,
-                        tax_percent=rate.rate,
+                        tax_percent=rate.percent,
                         is_retention=False,
                         tax_amount=ln.tax_amount,
                     )

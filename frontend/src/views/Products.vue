@@ -181,6 +181,10 @@
       :product="selectedProduct"
       :open="detailOpen"
       @close="closeDetail"
+      @new-sales-quote="handleNewSalesQuote"
+      @new-purchase-quote="handleNewPurchaseQuote"
+      @new-sales-invoice="handleNewSalesInvoice"
+      @new-purchase-invoice="handleNewPurchaseInvoice"
     />
 
     <!-- ===================== CREATE / EDIT MODAL ===================== -->
@@ -195,6 +199,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Plus, Search, ArrowUpDown, Package, MoreVertical,
   Download, Globe, Store, Wrench, Pencil, Trash2
@@ -206,6 +211,7 @@ import { saveBlob } from '@/services/api'
 import { mapProductFromApi, mapProductDetailFromApi, mapProductToApi, parseDrfErrors } from '../services/mappers'
 import { useToast } from '@/composables/useToast'
 
+const router = useRouter()
 const toast = useToast()
 const loading = ref(false)
 const exporting = ref(false)
@@ -262,6 +268,34 @@ function closeDetail() {
   detailOpen.value = false
 }
 
+function productLineQuery(product, price) {
+  return {
+    productName: product.name,
+    productPrice: price ?? 0,
+    productTax: parseFloat(product.tax) || 21,
+  }
+}
+
+function handleNewSalesQuote(product) {
+  closeDetail()
+  router.push({ name: 'SalesQuotes', query: { newQuote: 'true', ...productLineQuery(product, product.price) } })
+}
+
+function handleNewPurchaseQuote(product) {
+  closeDetail()
+  router.push({ name: 'PurchaseQuotes', query: { newQuote: 'true', ...productLineQuery(product, product.cost) } })
+}
+
+function handleNewSalesInvoice(product) {
+  closeDetail()
+  router.push({ name: 'Invoices', query: { newInvoice: 'true', ...productLineQuery(product, product.price) } })
+}
+
+function handleNewPurchaseInvoice(product) {
+  closeDetail()
+  router.push({ name: 'PurchaseInvoices', query: { newPurchaseInvoice: 'true', ...productLineQuery(product, product.cost) } })
+}
+
 /* ── Form modal state ── */
 const formModalOpen = ref(false)
 const formProduct = ref(null)
@@ -278,12 +312,22 @@ function closeProductForm() {
 
 async function handleProductSave(data) {
   const apiData = mapProductToApi(data)
+  let payload = apiData
+  if (data.imageFile) {
+    const fd = new FormData()
+    for (const [key, value] of Object.entries(apiData)) {
+      if (value === null || value === undefined) continue
+      fd.append(key, typeof value === 'boolean' ? String(value) : value)
+    }
+    fd.append('image', data.imageFile)
+    payload = fd
+  }
   try {
     if (formProduct.value) {
-      await productsApi.update(formProduct.value.id, apiData)
+      await productsApi.update(formProduct.value.id, payload)
       toast.success('Producto actualizado')
     } else {
-      await productsApi.create(apiData)
+      await productsApi.create(payload)
       toast.success('Producto creado')
     }
     await fetchProducts()

@@ -22,3 +22,17 @@ CLAUDE.md
 *.njsproj
 *.sln
 *.sw?
+__pycache__/
+*.pyc
+*.md
+# Odoo runtime data (docker-compose.odoo.yml)
+odoo_filestore/
+odoo_addons/*
+!odoo_addons/.gitkeep
+
+# Variables de entorno (raíz, para docker compose)
+.env
+
+
+# Odoo provisioning worker log
+backend/odoo_provisioning.log

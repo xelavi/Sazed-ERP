@@ -7,6 +7,11 @@
           <span class="count-badge">{{ invoices.length }}</span>
         </div>
         <div class="header-actions">
+          <button class="btn btn-secondary" @click="openPlansModal">
+            <Repeat :size="18" />
+            <span>Recurrentes</span>
+            <span v-if="activePlanCount" class="header-pill">{{ activePlanCount }}</span>
+          </button>
           <button class="btn btn-secondary" :disabled="exporting" @click="handleExport">
             <Download :size="18" />
             <span>{{ exporting ? 'Exportando…' : 'Export' }}</span>
@@ -173,6 +178,14 @@
                             <Copy :size="16" />
                             <span>Duplicate</span>
                           </button>
+                          <button
+                            v-if="invoice.type !== 'CreditNote'"
+                            class="dropdown-item"
+                            @click="openRecurrenceForm(invoice); closeDropdown()"
+                          >
+                            <Repeat :size="16" />
+                            <span>Hacer recurrente</span>
+                          </button>
                           <div class="dropdown-divider"></div>
                           <button
                             v-if="invoice.status === 'Draft'"
@@ -274,8 +287,10 @@
       :series-list="invoiceSeriesList"
       :customers="customersList"
       :preselected-customer-id="preselectedCustomerId"
+      :preselected-line="preselectedLine"
       @close="closeInvoiceForm"
       @save="handleInvoiceSave"
+      @customer-created="fetchCustomers"
     />
 
     <!-- ===================== PAYMENT MODAL ===================== -->
@@ -327,6 +342,24 @@
         </div>
       </div>
     </Transition>
+
+    <!-- ===================== RECURRENCE MODALS ===================== -->
+    <RecurrenceFormModal
+      :open="recurrenceFormOpen"
+      :source-invoice="recurrenceSource"
+      :submitting="recurrenceSubmitting"
+      @close="closeRecurrenceForm"
+      @create="createRecurrence"
+    />
+    <RecurringPlansModal
+      :open="plansModalOpen"
+      :plans="plans"
+      name-field="customer_name"
+      @close="plansModalOpen = false"
+      @run="runPlan"
+      @toggle="togglePlan"
+      @remove="removePlan"
+    />
   </div>
 </template>
 
@@ -336,10 +369,12 @@ import { useRoute } from 'vue-router'
 import {
   Plus, Search, ArrowUpDown, MoreVertical, Download,
   Pencil, Eye, Copy, CheckCircle2, Send,
-  FileDown, Trash2, Ban, Banknote, FileX, X
+  FileDown, Trash2, Ban, Banknote, FileX, X, Repeat
 } from 'lucide-vue-next'
 import InvoiceDetailDrawer from '@/components/InvoiceDetailDrawer.vue'
 import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
+import RecurrenceFormModal from '@/components/RecurrenceFormModal.vue'
+import RecurringPlansModal from '@/components/RecurringPlansModal.vue'
 import invoicesApi from '@/services/invoices'
 import customersApi from '@/services/customers'
 import { saveBlob } from '@/services/api'
@@ -419,14 +454,25 @@ onMounted(async () => {
   await fetchInvoices()
   await fetchSeries()
   await fetchCustomers()
+  fetchPlans()
 
-  // Check if coming from Customers page to create new invoice for a specific customer
-  if (route.query.newInvoice === 'true' && route.query.customerId) {
-    const customerId = parseInt(route.query.customerId)
-    const customer = customersList.value.find(c => c.id === customerId)
-    if (customer) {
-      openInvoiceForm(null, customerId)
+  // Check if coming from Customers / Products page to create a new invoice
+  if (route.query.newInvoice === 'true') {
+    if (route.query.productName) {
+      const taxN = parseFloat(route.query.productTax)
+      preselectedLine.value = {
+        description: route.query.productName,
+        quantity: 1,
+        unitPrice: parseFloat(route.query.productPrice) || 0,
+        tax: [21, 10, 4].includes(taxN) ? `IVA ${taxN}%` : 'IVA 21%',
+      }
     }
+    let customerId = null
+    if (route.query.customerId) {
+      const id = parseInt(route.query.customerId)
+      if (customersList.value.find(c => c.id === id)) customerId = id
+    }
+    openInvoiceForm(null, customerId)
   }
 })
 
@@ -458,6 +504,7 @@ function closeDetail() {
 const formModalOpen = ref(false)
 const formInvoice = ref(null)
 const preselectedCustomerId = ref(null)
+const preselectedLine = ref(null)
 
 function openInvoiceForm(invoice = null, customerId = null) {
   formInvoice.value = invoice
@@ -469,6 +516,7 @@ function closeInvoiceForm() {
   formModalOpen.value = false
   formInvoice.value = null
   preselectedCustomerId.value = null
+  preselectedLine.value = null
 }
 
 async function handleInvoiceSave(data) {
@@ -478,8 +526,17 @@ async function handleInvoiceSave(data) {
       await invoicesApi.update(formInvoice.value.id, apiData)
       toast.success('Factura actualizada')
     } else {
-      await invoicesApi.create(apiData)
+      const created = await invoicesApi.create(apiData)
       toast.success('Factura creada')
+      if (data.recurrence && created?.id) {
+        try {
+          await invoicesApi.createRecurring({ source_invoice: created.id, ...data.recurrence })
+          toast.success('Recurrencia programada')
+          await fetchPlans()
+        } catch (err) {
+          toast.error(err.data?.detail || err.message || 'Factura creada, pero falló la recurrencia')
+        }
+      }
     }
     await fetchInvoices()
   } catch (err) {
@@ -533,6 +590,84 @@ async function savePayment() {
     await fetchInvoices()
   } catch (err) {
     toast.error(err.data?.detail || err.message || 'Error al registrar pago')
+  }
+}
+
+/* ══════════════════════════════════════════
+   RECURRENCE STATE
+   ══════════════════════════════════════════ */
+const plans = ref([])
+const plansModalOpen = ref(false)
+const recurrenceFormOpen = ref(false)
+const recurrenceSource = ref(null)
+const recurrenceSubmitting = ref(false)
+
+const activePlanCount = computed(() => plans.value.filter(p => p.active).length)
+
+async function fetchPlans() {
+  try {
+    const data = await invoicesApi.listRecurring()
+    plans.value = Array.isArray(data) ? data : (data.results || [])
+  } catch (err) {
+    console.error('Failed to load recurring plans:', err)
+  }
+}
+
+function openPlansModal() {
+  plansModalOpen.value = true
+  fetchPlans()
+}
+
+function openRecurrenceForm(invoice) {
+  recurrenceSource.value = invoice
+  recurrenceFormOpen.value = true
+}
+
+function closeRecurrenceForm() {
+  recurrenceFormOpen.value = false
+  recurrenceSource.value = null
+}
+
+async function createRecurrence(payload) {
+  recurrenceSubmitting.value = true
+  try {
+    await invoicesApi.createRecurring(payload)
+    toast.success('Recurrencia creada')
+    closeRecurrenceForm()
+    await fetchPlans()
+  } catch (err) {
+    toast.error(err.data?.detail || err.message || 'Error al crear la recurrencia')
+  } finally {
+    recurrenceSubmitting.value = false
+  }
+}
+
+async function runPlan(plan) {
+  try {
+    await invoicesApi.runRecurring(plan.id)
+    toast.success('Factura generada')
+    await Promise.all([fetchPlans(), fetchInvoices()])
+  } catch (err) {
+    toast.error(err.data?.detail || err.message || 'Error al generar la factura')
+  }
+}
+
+async function togglePlan(plan) {
+  try {
+    await invoicesApi.updateRecurring(plan.id, { active: !plan.active })
+    await fetchPlans()
+  } catch (err) {
+    toast.error(err.data?.detail || err.message || 'Error al actualizar el plan')
+  }
+}
+
+async function removePlan(plan) {
+  try {
+    await invoicesApi.deleteRecurring(plan.id)
+    toast.success('Recurrencia eliminada')
+    await fetchPlans()
+  } catch (err) {
+    toast.error(err.data?.detail || err.message || 'Error al eliminar el plan')
   }
 }
 
@@ -868,6 +1003,21 @@ function formatDateShort(dateStr) {
 .header-actions {
   display: flex;
   gap: 0.75rem;
+}
+
+.header-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.35rem;
+  margin-left: 0.1rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border-radius: 9px;
+  background: var(--primary-color);
+  color: white;
 }
 
 /* ============================

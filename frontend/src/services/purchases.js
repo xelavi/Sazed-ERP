@@ -1,4 +1,4 @@
-import { createResource, get, post, getBlob } from './api'
+import { createResource, get, post, del, patch, getBlob } from './api'
 
 const purchasesResource = createResource('/purchases/')
 
@@ -7,6 +7,23 @@ export default {
 
   async approve(invoiceId) {
     return post(`/purchases/${invoiceId}/approve/`, {})
+  },
+
+  // Recurring purchase invoice plans
+  async listRecurring() {
+    return get('/purchases/recurring/')
+  },
+  async createRecurring(data) {
+    return post('/purchases/recurring/', data)
+  },
+  async updateRecurring(id, data) {
+    return patch(`/purchases/recurring/${id}/`, data)
+  },
+  async deleteRecurring(id) {
+    return del(`/purchases/recurring/${id}/`)
+  },
+  async runRecurring(id) {
+    return post(`/purchases/recurring/${id}/run/`, {})
   },
 
   async void(invoiceId) {

@@ -127,6 +127,18 @@ class Product(models.Model):
     # Notas
     notes = models.TextField(blank=True)
 
+    # Integración Odoo
+    odoo_id = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text='ID del product.product asociado en Odoo (si está sincronizado).',
+    )
+
+    # Integración e-commerce
+    prestashop_id = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text='ID del product en PrestaShop (si está sincronizado).',
+    )
+
     # Auditoría
     created_by = models.CharField(max_length=100, blank=True)
     modified_by = models.CharField(max_length=100, blank=True)

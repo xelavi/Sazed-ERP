@@ -7,6 +7,10 @@
           <span class="count-badge">{{ filteredMembers.length }}</span>
         </div>
         <div class="header-actions">
+          <button v-if="canManage" class="btn btn-secondary" @click="openRolesModal">
+            <Shield :size="18" />
+            <span>Gestionar roles</span>
+          </button>
           <button v-if="canManage" class="btn btn-primary" @click="showInviteModal = true">
             <UserPlus :size="18" />
             <span>Invitar empleado</span>
@@ -29,10 +33,9 @@
         <div class="filter-actions">
           <select class="select filter-select" v-model="roleFilter">
             <option value="all">Todos los roles</option>
-            <option value="owner">Propietario</option>
-            <option value="admin">Administrador</option>
-            <option value="editor">Editor</option>
-            <option value="viewer">Solo lectura</option>
+            <option v-for="opt in roleFilterOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
           </select>
         </div>
       </div>
@@ -70,7 +73,7 @@
                   <span class="email-text">{{ m.user?.email }}</span>
                 </td>
                 <td class="col-role">
-                  <span :class="['badge', roleBadgeClass(m.role)]">{{ roleLabel(m.role) }}</span>
+                  <span :class="['badge', roleBadgeClass(m)]">{{ roleLabel(m) }}</span>
                 </td>
                 <td class="col-joined">
                   <span class="joined-text">{{ formatDate(m.joined_at) }}</span>
@@ -113,6 +116,7 @@
       :member="selectedMember"
       :can-manage="canManage"
       :current-user-id="currentUser?.id"
+      :custom-roles="customRoles"
       @close="closeDetail"
       @save="handleSave"
       @delete="confirmDelete"
@@ -140,10 +144,19 @@
             </div>
             <div class="form-group">
               <label class="form-label">Rol</label>
-              <select v-model="inviteForm.role" class="select">
-                <option value="admin">Administrador</option>
-                <option value="editor">Editor</option>
-                <option value="viewer">Solo lectura</option>
+              <select v-model="inviteForm.roleToken" class="select">
+                <optgroup label="Roles base">
+                  <option value="builtin:admin">Administrador</option>
+                  <option value="builtin:editor">Editor</option>
+                  <option value="builtin:viewer">Solo lectura</option>
+                </optgroup>
+                <optgroup v-if="customRoles.length" label="Roles personalizados">
+                  <option
+                    v-for="r in customRoles"
+                    :key="r.id"
+                    :value="`custom:${r.id}`"
+                  >{{ r.name }}</option>
+                </optgroup>
               </select>
             </div>
             <div class="modal-actions">
@@ -158,16 +171,120 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Roles management modal -->
+    <Teleport to="body">
+      <div v-if="showRolesModal" class="modal-overlay" @click.self="showRolesModal = false">
+        <div class="modal-card roles-card">
+          <div class="modal-header">
+            <h3>Gestionar roles</h3>
+            <button class="modal-close" @click="showRolesModal = false">
+              <X :size="20" />
+            </button>
+          </div>
+          <div class="modal-body roles-body">
+            <!-- Existing roles -->
+            <div class="roles-list">
+              <p class="roles-section-label">Roles personalizados</p>
+              <p v-if="!customRoles.length" class="roles-empty">
+                Aún no has creado ningún rol. Crea uno para definir a qué módulos accede cada empleado.
+              </p>
+              <div
+                v-for="r in customRoles"
+                :key="r.id"
+                :class="['role-chip', { active: editingRoleId === r.id }]"
+              >
+                <div class="role-chip-info" @click="editRole(r)">
+                  <span class="role-chip-name">{{ r.name }}</span>
+                  <span class="role-chip-meta">{{ r.members_count }} empleado(s)</span>
+                </div>
+                <div class="role-chip-actions">
+                  <button class="btn-icon" title="Editar" @click="editRole(r)">
+                    <Pencil :size="14" />
+                  </button>
+                  <button
+                    class="btn-icon"
+                    title="Eliminar"
+                    style="color: var(--error-color);"
+                    @click="deleteRole(r)"
+                  >
+                    <Trash2 :size="14" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Role editor -->
+            <div class="role-editor">
+              <p class="roles-section-label">
+                {{ editingRoleId ? 'Editar rol' : 'Nuevo rol' }}
+                <button
+                  v-if="editingRoleId"
+                  class="link-btn"
+                  type="button"
+                  @click="resetRoleForm"
+                >
+                  <Plus :size="14" /> Crear otro
+                </button>
+              </p>
+              <div class="form-group">
+                <label class="form-label">Nombre del rol <span class="required">*</span></label>
+                <input
+                  v-model="roleForm.name"
+                  type="text"
+                  class="input"
+                  placeholder="Ej. Comercial, Almacén, Contabilidad…"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Permisos por módulo</label>
+                <div class="perm-grid">
+                  <div v-for="mod in modules" :key="mod.key" class="perm-row">
+                    <span class="perm-module">{{ mod.label }}</span>
+                    <div class="perm-options">
+                      <label
+                        v-for="opt in PERMISSION_OPTIONS"
+                        :key="opt.value"
+                        :class="['perm-opt', { selected: roleForm.permissions[mod.key] === opt.value }]"
+                      >
+                        <input
+                          type="radio"
+                          :name="`perm-${mod.key}`"
+                          :value="opt.value"
+                          v-model="roleForm.permissions[mod.key]"
+                        />
+                        {{ opt.label }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @click="showRolesModal = false">
+                  Cerrar
+                </button>
+                <button type="button" class="btn btn-primary" :disabled="savingRole" @click="saveRole">
+                  {{ savingRole ? 'Guardando...' : (editingRoleId ? 'Guardar cambios' : 'Crear rol') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
 import {
-  Search, UserPlus, Pencil, Trash2, X,
+  Search, UserPlus, Pencil, Trash2, X, Shield, Plus,
 } from 'lucide-vue-next'
 import PersonnelDetailDrawer from '@/components/PersonnelDetailDrawer.vue'
 import authApi from '@/services/auth'
+import inboxApi from '@/services/inbox'
 import { useAuth } from '@/composables/useAuth'
 import { useToast } from '@/composables/useToast'
 
@@ -178,6 +295,23 @@ const members = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
 const roleFilter = ref('all')
+
+// Custom roles + the module catalog (loaded from the backend).
+const customRoles = ref([])
+const modules = ref([])
+
+const BUILTIN_ROLES = [
+  { value: 'owner', label: 'Propietario' },
+  { value: 'admin', label: 'Administrador' },
+  { value: 'editor', label: 'Editor' },
+  { value: 'viewer', label: 'Solo lectura' },
+]
+
+const PERMISSION_OPTIONS = [
+  { value: 'none', label: 'Sin acceso' },
+  { value: 'view', label: 'Ver' },
+  { value: 'edit', label: 'Editar' },
+]
 
 const canManage = computed(() => ['owner', 'admin'].includes(activeRole.value))
 
@@ -198,7 +332,21 @@ async function fetchMembers() {
   }
 }
 
-onMounted(fetchMembers)
+async function fetchRoles() {
+  if (!activeCompany.value) return
+  try {
+    const data = await authApi.getRoles(activeCompany.value.id)
+    customRoles.value = data.roles || []
+    modules.value = data.modules || []
+  } catch {
+    /* non-critical — the roles UI just stays empty */
+  }
+}
+
+onMounted(() => {
+  fetchMembers()
+  fetchRoles()
+})
 
 const filteredMembers = computed(() => {
   let result = members.value
@@ -210,7 +358,7 @@ const filteredMembers = computed(() => {
     )
   }
   if (roleFilter.value !== 'all') {
-    result = result.filter(m => m.role === roleFilter.value)
+    result = result.filter(m => memberMatchesFilter(m, roleFilter.value))
   }
   return result
 })
@@ -272,22 +420,26 @@ async function confirmDelete(member) {
 /* ── Invite ── */
 const showInviteModal = ref(false)
 const inviting = ref(false)
-const inviteForm = reactive({ email: '', role: 'editor' })
+const inviteForm = reactive({ email: '', roleToken: 'builtin:editor' })
 
 async function handleInvite() {
   if (!inviteForm.email.trim()) return
   inviting.value = true
+  const [kind, value] = inviteForm.roleToken.split(':')
+  const payload = { email: inviteForm.email.trim() }
+  if (kind === 'custom') {
+    payload.custom_role = Number(value)
+  } else {
+    payload.role = value
+  }
   try {
-    await authApi.inviteMember(
-      activeCompany.value.id,
-      inviteForm.email.trim(),
-      inviteForm.role,
-    )
-    toast.success('Invitación enviada')
+    // Sends an invitation to the user's inbox; they choose to accept or reject.
+    // The invitation is scoped to the active company via the X-Company header.
+    await inboxApi.createInvitation(payload)
+    toast.success('Invitación enviada. El usuario la verá en su buzón.')
     showInviteModal.value = false
     inviteForm.email = ''
-    inviteForm.role = 'editor'
-    await fetchMembers()
+    inviteForm.roleToken = 'builtin:editor'
   } catch (err) {
     toast.error(err.data?.detail || err.message || 'Error al invitar')
   } finally {
@@ -295,15 +447,102 @@ async function handleInvite() {
   }
 }
 
-/* ── Helpers ── */
-function roleLabel(role) {
-  const map = { owner: 'Propietario', admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' }
-  return map[role] || role
+/* ── Roles management ── */
+const showRolesModal = ref(false)
+const savingRole = ref(false)
+const editingRoleId = ref(null)  // null = creating a new role
+const roleForm = reactive({ name: '', permissions: {} })
+
+function blankPermissions() {
+  const perms = {}
+  modules.value.forEach(m => { perms[m.key] = 'none' })
+  return perms
 }
 
-function roleBadgeClass(role) {
+function openRolesModal() {
+  showRolesModal.value = true
+  resetRoleForm()
+}
+
+function resetRoleForm() {
+  editingRoleId.value = null
+  roleForm.name = ''
+  roleForm.permissions = blankPermissions()
+}
+
+function editRole(role) {
+  editingRoleId.value = role.id
+  roleForm.name = role.name
+  roleForm.permissions = { ...blankPermissions(), ...(role.permissions || {}) }
+}
+
+async function saveRole() {
+  if (!roleForm.name.trim()) {
+    toast.error('El rol necesita un nombre')
+    return
+  }
+  savingRole.value = true
+  const payload = { name: roleForm.name.trim(), permissions: { ...roleForm.permissions } }
+  try {
+    if (editingRoleId.value) {
+      await authApi.updateRole(activeCompany.value.id, editingRoleId.value, payload)
+      toast.success('Rol actualizado')
+    } else {
+      await authApi.createRole(activeCompany.value.id, payload)
+      toast.success('Rol creado')
+    }
+    await fetchRoles()
+    await fetchMembers()
+    resetRoleForm()
+  } catch (err) {
+    toast.error(err.data?.detail || err.message || 'Error al guardar el rol')
+  } finally {
+    savingRole.value = false
+  }
+}
+
+async function deleteRole(role) {
+  if (!confirm(`¿Eliminar el rol "${role.name}"? Los empleados con este rol pasarán a su rol base.`)) return
+  try {
+    await authApi.deleteRole(activeCompany.value.id, role.id)
+    toast.success('Rol eliminado')
+    if (editingRoleId.value === role.id) resetRoleForm()
+    await fetchRoles()
+    await fetchMembers()
+  } catch (err) {
+    toast.error(err.data?.detail || err.message || 'Error al eliminar el rol')
+  }
+}
+
+/* ── Helpers ── */
+const roleFilterOptions = computed(() => [
+  ...BUILTIN_ROLES,
+  ...customRoles.value.map(r => ({ value: `custom:${r.id}`, label: r.name })),
+])
+
+function memberMatchesFilter(m, filter) {
+  if (filter === 'all') return true
+  if (filter.startsWith('custom:')) {
+    return String(m.custom_role) === filter.slice(7)
+  }
+  // Builtin filter: match the base role, but exclude members that carry a
+  // custom role (those are listed under their custom-role filter instead).
+  return m.role === filter && !m.custom_role
+}
+
+function roleLabel(member) {
+  // Prefer the label computed by the backend (handles custom roles).
+  if (member?.role_label) return member.role_label
+  const map = { owner: 'Propietario', admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' }
+  return map[member?.role] || member?.role
+}
+
+function roleBadgeClass(member) {
+  if (member?.custom_role && !['owner', 'admin'].includes(member.role)) {
+    return 'badge-primary'
+  }
   const map = { owner: 'badge-primary', admin: 'badge-success', editor: 'badge-warning', viewer: 'badge-gray' }
-  return map[role] || 'badge-gray'
+  return map[member?.role] || 'badge-gray'
 }
 
 const avatarColors = ['#667eea', '#f97316', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#f59e0b']
@@ -595,6 +834,154 @@ function formatDate(dateStr) {
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 1.25rem;
+}
+
+/* Roles modal */
+.roles-card {
+  max-width: 720px;
+}
+
+.roles-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.roles-section-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.roles-empty {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.role-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.role-chip.active {
+  border-color: var(--primary-color, #667eea);
+  background: var(--bg-hover);
+}
+
+.role-chip-info {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.role-chip-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.role-chip-meta {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+}
+
+.role-chip-actions {
+  display: flex;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+
+.role-editor {
+  border-left: 1px solid var(--border-color);
+  padding-left: 1.5rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary-color, #667eea);
+  font-size: var(--font-size-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.perm-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.perm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.375rem 0;
+}
+
+.perm-module {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.perm-options {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.perm-opt {
+  font-size: 0.6875rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  user-select: none;
+  transition: all var(--transition-fast);
+}
+
+.perm-opt.selected {
+  background: var(--primary-color, #667eea);
+  border-color: var(--primary-color, #667eea);
+  color: white;
+}
+
+.perm-opt input {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .roles-body {
+    grid-template-columns: 1fr;
+  }
+  .role-editor {
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    padding-left: 0;
+    padding-top: 1.25rem;
+  }
 }
 
 @media (max-width: 768px) {

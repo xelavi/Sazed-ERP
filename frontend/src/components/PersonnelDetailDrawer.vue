@@ -13,8 +13,8 @@
               <div>
                 <h2 class="drawer-title">{{ member.user?.full_name || member.user?.email }}</h2>
                 <div class="drawer-meta">
-                  <span :class="['badge', roleBadgeClass(member.role)]">
-                    {{ roleLabel(member.role) }}
+                  <span :class="['badge', currentRoleBadgeClass()]">
+                    {{ currentRoleLabel() }}
                   </span>
                   <span v-if="isSelf" class="self-tag">Tú</span>
                 </div>
@@ -66,8 +66,8 @@
                 </h4>
                 <div class="detail-row">
                   <span class="detail-label">Rol en la empresa</span>
-                  <span :class="['badge', roleBadgeClass(member.role)]">
-                    {{ roleLabel(member.role) }}
+                  <span :class="['badge', currentRoleBadgeClass()]">
+                    {{ currentRoleLabel() }}
                   </span>
                 </div>
                 <div class="detail-row">
@@ -119,19 +119,33 @@
                   <label class="field-label">Rol</label>
                   <select
                     class="select"
-                    v-model="form.role"
-                    :disabled="member.role === 'owner' || isSelf"
+                    v-model="form.roleToken"
+                    :disabled="isOwner || isSelf"
                   >
-                    <option v-if="member.role === 'owner'" value="owner">Propietario</option>
-                    <option value="admin">Administrador</option>
-                    <option value="editor">Editor</option>
-                    <option value="viewer">Solo lectura</option>
+                    <option v-if="isOwner" value="builtin:owner">Propietario</option>
+                    <optgroup label="Roles base">
+                      <option
+                        v-for="opt in builtinRoleOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                      >{{ opt.label }}</option>
+                    </optgroup>
+                    <optgroup v-if="customRoles.length" label="Roles personalizados">
+                      <option
+                        v-for="r in customRoles"
+                        :key="r.id"
+                        :value="`custom:${r.id}`"
+                      >{{ r.name }}</option>
+                    </optgroup>
                   </select>
-                  <span v-if="member.role === 'owner'" class="field-hint">
+                  <span v-if="isOwner" class="field-hint">
                     El rol del propietario no se puede cambiar.
                   </span>
                   <span v-else-if="isSelf" class="field-hint">
                     No puedes cambiar tu propio rol.
+                  </span>
+                  <span v-else class="field-hint">
+                    Los roles personalizados definen a qué módulos accede el empleado.
                   </span>
                 </div>
               </section>
@@ -179,6 +193,7 @@ const props = defineProps({
   member: { type: Object, required: true },
   canManage: { type: Boolean, default: false },
   currentUserId: { type: [Number, String], default: null },
+  customRoles: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['close', 'save', 'delete'])
@@ -186,15 +201,31 @@ const emit = defineEmits(['close', 'save', 'delete'])
 const isEditing = ref(false)
 const saving = ref(false)
 
+// Role is selected as a token: 'builtin:<role>' or 'custom:<id>'.
 const form = reactive({
   first_name: '',
   last_name: '',
-  role: 'viewer',
+  roleToken: 'builtin:viewer',
 })
 
 const isSelf = computed(() =>
   props.currentUserId != null && props.member.user?.id === props.currentUserId
 )
+
+const isOwner = computed(() => props.member.role === 'owner')
+
+function tokenForMember(m) {
+  if (m?.custom_role && !['owner', 'admin'].includes(m.role)) {
+    return `custom:${m.custom_role}`
+  }
+  return `builtin:${m?.role || 'viewer'}`
+}
+
+const builtinRoleOptions = [
+  { value: 'builtin:admin', label: 'Administrador' },
+  { value: 'builtin:editor', label: 'Editor' },
+  { value: 'builtin:viewer', label: 'Solo lectura' },
+]
 
 const avatarColors = ['#667eea', '#f97316', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#f59e0b']
 const avatarColor = computed(() => {
@@ -208,7 +239,7 @@ watch(
     if (!m) return
     form.first_name = m.user?.first_name || ''
     form.last_name = m.user?.last_name || ''
-    form.role = m.role || 'viewer'
+    form.roleToken = tokenForMember(m)
     isEditing.value = false
   },
   { immediate: true, deep: true },
@@ -222,7 +253,7 @@ function startEdit() {
   if (!props.canManage) return
   form.first_name = props.member.user?.first_name || ''
   form.last_name = props.member.user?.last_name || ''
-  form.role = props.member.role || 'viewer'
+  form.roleToken = tokenForMember(props.member)
   isEditing.value = true
 }
 
@@ -237,12 +268,16 @@ function save() {
     first_name: form.first_name,
     last_name: form.last_name,
   }
-  if (
-    props.member.role !== 'owner'
-    && !isSelf.value
-    && form.role !== props.member.role
-  ) {
-    payload.role = form.role
+  // Role changes are only sent for non-owners, not for yourself, and only
+  // when the selection actually changed.
+  if (!isOwner.value && !isSelf.value && form.roleToken !== tokenForMember(props.member)) {
+    const [kind, value] = form.roleToken.split(':')
+    if (kind === 'custom') {
+      payload.custom_role = Number(value)
+    } else {
+      payload.role = value
+      payload.custom_role = null
+    }
   }
   emit('save', payload)
   // Parent updates the member prop on success → watcher resets isEditing.
@@ -254,14 +289,18 @@ function save() {
 }
 
 /* ── Helpers ── */
-function roleLabel(role) {
+function currentRoleLabel() {
+  if (props.member?.role_label) return props.member.role_label
   const map = { owner: 'Propietario', admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' }
-  return map[role] || role
+  return map[props.member?.role] || props.member?.role
 }
 
-function roleBadgeClass(role) {
+function currentRoleBadgeClass() {
+  if (props.member?.custom_role && !['owner', 'admin'].includes(props.member.role)) {
+    return 'badge-primary'
+  }
   const map = { owner: 'badge-primary', admin: 'badge-success', editor: 'badge-warning', viewer: 'badge-gray' }
-  return map[role] || 'badge-gray'
+  return map[props.member?.role] || 'badge-gray'
 }
 
 function formatDate(dateStr) {

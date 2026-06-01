@@ -151,7 +151,7 @@ export function saveBlob(blob, filename) {
 export async function post(endpoint, data) {
   return apiFetch(endpoint, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: data instanceof FormData ? data : JSON.stringify(data),
   })
 }
 
@@ -161,7 +161,7 @@ export async function post(endpoint, data) {
 export async function put(endpoint, data) {
   return apiFetch(endpoint, {
     method: 'PUT',
-    body: JSON.stringify(data),
+    body: data instanceof FormData ? data : JSON.stringify(data),
   })
 }
 

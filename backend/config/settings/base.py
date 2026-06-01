@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'tasks',
     'providers',
     'purchases',
+    'accounting_sync',
+    'ecommerce_sync',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -109,6 +111,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
@@ -143,3 +148,30 @@ REST_FRAMEWORK = {
 FACEBOOK_APP_ID = config('FACEBOOK_APP_ID', default='')
 FACEBOOK_APP_SECRET = config('FACEBOOK_APP_SECRET', default='')
 FACEBOOK_GRAPH_VERSION = config('FACEBOOK_GRAPH_VERSION', default='v19.0')
+
+# ── Integración Odoo ──────────────────────────────────
+# Clave Fernet para cifrar credenciales de OdooConnection en BD.
+# Generar con:
+#   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+ODOO_ENCRYPTION_KEY = config('ODOO_ENCRYPTION_KEY', default='')
+# Intervalo de polling de pagos (minutos). Fijo global por decisión de proyecto.
+ODOO_POLL_INTERVAL_MINUTES = config(
+    'ODOO_POLL_INTERVAL_MINUTES', default=5, cast=int,
+)
+# Timeout por defecto de las llamadas XML-RPC a Odoo (segundos).
+ODOO_RPC_TIMEOUT = config('ODOO_RPC_TIMEOUT', default=30, cast=int)
+# Master password de Odoo (necesaria para crear BDs vía bootstrap_odoo).
+ODOO_MASTER_PWD = config('ODOO_MASTER_PWD', default='')
+# URL base del Odoo accesible desde el servidor Django (provisioning automático).
+ODOO_BASE_URL = config('ODOO_BASE_URL', default='http://localhost:8069')
+
+# ── Integración e-commerce (PrestaShop) ───────────────
+# Clave Fernet para cifrar la API key de StoreConnection. Si no se define,
+# se reutiliza ODOO_ENCRYPTION_KEY (ver ecommerce_sync/fields.py).
+ECOMMERCE_ENCRYPTION_KEY = config('ECOMMERCE_ENCRYPTION_KEY', default='')
+# Timeout por defecto de las llamadas HTTP al Webservice de la tienda (segundos).
+ECOMMERCE_HTTP_TIMEOUT = config('ECOMMERCE_HTTP_TIMEOUT', default=30, cast=int)
+# Intervalo de polling de pedidos (minutos). PrestaShop no tiene webhooks.
+ECOMMERCE_POLL_INTERVAL_MINUTES = config(
+    'ECOMMERCE_POLL_INTERVAL_MINUTES', default=10, cast=int,
+)

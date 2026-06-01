@@ -17,4 +17,11 @@ export default {
   async getWallet() {
     return get('/dashboard/wallet/')
   },
+
+  /**
+   * Get analytics: 12-month series + breakdowns per metric (real company data)
+   */
+  async getAnalytics() {
+    return get('/dashboard/analytics/')
+  },
 }

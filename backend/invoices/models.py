@@ -70,6 +70,12 @@ class Invoice(models.Model):
         VOIDED = 'Voided', 'Anulada'
         RECTIFIED = 'Rectified', 'Rectificada'
 
+    # Empresa propietaria (multitenant). Backfill desde customer.company en migración.
+    company = models.ForeignKey(
+        'accounts.Company', on_delete=models.CASCADE,
+        related_name='invoices', null=True, blank=True,
+    )
+
     # Tipo y estado
     invoice_type = models.CharField(
         max_length=12, choices=InvoiceType.choices, default='Standard',
@@ -144,6 +150,10 @@ class Invoice(models.Model):
         on_delete=models.SET_NULL, related_name='credit_notes',
     )
 
+    # Plantilla de recurrencia: si es True, no es una factura real, solo el
+    # molde que usa RecurringInvoice para generar facturas periódicas.
+    is_template = models.BooleanField(default=False, db_index=True)
+
     # Bloqueo
     locked_at = models.DateTimeField(null=True, blank=True)
     locked_by = models.CharField(max_length=100, blank=True)
@@ -169,6 +179,18 @@ class Invoice(models.Model):
     verifactu_csv = models.CharField(
         max_length=100, blank=True,
         help_text='CSV devuelto por la AEAT al aceptar el registro',
+    )
+
+    # Integración Odoo
+    odoo_id = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text='ID del account.move asociado en Odoo (si está sincronizado).',
+    )
+
+    # Integración e-commerce (pedido de origen en la tienda)
+    prestashop_id = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text='ID del order en PrestaShop que originó esta factura.',
     )
 
     # Auditoría
@@ -463,6 +485,63 @@ class QuoteLine(models.Model):
         self.subtotal = gross.quantize(Decimal('0.01'))
         self.tax_amount = (gross * (self.tax_percent or Decimal('0')) / Decimal('100')).quantize(Decimal('0.01'))
         super().save(*args, **kwargs)
+
+
+class RecurringInvoice(models.Model):
+    """Plan de facturación recurrente de venta.
+
+    Usa una factura plantilla (is_template=True) como molde y genera
+    automáticamente facturas aprobadas en cada vencimiento.
+    """
+
+    from core.recurrence import RecurrenceFrequency
+
+    company = models.ForeignKey(
+        'accounts.Company', on_delete=models.CASCADE,
+        related_name='recurring_invoices', null=True, blank=True,
+    )
+    template = models.ForeignKey(
+        Invoice, on_delete=models.PROTECT,
+        related_name='recurrence_plans',
+    )
+    frequency = models.CharField(
+        max_length=12, choices=RecurrenceFrequency.choices,
+        default=RecurrenceFrequency.MONTHLY,
+    )
+    interval = models.PositiveIntegerField(
+        default=1, help_text='Cada N periodos (p. ej. 2 = cada 2 meses).',
+    )
+    payment_term_days = models.PositiveIntegerField(
+        default=30,
+        help_text='Días entre emisión y vencimiento de cada factura generada.',
+    )
+    start_date = models.DateField()
+    next_run = models.DateField(db_index=True)
+    end_date = models.DateField(null=True, blank=True)
+    max_occurrences = models.PositiveIntegerField(null=True, blank=True)
+    occurrences = models.PositiveIntegerField(default=0)
+    last_run = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True, db_index=True)
+
+    created_by = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-active', 'next_run']
+
+    def __str__(self):
+        return f'Recurrencia {self.get_frequency_display()} — plantilla #{self.template_id}'
+
+    @property
+    def is_finished(self):
+        if not self.active:
+            return True
+        if self.end_date and self.next_run > self.end_date:
+            return True
+        if self.max_occurrences and self.occurrences >= self.max_occurrences:
+            return True
+        return False
 
 
 class EventLog(models.Model):

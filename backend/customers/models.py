@@ -23,7 +23,7 @@ class Customer(models.Model):
     # Datos principales
     name = models.CharField(max_length=200)
     contact_type = models.CharField(max_length=10, choices=ContactType.choices)
-    email = models.EmailField()
+    email = models.EmailField(blank=True, default='')
     phone = models.CharField(max_length=30, blank=True)
     website = models.URLField(blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default='Active')
@@ -59,6 +59,18 @@ class Customer(models.Model):
 
     # Contactos vinculados (relación M2M consigo mismo)
     linked_contacts = models.ManyToManyField('self', blank=True, symmetrical=True)
+
+    # Integración Odoo
+    odoo_id = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text='ID del res.partner asociado en Odoo (si está sincronizado).',
+    )
+
+    # Integración e-commerce
+    prestashop_id = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text='ID del customer en PrestaShop (si está sincronizado).',
+    )
 
     # Auditoría
     created_at = models.DateTimeField(auto_now_add=True)

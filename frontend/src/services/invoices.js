@@ -1,12 +1,31 @@
 /**
  * Invoices API service
  */
-import { createResource, get, post, getBlob } from './api'
+import { createResource, get, post, del, patch, getBlob } from './api'
 
 const invoicesResource = createResource('/invoices/')
 
 export default {
   ...invoicesResource,
+
+  /**
+   * Recurring invoice plans
+   */
+  async listRecurring() {
+    return get('/invoices/recurring/')
+  },
+  async createRecurring(data) {
+    return post('/invoices/recurring/', data)
+  },
+  async updateRecurring(id, data) {
+    return patch(`/invoices/recurring/${id}/`, data)
+  },
+  async deleteRecurring(id) {
+    return del(`/invoices/recurring/${id}/`)
+  },
+  async runRecurring(id) {
+    return post(`/invoices/recurring/${id}/run/`, {})
+  },
 
   /**
    * Approve invoice (Draft → Approved)

@@ -1,0 +1,19 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('providers', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='provider',
+            name='odoo_id',
+            field=models.PositiveIntegerField(
+                blank=True, db_index=True, null=True,
+                help_text='ID del res.partner asociado en Odoo (proveedor).',
+            ),
+        ),
+    ]

@@ -3,7 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from core.dashboard import dashboard_summary, dashboard_wallet
+from core.dashboard import dashboard_summary, dashboard_wallet, dashboard_analytics
 from core.inventory import (
     inventory_overview, warehouse_stock, reorder_rules,
     create_reorder_rule, restock_product, movement_history,
@@ -21,8 +21,11 @@ urlpatterns = [
     path('api/tasks/', include('tasks.urls')),
     path('api/providers/', include('providers.urls')),
     path('api/purchases/', include('purchases.urls')),
+    path('api/integrations/', include('accounting_sync.urls')),
+    path('api/integrations/', include('ecommerce_sync.urls')),
     path('api/dashboard/summary/', dashboard_summary, name='dashboard-summary'),
     path('api/dashboard/wallet/', dashboard_wallet, name='dashboard-wallet'),
+    path('api/dashboard/analytics/', dashboard_analytics, name='dashboard-analytics'),
     # Mock AEAT — VeriFactu
     path('api/mock-aeat/verifactu/alta', mock_aeat_alta, name='mock-aeat-alta'),
     # Inventory

@@ -4,6 +4,30 @@
 
 // ── Helpers ───────────────────────────────────────────
 
+/**
+ * Parse el campo descuento de una línea ("10%" | "10" | "") al formato del
+ * backend { discount_type: 'percent'|'fixed'|null, discount_value: Number }.
+ */
+export function parseLineDiscount(discount) {
+  if (discount === null || discount === undefined || discount === '') {
+    return { discount_type: null, discount_value: 0 }
+  }
+  const s = String(discount).trim()
+  if (s.endsWith('%')) {
+    const v = parseFloat(s.slice(0, -1))
+    return { discount_type: 'percent', discount_value: Number.isNaN(v) ? 0 : v }
+  }
+  const v = parseFloat(s)
+  return { discount_type: 'fixed', discount_value: Number.isNaN(v) ? 0 : v }
+}
+
+/** Extrae el porcentaje de impuesto de una etiqueta de línea ("IVA 21%" -> 21). */
+export function parseLineTaxPercent(tax) {
+  if (!tax) return 0
+  const m = String(tax).match(/([\d.]+)\s*%/)
+  return m ? parseFloat(m[1]) : 0
+}
+
 /** Parse DRF validation errors into a single user-friendly string */
 export function parseDrfErrors(data) {
   if (!data || typeof data !== 'object') return null
@@ -329,10 +353,13 @@ export function mapInvoiceDetailFromApi(inv) {
     currency: inv.currency || 'EUR',
     lines: (inv.lines || []).map(l => ({
       id: l.id,
+      productId: l.product || null,
       description: l.description,
       quantity: l.quantity,
       unitPrice: parseFloat(l.unit_price),
-      discount: l.discount_value ? `${l.discount_value}%` : null,
+      discount: l.discount_value
+        ? (l.discount_type === 'fixed' ? `${l.discount_value}` : `${l.discount_value}%`)
+        : null,
       tax: (l.taxes || []).map(t => t.tax_name).join(', ') || '—',
       subtotal: parseFloat(l.subtotal),
     })),
@@ -389,13 +416,18 @@ export function mapInvoiceToApi(formData) {
     currency: formData.currency || 'EUR',
     customer_notes: formData.customerNotes || '',
     internal_notes: formData.internalNotes || '',
-    lines: (formData.lines || []).map(l => ({
-      description: l.description,
-      quantity: l.quantity,
-      unit_price: l.unitPrice,
-      discount_type: l.discountType || 'Percent',
-      discount_value: l.discountValue || 0,
-    })),
+    lines: (formData.lines || []).map(l => {
+      const d = parseLineDiscount(l.discount)
+      return {
+        product: l.productId || l.product || null,
+        description: l.description,
+        quantity: l.quantity,
+        unit_price: l.unitPrice,
+        discount_type: d.discount_type,
+        discount_value: d.discount_value,
+        tax_percent: parseLineTaxPercent(l.tax),
+      }
+    }),
   }
 }
 
@@ -541,10 +573,13 @@ export function mapPurchaseInvoiceDetailFromApi(inv) {
     currency: inv.currency || 'EUR',
     lines: (inv.lines || []).map(l => ({
       id: l.id,
+      productId: l.product || null,
       description: l.description,
       quantity: l.quantity,
       unitPrice: parseFloat(l.unit_price),
-      discount: l.discount_value ? `${l.discount_value}%` : null,
+      discount: l.discount_value
+        ? (l.discount_type === 'fixed' ? `${l.discount_value}` : `${l.discount_value}%`)
+        : null,
       tax: (l.taxes || []).map(t => t.tax_name).join(', ') || '—',
       subtotal: parseFloat(l.subtotal),
     })),
@@ -622,6 +657,7 @@ export function mapSalesQuoteDetailFromApi(q) {
     lines: (q.lines || []).map(l => ({
       id: l.id,
       position: l.position,
+      productId: l.product || null,
       description: l.description,
       quantity: parseFloat(l.quantity),
       unitPrice: parseFloat(l.unit_price),
@@ -653,6 +689,7 @@ export function mapSalesQuoteToApi(form) {
     internal_notes: form.internalNotes || '',
     lines: (form.lines || []).map((l, i) => ({
       position: l.position ?? i,
+      product: l.productId || l.product || null,
       description: l.description || '',
       quantity: l.quantity || 0,
       unit_price: l.unitPrice || 0,
@@ -708,6 +745,7 @@ export function mapPurchaseQuoteDetailFromApi(q) {
     lines: (q.lines || []).map(l => ({
       id: l.id,
       position: l.position,
+      productId: l.product || null,
       description: l.description,
       quantity: parseFloat(l.quantity),
       unitPrice: parseFloat(l.unit_price),
@@ -739,6 +777,7 @@ export function mapPurchaseQuoteToApi(form) {
     internal_notes: form.internalNotes || '',
     lines: (form.lines || []).map((l, i) => ({
       position: l.position ?? i,
+      product: l.productId || l.product || null,
       description: l.description || '',
       quantity: l.quantity || 0,
       unit_price: l.unitPrice || 0,
@@ -763,12 +802,17 @@ export function mapPurchaseInvoiceToApi(formData) {
     currency: formData.currency || 'EUR',
     provider_notes: formData.providerNotes || '',
     internal_notes: formData.internalNotes || '',
-    lines: (formData.lines || []).map(l => ({
-      description: l.description,
-      quantity: l.quantity,
-      unit_price: l.unitPrice,
-      discount_type: l.discountType || 'Percent',
-      discount_value: l.discountValue || 0,
-    })),
+    lines: (formData.lines || []).map(l => {
+      const d = parseLineDiscount(l.discount)
+      return {
+        product: l.productId || l.product || null,
+        description: l.description,
+        quantity: l.quantity,
+        unit_price: l.unitPrice,
+        discount_type: d.discount_type,
+        discount_value: d.discount_value,
+        tax_percent: parseLineTaxPercent(l.tax),
+      }
+    }),
   }
 }

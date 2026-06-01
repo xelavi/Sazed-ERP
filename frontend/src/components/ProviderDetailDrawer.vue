@@ -347,6 +347,10 @@
               <Pencil :size="18" />
               Editar
             </button>
+            <button class="btn btn-primary" @click="$emit('new-quote', provider)">
+              <FileText :size="18" />
+              Nuevo presupuesto
+            </button>
           </div>
         </div>
       </div>
@@ -366,7 +370,7 @@ const props = defineProps({
   provider: { type: Object, required: true }
 })
 
-defineEmits(['close', 'edit'])
+defineEmits(['close', 'edit', 'new-quote'])
 
 const tabs = [
   { key: 'info', label: 'Información', icon: User },

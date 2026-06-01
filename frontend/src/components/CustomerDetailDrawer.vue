@@ -226,48 +226,10 @@
                     <FileText :size="16" />
                     Presupuestos
                   </h4>
-                  <button class="btn btn-sm btn-secondary" @click="showNewQuote = !showNewQuote">
+                  <button class="btn btn-sm btn-primary" @click="$emit('new-quote', customer)">
                     <Plus :size="14" />
                     Nuevo presupuesto
                   </button>
-                </div>
-
-                <!-- New quote form -->
-                <div v-if="showNewQuote" class="new-item-form">
-                  <div class="field-row">
-                    <div class="field">
-                      <label class="field-label">Concepto</label>
-                      <input class="input" type="text" placeholder="Descripción del presupuesto" v-model="newQuote.concept" />
-                    </div>
-                    <div class="field">
-                      <label class="field-label">Importe</label>
-                      <div class="input-suffix">
-                        <input class="input" type="number" step="0.01" min="0" placeholder="0" v-model.number="newQuote.amount" />
-                        <span class="suffix">€</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="field-row">
-                    <div class="field">
-                      <label class="field-label">Fecha</label>
-                      <input class="input" type="date" v-model="newQuote.date" />
-                    </div>
-                    <div class="field">
-                      <label class="field-label">Validez (días)</label>
-                      <input class="input" type="number" min="1" placeholder="30" v-model.number="newQuote.validDays" />
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label class="field-label">Notas</label>
-                    <textarea class="input textarea" rows="2" placeholder="Notas adicionales..." v-model="newQuote.notes"></textarea>
-                  </div>
-                  <div class="new-item-actions">
-                    <button class="btn btn-secondary btn-sm" @click="showNewQuote = false; resetNewQuote()">Cancelar</button>
-                    <button class="btn btn-primary btn-sm" @click="addQuote" :disabled="!newQuote.concept.trim()">
-                      <Check :size="14" />
-                      Guardar
-                    </button>
-                  </div>
                 </div>
 
                 <!-- Quotes list -->
@@ -284,7 +246,7 @@
                     </div>
                   </div>
                 </div>
-                <p v-else-if="!showNewQuote" class="empty-hint">No hay presupuestos para este contacto.</p>
+                <p v-else class="empty-hint">No hay presupuestos para este contacto.</p>
               </section>
             </div>
 
@@ -483,7 +445,7 @@ const props = defineProps({
   customer: { type: Object, required: true }
 })
 
-defineEmits(['close', 'edit', 'new-invoice'])
+defineEmits(['close', 'edit', 'new-invoice', 'new-quote'])
 
 /* ── Tabs ── */
 const tabs = [
@@ -512,38 +474,6 @@ function addNote() {
   props.customer.detail.notes.unshift(note)
   newNote.content = ''
   showNewNote.value = false
-}
-
-/* ── New Quote ── */
-const showNewQuote = ref(false)
-const newQuote = reactive({
-  concept: '',
-  amount: null,
-  date: new Date().toISOString().split('T')[0],
-  validDays: 30,
-  notes: ''
-})
-
-function resetNewQuote() {
-  Object.assign(newQuote, { concept: '', amount: null, date: new Date().toISOString().split('T')[0], validDays: 30, notes: '' })
-}
-
-function addQuote() {
-  if (!newQuote.concept.trim()) return
-  const quoteCount = props.customer.detail.quotes.length + 1
-  const quote = {
-    id: Date.now(),
-    number: `PRES-${String(quoteCount).padStart(3, '0')}`,
-    concept: newQuote.concept.trim(),
-    amount: newQuote.amount || 0,
-    date: newQuote.date,
-    validDays: newQuote.validDays || 30,
-    notes: newQuote.notes,
-    status: 'Borrador'
-  }
-  props.customer.detail.quotes.unshift(quote)
-  resetNewQuote()
-  showNewQuote.value = false
 }
 
 /* ── New Activity ── */

@@ -152,6 +152,7 @@
       @close="closeDetail"
       @edit="(c) => { closeDetail(); openCustomerForm(c) }"
       @new-invoice="handleNewInvoice"
+      @new-quote="handleNewQuote"
     />
 
     <!-- ===================== CREATE / EDIT MODAL ===================== -->
@@ -278,6 +279,11 @@ async function deleteCustomer(customer) {
 function handleNewInvoice(customer) {
   closeDetail()
   router.push({ name: 'Invoices', query: { newInvoice: 'true', customerId: customer.id } })
+}
+
+function handleNewQuote(customer) {
+  closeDetail()
+  router.push({ name: 'SalesQuotes', query: { newQuote: 'true', customerId: customer.id } })
 }
 
 /* ── Table state ── */

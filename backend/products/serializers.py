@@ -100,9 +100,9 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'sku', 'name', 'status', 'product_type', 'category',
-            'stock', 'reserved', 'price', 'price_from', 'has_variants',
-            'variants_count', 'cost', 'tax', 'supplier', 'channels',
-            'updated_at', 'image', 'margin',
+            'stock', 'reserved', 'price', 'price_excl_tax', 'price_from',
+            'has_variants', 'variants_count', 'cost', 'tax', 'tax_rate',
+            'supplier', 'channels', 'updated_at', 'image', 'margin',
         ]
 
     def get_supplier(self, obj):

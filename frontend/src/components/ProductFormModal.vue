@@ -252,7 +252,30 @@
                 <h4 class="sidebar-card-title">Imagen del producto</h4>
                 <p class="sidebar-card-desc">Sube una imagen de tu producto. Podrás utilizarla en documentos y en tu catálogo.</p>
 
-                <div class="image-upload-area">
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png"
+                  class="file-input-hidden"
+                  @change="onFileChange"
+                />
+
+                <div v-if="form.imagePreview" class="image-preview">
+                  <img :src="form.imagePreview" alt="Vista previa" />
+                  <button class="image-remove" type="button" @click="removeImage">
+                    <X :size="14" />
+                  </button>
+                </div>
+
+                <div
+                  v-else
+                  class="image-upload-area"
+                  :class="{ 'is-dragging': isDragging }"
+                  @click="fileInput?.click()"
+                  @dragover.prevent="isDragging = true"
+                  @dragleave.prevent="isDragging = false"
+                  @drop.prevent="onDrop"
+                >
                   <Upload :size="28" class="upload-icon" />
                   <span class="upload-text">Selecciona o arrastra aquí tus archivos</span>
                   <span class="upload-hint">Hasta 30 MB y 7680 × 4320 píxeles<br>(JPEG, JPG, PNG)</span>
@@ -332,7 +355,9 @@ function blankForm() {
     digital: false,
     notes: '',
     sellable: true,
-    purchasable: true
+    purchasable: true,
+    imageFile: null,
+    imagePreview: ''
   }
 }
 
@@ -340,6 +365,39 @@ const form = reactive(blankForm())
 const tagInput = ref('')
 const channelWeb = ref(false)
 const channelMarketplace = ref(false)
+const fileInput = ref(null)
+const isDragging = ref(false)
+
+/* ── Image upload ── */
+function setImage(file) {
+  if (!file) return
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png']
+  if (!validTypes.includes(file.type)) {
+    Swal.fire({ icon: 'warning', title: 'Formato no válido', text: 'Solo se admiten archivos JPEG, JPG o PNG.', confirmButtonColor: '#667eea', target: document.body, heightAuto: false })
+    return
+  }
+  if (file.size > 30 * 1024 * 1024) {
+    Swal.fire({ icon: 'warning', title: 'Archivo demasiado grande', text: 'La imagen no puede superar los 30 MB.', confirmButtonColor: '#667eea', target: document.body, heightAuto: false })
+    return
+  }
+  form.imageFile = file
+  form.imagePreview = URL.createObjectURL(file)
+}
+
+function onFileChange(e) {
+  setImage(e.target.files?.[0])
+}
+
+function onDrop(e) {
+  isDragging.value = false
+  setImage(e.dataTransfer?.files?.[0])
+}
+
+function removeImage() {
+  form.imageFile = null
+  form.imagePreview = ''
+  if (fileInput.value) fileInput.value.value = ''
+}
 
 /* ── Populate form when editing ── */
 watch(() => props.open, (isOpen) => {
@@ -372,7 +430,9 @@ watch(() => props.open, (isOpen) => {
       digital: p.detail?.digital || false,
       notes: p.detail?.notes || '',
       sellable: p.detail?.sellable ?? true,
-      purchasable: p.detail?.purchasable ?? true
+      purchasable: p.detail?.purchasable ?? true,
+      imageFile: null,
+      imagePreview: p.image || ''
     })
     channelWeb.value = p.channels?.includes('Web') || false
     channelMarketplace.value = p.channels?.includes('Marketplace') || false
@@ -713,8 +773,50 @@ function handleSave() {
   transition: border-color var(--transition-base);
 }
 
-.image-upload-area:hover {
+.image-upload-area:hover,
+.image-upload-area.is-dragging {
   border-color: var(--primary-color);
+  background: var(--bg-hover);
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.image-preview {
+  position: relative;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.image-preview img {
+  display: block;
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+  background: var(--bg-secondary);
+}
+
+.image-remove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.image-remove:hover {
+  background: rgba(0, 0, 0, 0.75);
 }
 
 .upload-icon {

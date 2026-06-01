@@ -3,11 +3,13 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     InvoiceSeriesViewSet, InvoiceViewSet, QuoteViewSet, mock_aeat_alta,
+    RecurringInvoiceViewSet,
 )
 
 router = DefaultRouter()
 router.register(r'series', InvoiceSeriesViewSet)
 router.register(r'quotes', QuoteViewSet)
+router.register(r'recurring', RecurringInvoiceViewSet)
 router.register(r'', InvoiceViewSet)
 
 urlpatterns = [

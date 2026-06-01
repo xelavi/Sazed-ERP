@@ -36,7 +36,8 @@
                     <label class="field-label">{{ contactLabel }} <span class="required">*</span></label>
                     <select class="select" v-model="form.contactId">
                       <option value="">Select {{ contactLabel.toLowerCase() }}...</option>
-                      <option v-for="c in contacts" :key="c.id" :value="c.id">{{ c.name }}</option>
+                      <option v-for="c in contactOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
+                      <option value="__new__">+ Crear nuevo {{ mode === 'purchase' ? 'proveedor' : 'cliente' }}…</option>
                     </select>
                   </div>
                   <div class="field">
@@ -78,7 +79,15 @@
                   </div>
 
                   <div v-for="(line, idx) in form.lines" :key="idx" class="le-row">
-                    <input class="input input-sm" type="text" placeholder="Item description..." v-model="line.description" />
+                    <ProductAutocomplete
+                      v-model="line.description"
+                      :products="products"
+                      :linked-product-id="line.productId"
+                      :price-mode="mode === 'purchase' ? 'purchase' : 'sale'"
+                      placeholder="Producto o servicio..."
+                      @select="(p) => onProductSelect(line, p)"
+                      @clear="onProductClear(line)"
+                    />
                     <input class="input input-sm input-number" type="number" min="0" step="0.01" v-model.number="line.quantity" />
                     <input class="input input-sm input-number" type="number" min="0" step="0.01" v-model.number="line.unitPrice" />
                     <select class="select select-sm" v-model.number="line.taxPercent">
@@ -136,12 +145,37 @@
         </div>
       </div>
     </Transition>
+
+    <CustomerFormModal
+      v-if="mode !== 'purchase'"
+      :open="createContactOpen"
+      @close="createContactOpen = false"
+      @save="handleContactCreated"
+    />
+    <ProviderFormModal
+      v-else
+      :open="createContactOpen"
+      @close="createContactOpen = false"
+      @save="handleContactCreated"
+    />
   </Teleport>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Save, Plus, Trash2 } from 'lucide-vue-next'
+import Swal from 'sweetalert2'
+import customersApi from '@/services/customers'
+import providersApi from '@/services/providers'
+import productsApi from '@/services/products'
+import {
+  mapCustomerFromApi, mapCustomerToApi,
+  mapProviderFromApi, mapProviderToApi, mapProductFromApi
+} from '@/services/mappers'
+import { taxPercentFromProduct, priceForMode } from '@/services/productLine'
+import CustomerFormModal from '@/components/CustomerFormModal.vue'
+import ProviderFormModal from '@/components/ProviderFormModal.vue'
+import ProductAutocomplete from '@/components/ProductAutocomplete.vue'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -149,16 +183,89 @@ const props = defineProps({
   contacts: { type: Array, default: () => [] },
   mode: { type: String, default: 'sales' }, // 'sales' | 'purchase'
   preselectedContactId: { type: [Number, String], default: null },
+  preselectedLine: { type: Object, default: null },
 })
 
-const emit = defineEmits(['close', 'save'])
+const emit = defineEmits(['close', 'save', 'contact-created'])
 
 const isEditing = computed(() => !!props.quote)
 const contactLabel = computed(() => props.mode === 'purchase' ? 'Provider' : 'Customer')
 
+/* ── Contact options + inline creation ── */
+const extraContacts = ref([]) // contacts created inline from this modal
+
+const contactOptions = computed(() => {
+  if (!extraContacts.value.length) return props.contacts
+  const ids = new Set(props.contacts.map(c => c.id))
+  return [...props.contacts, ...extraContacts.value.filter(c => !ids.has(c.id))]
+})
+
+const createContactOpen = ref(false)
+
+/* ── Product catalog (for line autocomplete) ── */
+const products = ref([])
+
+async function loadProducts() {
+  try {
+    const data = await productsApi.getAll({ page_size: 1000 })
+    const items = Array.isArray(data) ? data : (data.results || [])
+    products.value = items.map(mapProductFromApi).filter(p => p.status !== 'Archived')
+  } catch (err) {
+    console.error('[QuoteFormModal] failed to load products:', err)
+    products.value = []
+  }
+}
+
+/* Autorellena la línea al elegir un producto del catálogo. */
+function onProductSelect(line, product) {
+  line.productId = product.id
+  line.unitPrice = priceForMode(product, props.mode === 'purchase' ? 'purchase' : 'sale')
+  const pct = taxPercentFromProduct(product)
+  if (pct !== null) line.taxPercent = pct
+}
+
+function onProductClear(line) {
+  line.productId = null
+}
+
+async function handleContactCreated(formData) {
+  try {
+    let mapped
+    if (props.mode === 'purchase') {
+      const created = await providersApi.create(mapProviderToApi(formData))
+      mapped = mapProviderFromApi(created)
+    } else {
+      const created = await customersApi.create(mapCustomerToApi(formData))
+      mapped = mapCustomerFromApi(created)
+    }
+    extraContacts.value.push(mapped)
+    form.value.contactId = mapped.id
+    createContactOpen.value = false
+    emit('contact-created', mapped)
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.message || 'No se pudo crear el contacto',
+      confirmButtonColor: '#667eea',
+      customClass: { popup: 'swal-erp-popup' },
+      target: document.body,
+      heightAuto: false
+    })
+  }
+}
+
 const today = new Date().toISOString().split('T')[0]
 
 const form = ref(emptyForm())
+
+/* ── Open the inline "new contact" modal when sentinel option picked ── */
+watch(() => form.value.contactId, (val, prev) => {
+  if (val === '__new__') {
+    form.value.contactId = prev === '__new__' ? '' : (prev ?? '')
+    createContactOpen.value = true
+  }
+})
 
 function emptyForm() {
   return {
@@ -174,11 +281,12 @@ function emptyForm() {
 }
 
 function emptyLine() {
-  return { description: '', quantity: 1, unitPrice: 0, taxPercent: 21 }
+  return { productId: null, description: '', quantity: 1, unitPrice: 0, taxPercent: 21 }
 }
 
 watch(() => props.open, (val) => {
   if (val) {
+    loadProducts()
     if (props.quote) {
       const q = props.quote
       form.value = {
@@ -191,6 +299,7 @@ watch(() => props.open, (val) => {
         internalNotes: q.internalNotes || '',
         lines: (q.lines && q.lines.length > 0)
           ? q.lines.map(l => ({
+              productId: l.productId || l.product || null,
               description: l.description,
               quantity: l.quantity,
               unitPrice: l.unitPrice,
@@ -202,6 +311,9 @@ watch(() => props.open, (val) => {
       form.value = emptyForm()
       if (props.preselectedContactId) {
         form.value.contactId = props.preselectedContactId
+      }
+      if (props.preselectedLine) {
+        form.value.lines = [{ ...emptyLine(), ...props.preselectedLine }]
       }
     }
   }
@@ -241,6 +353,7 @@ function handleSave() {
       .filter(l => l.description?.trim())
       .map((l, i) => ({
         position: i,
+        productId: l.productId || null,
         description: l.description,
         quantity: l.quantity || 0,
         unitPrice: l.unitPrice || 0,

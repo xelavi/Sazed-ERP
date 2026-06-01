@@ -125,8 +125,18 @@ class PurchaseInvoice(models.Model):
         on_delete=models.SET_NULL, related_name='credit_notes',
     )
 
+    # Plantilla de recurrencia: si es True, no es una factura real, solo el
+    # molde que usa RecurringPurchaseInvoice para generar facturas periódicas.
+    is_template = models.BooleanField(default=False, db_index=True)
+
     locked_at = models.DateTimeField(null=True, blank=True)
     locked_by = models.CharField(max_length=100, blank=True)
+
+    # Integración Odoo
+    odoo_id = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text='ID del account.move (in_invoice) asociado en Odoo.',
+    )
 
     created_by = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -310,6 +320,63 @@ class PurchaseInvoiceTimeline(models.Model):
 
     def __str__(self):
         return f'{self.event_type}: {self.action}'
+
+
+class RecurringPurchaseInvoice(models.Model):
+    """Plan de facturación recurrente de compra.
+
+    Usa una factura de compra plantilla (is_template=True) como molde y genera
+    automáticamente facturas aprobadas en cada vencimiento.
+    """
+
+    from core.recurrence import RecurrenceFrequency
+
+    company = models.ForeignKey(
+        'accounts.Company', on_delete=models.CASCADE,
+        related_name='recurring_purchase_invoices', null=True, blank=True,
+    )
+    template = models.ForeignKey(
+        PurchaseInvoice, on_delete=models.PROTECT,
+        related_name='recurrence_plans',
+    )
+    frequency = models.CharField(
+        max_length=12, choices=RecurrenceFrequency.choices,
+        default=RecurrenceFrequency.MONTHLY,
+    )
+    interval = models.PositiveIntegerField(
+        default=1, help_text='Cada N periodos (p. ej. 2 = cada 2 meses).',
+    )
+    payment_term_days = models.PositiveIntegerField(
+        default=30,
+        help_text='Días entre emisión y vencimiento de cada factura generada.',
+    )
+    start_date = models.DateField()
+    next_run = models.DateField(db_index=True)
+    end_date = models.DateField(null=True, blank=True)
+    max_occurrences = models.PositiveIntegerField(null=True, blank=True)
+    occurrences = models.PositiveIntegerField(default=0)
+    last_run = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True, db_index=True)
+
+    created_by = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-active', 'next_run']
+
+    def __str__(self):
+        return f'Recurrencia compra {self.get_frequency_display()} — plantilla #{self.template_id}'
+
+    @property
+    def is_finished(self):
+        if not self.active:
+            return True
+        if self.end_date and self.next_run > self.end_date:
+            return True
+        if self.max_occurrences and self.occurrences >= self.max_occurrences:
+            return True
+        return False
 
 
 class PurchaseQuote(models.Model):

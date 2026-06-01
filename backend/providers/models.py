@@ -49,6 +49,12 @@ class Provider(models.Model):
 
     linked_contacts = models.ManyToManyField('self', blank=True, symmetrical=True)
 
+    # Integración Odoo
+    odoo_id = models.PositiveIntegerField(
+        null=True, blank=True, db_index=True,
+        help_text='ID del res.partner asociado en Odoo (proveedor).',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

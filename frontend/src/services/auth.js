@@ -87,16 +87,31 @@ export default {
     return get(`/companies/${companyId}/members/`)
   },
 
-  async inviteMember(companyId, email, role) {
-    return post(`/companies/${companyId}/members/`, { email, role })
-  },
-
   async updateMember(companyId, memberId, data) {
     return patch(`/companies/${companyId}/members/${memberId}/`, data)
   },
 
   async removeMember(companyId, memberId) {
     return apiFetch(`/companies/${companyId}/members/${memberId}/`, {
+      method: 'DELETE',
+    })
+  },
+
+  // ── Custom roles ──
+  async getRoles(companyId) {
+    return get(`/companies/${companyId}/roles/`)
+  },
+
+  async createRole(companyId, data) {
+    return post(`/companies/${companyId}/roles/`, data)
+  },
+
+  async updateRole(companyId, roleId, data) {
+    return patch(`/companies/${companyId}/roles/${roleId}/`, data)
+  },
+
+  async deleteRole(companyId, roleId) {
+    return apiFetch(`/companies/${companyId}/roles/${roleId}/`, {
       method: 'DELETE',
     })
   },

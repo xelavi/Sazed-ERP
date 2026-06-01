@@ -41,6 +41,7 @@
                   >
                     <option value="">Select customer...</option>
                     <option v-for="c in customerOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
+                    <option value="__new__">+ Crear nuevo cliente…</option>
                   </select>
                   <span v-if="touched.customer && !form.customerId" class="field-error">Customer is required</span>
                 </div>
@@ -102,11 +103,14 @@
                   <!-- Line rows -->
                   <div v-for="(line, idx) in form.lines" :key="line.id" class="le-row">
                     <div class="le-cell-desc">
-                      <input
-                        class="input input-sm"
-                        type="text"
-                        placeholder="Product or service..."
+                      <ProductAutocomplete
                         v-model="line.description"
+                        :products="products"
+                        :linked-product-id="line.productId"
+                        price-mode="sale"
+                        placeholder="Producto o servicio..."
+                        @select="(p) => onProductSelect(line, p)"
+                        @clear="onProductClear(line)"
                       />
                     </div>
                     <div class="le-cell-qty">
@@ -223,6 +227,61 @@
                 </div>
               </div>
 
+              <!-- ── Recurrence ── -->
+              <div v-if="!isEditing" class="sidebar-card">
+                <label class="rec-toggle">
+                  <input type="checkbox" v-model="form.recurring" />
+                  <span class="rec-toggle-text">
+                    <Repeat :size="14" />
+                    Factura recurrente
+                  </span>
+                </label>
+                <p class="sidebar-card-desc" style="margin-top:0.5rem">
+                  Se generará y aprobará una factura automáticamente cada periodo.
+                </p>
+
+                <template v-if="form.recurring">
+                  <div class="field">
+                    <label class="field-label">Frecuencia</label>
+                    <div class="field-row-inline">
+                      <span class="rec-inline-prefix">Cada</span>
+                      <input class="input input-sm" style="width:64px;text-align:right" type="number" min="1" v-model.number="form.recInterval" />
+                      <select class="select select-sm" style="flex:1" v-model="form.recFrequency">
+                        <option value="weekly">semana(s)</option>
+                        <option value="monthly">mes(es)</option>
+                        <option value="quarterly">trimestre(s)</option>
+                        <option value="semiannual">semestre(s)</option>
+                        <option value="yearly">año(s)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label class="field-label">Primera emisión automática</label>
+                    <input class="input input-sm" type="date" v-model="form.recStartDate" />
+                  </div>
+
+                  <div class="field">
+                    <label class="field-label">Finalización</label>
+                    <select class="select select-sm" v-model="form.recEndMode">
+                      <option value="never">Sin fin</option>
+                      <option value="until">En una fecha</option>
+                      <option value="count">Tras N facturas</option>
+                    </select>
+                  </div>
+
+                  <div v-if="form.recEndMode === 'until'" class="field">
+                    <label class="field-label">Hasta el</label>
+                    <input class="input input-sm" type="date" v-model="form.recEndDate" />
+                  </div>
+
+                  <div v-if="form.recEndMode === 'count'" class="field">
+                    <label class="field-label">Nº de facturas</label>
+                    <input class="input input-sm" style="width:90px" type="number" min="1" v-model.number="form.recMaxOccurrences" />
+                  </div>
+                </template>
+              </div>
+
               <!-- ── Currency ── -->
               <div class="sidebar-card">
                 <h4 class="sidebar-card-title">Currency</h4>
@@ -251,18 +310,28 @@
         </div>
       </div>
     </Transition>
+
+    <CustomerFormModal
+      :open="createCustomerOpen"
+      @close="createCustomerOpen = false"
+      @save="handleCustomerCreated"
+    />
   </Teleport>
 </template>
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import {
-  X, Plus, Trash2, Save, CheckCircle2
+  X, Plus, Trash2, Save, CheckCircle2, Repeat
 } from 'lucide-vue-next'
 import Swal from 'sweetalert2'
 import invoicesApi from '@/services/invoices'
 import customersApi from '@/services/customers'
-import { mapCustomerFromApi } from '@/services/mappers'
+import productsApi from '@/services/products'
+import { mapCustomerFromApi, mapCustomerToApi, mapProductFromApi } from '@/services/mappers'
+import { lineTaxFromProduct, salePriceOf } from '@/services/productLine'
+import CustomerFormModal from '@/components/CustomerFormModal.vue'
+import ProductAutocomplete from '@/components/ProductAutocomplete.vue'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -271,9 +340,10 @@ const props = defineProps({
   seriesList: { type: Array, default: () => [] },
   customers: { type: Array, default: () => [] },
   preselectedCustomerId: { type: [Number, String], default: null },
+  preselectedLine: { type: Object, default: null },
 })
 
-const emit = defineEmits(['close', 'save'])
+const emit = defineEmits(['close', 'save', 'customer-created'])
 
 const isEditing = computed(() => !!props.invoice)
 
@@ -301,10 +371,38 @@ const activeSeries = computed(() =>
 
 /* ── Customer Options (loaded from API, or provided by parent) ── */
 const fallbackCustomers = ref([])
+const extraCustomers = ref([]) // customers created inline from this modal
 
-const customerOptions = computed(() =>
-  props.customers.length > 0 ? props.customers : fallbackCustomers.value
-)
+const customerOptions = computed(() => {
+  const base = props.customers.length > 0 ? props.customers : fallbackCustomers.value
+  if (!extraCustomers.value.length) return base
+  const ids = new Set(base.map(c => c.id))
+  return [...base, ...extraCustomers.value.filter(c => !ids.has(c.id))]
+})
+
+/* ── Inline customer creation ── */
+const createCustomerOpen = ref(false)
+
+async function handleCustomerCreated(formData) {
+  try {
+    const created = await customersApi.create(mapCustomerToApi(formData))
+    const mapped = mapCustomerFromApi(created)
+    extraCustomers.value.push(mapped)
+    form.customerId = mapped.id
+    createCustomerOpen.value = false
+    emit('customer-created', mapped)
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.message || 'No se pudo crear el cliente',
+      confirmButtonColor: '#667eea',
+      customClass: { popup: 'swal-erp-popup' },
+      target: document.body,
+      heightAuto: false
+    })
+  }
+}
 
 async function loadCustomers() {
   try {
@@ -315,6 +413,31 @@ async function loadCustomers() {
     console.error('[InvoiceFormModal] failed to load customers:', err)
     fallbackCustomers.value = []
   }
+}
+
+/* ── Product catalog (for line autocomplete) ── */
+const products = ref([])
+
+async function loadProducts() {
+  try {
+    const data = await productsApi.getAll({ page_size: 1000 })
+    const items = Array.isArray(data) ? data : (data.results || [])
+    products.value = items.map(mapProductFromApi).filter(p => p.status !== 'Archived')
+  } catch (err) {
+    console.error('[InvoiceFormModal] failed to load products:', err)
+    products.value = []
+  }
+}
+
+/* Autorellena la línea al elegir un producto del catálogo. */
+function onProductSelect(line, product) {
+  line.productId = product.id
+  line.unitPrice = salePriceOf(product)
+  line.tax = lineTaxFromProduct(product, line.tax)
+}
+
+function onProductClear(line) {
+  line.productId = null
 }
 
 const selectedCustomer = computed(() => {
@@ -328,6 +451,7 @@ let lineCounter = 100
 function blankLine() {
   return {
     id: lineCounter++,
+    productId: null,
     description: '',
     quantity: 1,
     unitPrice: 0,
@@ -348,8 +472,32 @@ function blankForm() {
     discountType: 'percent',
     discountValue: null,
     customerNotes: '',
-    internalNotes: ''
+    internalNotes: '',
+    // Recurrence
+    recurring: false,
+    recFrequency: 'monthly',
+    recInterval: 1,
+    recStartDate: '',
+    recEndMode: 'never',
+    recEndDate: null,
+    recMaxOccurrences: null
   }
+}
+
+function addPeriod(dateStr, frequency, interval = 1) {
+  const d = new Date(dateStr)
+  const n = Math.max(1, interval || 1)
+  if (frequency === 'weekly') {
+    d.setDate(d.getDate() + 7 * n)
+    return d.toISOString().split('T')[0]
+  }
+  const months = { monthly: 1, quarterly: 3, semiannual: 6, yearly: 12 }[frequency] || 1
+  const day = d.getDate()
+  d.setDate(1)
+  d.setMonth(d.getMonth() + months * n)
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+  d.setDate(Math.min(day, lastDay))
+  return d.toISOString().split('T')[0]
 }
 
 function getDefaultDueDate() {
@@ -359,6 +507,14 @@ function getDefaultDueDate() {
 }
 
 const form = reactive(blankForm())
+
+/* ── Open the inline "new customer" modal when sentinel option picked ── */
+watch(() => form.customerId, (val, prev) => {
+  if (val === '__new__') {
+    form.customerId = prev === '__new__' ? '' : (prev ?? '')
+    createCustomerOpen.value = true
+  }
+})
 
 /* ── Populate when editing ── */
 watch(() => props.open, async (isOpen) => {
@@ -388,6 +544,9 @@ watch(() => props.open, async (isOpen) => {
     fallbackCustomers.value = []
   }
 
+  // Load product catalog for line autocomplete
+  await loadProducts()
+
   if (props.invoice) {
     const inv = props.invoice
     Object.assign(form, {
@@ -399,6 +558,7 @@ watch(() => props.open, async (isOpen) => {
       currency: inv.currency || 'EUR',
       lines: inv.lines.map(l => ({
         id: lineCounter++,
+        productId: l.productId || l.product || null,
         description: l.description,
         quantity: l.quantity,
         unitPrice: l.unitPrice,
@@ -419,6 +579,17 @@ watch(() => props.open, async (isOpen) => {
     if (props.preselectedCustomerId) {
       form.customerId = props.preselectedCustomerId
     }
+    // Prefill a line if provided (e.g. coming from a product)
+    if (props.preselectedLine) {
+      form.lines = [{ ...blankLine(), ...props.preselectedLine }]
+    }
+  }
+})
+
+/* ── Recurrence: default the first auto issue to next period ── */
+watch(() => form.recurring, (on) => {
+  if (on && !form.recStartDate) {
+    form.recStartDate = addPeriod(form.issueDate, form.recFrequency, form.recInterval)
   }
 })
 
@@ -580,6 +751,7 @@ function buildInvoiceData(status) {
     currency: form.currency,
     lines: form.lines.filter(l => l.description).map((l, i) => ({
       id: l.id,
+      productId: l.productId || null,
       description: l.description,
       quantity: l.quantity,
       unitPrice: l.unitPrice,
@@ -600,7 +772,20 @@ function buildInvoiceData(status) {
     customerNotes: form.customerNotes,
     internalNotes: form.internalNotes,
     lockedAt: status === 'Approved' ? new Date().toISOString() : (props.invoice?.lockedAt || null),
-    timeline: buildTimeline(status)
+    timeline: buildTimeline(status),
+    recurrence: buildRecurrence()
+  }
+}
+
+function buildRecurrence() {
+  if (isEditing.value || !form.recurring) return null
+  return {
+    frequency: form.recFrequency,
+    interval: form.recInterval || 1,
+    payment_term_days: 30,
+    start_date: form.recStartDate || form.issueDate,
+    end_date: form.recEndMode === 'until' ? form.recEndDate : null,
+    max_occurrences: form.recEndMode === 'count' ? form.recMaxOccurrences : null
   }
 }
 
@@ -994,6 +1179,30 @@ function formatCurrency(value) {
   color: var(--text-tertiary);
   margin: 0.5rem 0 0;
   font-style: italic;
+}
+
+.rec-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.rec-toggle input { cursor: pointer; }
+
+.rec-toggle-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rec-inline-prefix {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 /* ── Totals in sidebar ── */

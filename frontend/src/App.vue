@@ -9,14 +9,31 @@ import {
   Menu, Search, Bell, HelpCircle, ShoppingBag,
   ClipboardList, TrendingUp,
   Receipt, FileText, Share2, AtSign, Image, Target, Star,
-  Upload, ExternalLink, BarChart2, AlertTriangle, UserCheck, Truck
+  Upload, ExternalLink, BarChart2, AlertTriangle, UserCheck, Truck,
+  Megaphone, LayoutDashboard, BookOpen
 } from 'lucide-vue-next'
 import UserMenu from '@/components/UserMenu.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
+import { useToast } from '@/composables/useToast'
+import odooApi from '@/services/odoo'
 
 const route = useRoute()
-const { isAuthenticated } = useAuth()
+const { isAuthenticated, hasCompany, canViewModule, activeCompany } = useAuth()
 const { unreadTotal, refresh: refreshInbox } = useInbox()
+const toast = useToast()
+
+const openingOdoo = ref(false)
+async function openAccounting() {
+  if (!activeCompany.value?.id || openingOdoo.value) return
+  openingOdoo.value = true
+  try {
+    await odooApi.openOdooForCompany(activeCompany.value.id)
+  } catch (err) {
+    toast.error(err.message || 'No se pudo abrir la contabilidad en Odoo')
+  } finally {
+    openingOdoo.value = false
+  }
+}
 const isSidebarCollapsed = ref(false)
 const expandedMenus = ref({})
 const searchQuery = ref('')
@@ -39,19 +56,25 @@ const currentDate = computed(() => {
 })
 
 const menuItems = [
-  { 
-    id: 'home', 
-    label: 'Home', 
-    icon: Home, 
-    route: '/' 
+  {
+    id: 'home',
+    label: 'Home',
+    icon: Home,
+    route: '/'
   },
-  { 
-    id: 'catalog', 
-    label: 'Catalog', 
-    icon: Package, 
+  {
+    id: 'dashboards',
+    label: 'Dashboards',
+    icon: LayoutDashboard,
+    route: '/dashboards'
+  },
+  {
+    id: 'catalog',
+    label: 'Catalog',
+    icon: Package,
     submenu: [
-      { label: 'Products', route: '/products', icon: ShoppingBag },
-      { label: 'Inventory', route: '/inventory', icon: ClipboardList }
+      { label: 'Products', route: '/products', icon: ShoppingBag, module: 'products' },
+      { label: 'Inventory', route: '/inventory', icon: ClipboardList, module: 'inventory' }
     ]
   },
   {
@@ -59,8 +82,8 @@ const menuItems = [
     label: 'Sales',
     icon: Receipt,
     submenu: [
-      { label: 'Invoices', route: '/invoices', icon: FileText },
-      { label: 'Presupuestos', route: '/quotes', icon: ClipboardList }
+      { label: 'Invoices', route: '/invoices', icon: FileText, module: 'invoices' },
+      { label: 'Presupuestos', route: '/quotes', icon: ClipboardList, module: 'quotes' }
     ]
   },
   {
@@ -68,27 +91,30 @@ const menuItems = [
     label: 'Purchases',
     icon: ShoppingBag,
     submenu: [
-      { label: 'Purchase Invoices', route: '/purchase-invoices', icon: FileText },
-      { label: 'Presupuestos', route: '/purchase-quotes', icon: ClipboardList }
+      { label: 'Purchase Invoices', route: '/purchase-invoices', icon: FileText, module: 'purchase_invoices' },
+      { label: 'Presupuestos', route: '/purchase-quotes', icon: ClipboardList, module: 'purchase_quotes' }
     ]
   },
   {
     id: 'customers',
     label: 'Customers',
     icon: Users,
-    route: '/customers'
+    route: '/customers',
+    module: 'customers'
   },
   {
     id: 'providers',
     label: 'Providers',
     icon: Truck,
-    route: '/providers'
+    route: '/providers',
+    module: 'providers'
   },
   {
     id: 'personnel',
     label: 'Personal',
     icon: UserCheck,
-    route: '/personnel'
+    route: '/personnel',
+    module: 'personnel'
   },
   { 
     id: 'marketing', 
@@ -100,6 +126,7 @@ const menuItems = [
     id: 'social-crm',
     label: 'Social CRM',
     icon: Share2,
+    module: 'social_crm',
     submenu: [
       { label: 'Dashboard',   route: '/social-crm',             icon: BarChart2 },
       { label: 'Contenido',   route: '/social-crm/content',     icon: Image },
@@ -110,6 +137,28 @@ const menuItems = [
     ]
   }
 ]
+
+// Accounts without a company see no modules — the sidebar stays empty.
+// Otherwise modules are filtered by the active role's view permissions.
+// (Items without a `module` key — Home, Marketing — are always shown.)
+const visibleMenuItems = computed(() => {
+  if (!hasCompany.value) return []
+  return menuItems.reduce((acc, item) => {
+    if (item.submenu) {
+      // A submenu item is gated by its own `module`; the group's `module`
+      // (if any) gates the whole group.
+      if (item.module && !canViewModule(item.module)) return acc
+      const submenu = item.submenu.filter(
+        sub => !sub.module || canViewModule(sub.module),
+      )
+      if (submenu.length) acc.push({ ...item, submenu })
+      return acc
+    }
+    if (item.module && !canViewModule(item.module)) return acc
+    acc.push(item)
+    return acc
+  }, [])
+})
 
 const toggleMenu = (menuId) => {
   expandedMenus.value[menuId] = !expandedMenus.value[menuId]
@@ -187,7 +236,7 @@ const toggleSidebar = () => {
 
         <nav class="sidebar-nav">
           <ul class="nav-list">
-            <li v-for="item in menuItems" :key="item.id" class="nav-item">
+            <li v-for="item in visibleMenuItems" :key="item.id" class="nav-item">
               <router-link 
                 v-if="!item.submenu" 
                 :to="item.route" 
@@ -222,11 +271,26 @@ const toggleSidebar = () => {
                 </ul>
               </div>
             </li>
+
+            <!-- Acceso externo a la contabilidad en Odoo -->
+            <li v-if="hasCompany" class="nav-item">
+              <button
+                type="button"
+                class="nav-link nav-link-button"
+                :disabled="openingOdoo"
+                @click="openAccounting"
+                title="Abrir el módulo de contabilidad en Odoo"
+              >
+                <BookOpen :size="20" class="nav-icon" />
+                <span v-if="!isSidebarCollapsed" class="nav-label">Contabilidad</span>
+                <ExternalLink v-if="!isSidebarCollapsed" :size="14" class="nav-external-icon" />
+              </button>
+            </li>
           </ul>
 
         </nav>
 
-        <div class="sidebar-footer">
+        <div v-if="hasCompany" class="sidebar-footer">
           <router-link to="/settings" class="nav-link" active-class="active">
             <Settings :size="20" class="nav-icon" />
             <span v-if="!isSidebarCollapsed" class="nav-label">Settings</span>
@@ -507,6 +571,25 @@ const toggleSidebar = () => {
 .nav-label {
   flex: 1;
   white-space: nowrap;
+}
+
+/* Botón de acción (Contabilidad/Odoo) con apariencia de nav-link */
+.nav-link-button {
+  width: calc(100% - 1rem);
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+}
+
+.nav-link-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-external-icon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .expand-icon {

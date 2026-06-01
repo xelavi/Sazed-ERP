@@ -5,7 +5,10 @@ Serializers for accounts app.
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from .models import User, Company, Membership, Notification, Message, Invitation
+from .models import (
+    User, Company, Membership, Notification, Message, Invitation,
+    Role, MODULE_KEYS, PERMISSION_LEVELS, normalize_permissions,
+)
 
 
 # ── Auth ───────────────────────────────────────────────
@@ -160,7 +163,8 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['name', 'tax_id', 'legal_name', 'email', 'currency']
+        fields = ['id', 'name', 'tax_id', 'legal_name', 'email', 'currency']
+        read_only_fields = ['id']
 
     def create(self, validated_data):
         from django.utils.text import slugify
@@ -199,10 +203,57 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
             is_default=True,
         )
 
+        # Encolar provisioning automático de BD Odoo (~2 min en background).
+        # Lo procesa el management command `process_odoo_provisioning`.
+        try:
+            from accounting_sync.provisioning_service import enqueue_for_company
+            enqueue_for_company(company)
+        except Exception:  # noqa: BLE001
+            # Nunca bloqueamos la creación de Company por un fallo de provisioning.
+            import logging
+            logging.getLogger(__name__).exception(
+                'No se pudo encolar el provisioning Odoo para company=%s', company.pk,
+            )
+
         return company
 
 
 # ── Membership ─────────────────────────────────────────
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    """Read/write a company-defined role with its permission matrix."""
+
+    members_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Role
+        fields = [
+            'id', 'name', 'permissions', 'members_count',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_members_count(self, obj):
+        return obj.memberships.count()
+
+    def validate_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError('El nombre es obligatorio.')
+        return value
+
+    def validate_permissions(self, value):
+        if not isinstance(value, dict):
+            raise serializers.ValidationError('Formato de permisos no válido.')
+        for key, level in value.items():
+            if key not in MODULE_KEYS:
+                raise serializers.ValidationError(f'Módulo desconocido: {key}')
+            if level not in PERMISSION_LEVELS:
+                raise serializers.ValidationError(
+                    f'Nivel de permiso no válido: {level}',
+                )
+        return normalize_permissions(value)
 
 
 class MembershipSerializer(serializers.ModelSerializer):
@@ -211,12 +262,15 @@ class MembershipSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     company_name = serializers.CharField(source='company.name', read_only=True)
     company_slug = serializers.CharField(source='company.slug', read_only=True)
+    role_label = serializers.ReadOnlyField()
+    permissions = serializers.ReadOnlyField(source='effective_permissions')
 
     class Meta:
         model = Membership
         fields = [
             'id', 'user', 'company', 'company_name', 'company_slug',
-            'role', 'is_default', 'joined_at',
+            'role', 'role_label', 'custom_role', 'permissions',
+            'is_default', 'joined_at',
         ]
         read_only_fields = ['id', 'user', 'company', 'joined_at']
 
@@ -228,6 +282,7 @@ class InviteMemberSerializer(serializers.Serializer):
     role = serializers.ChoiceField(
         choices=Membership.Role.choices, default='editor',
     )
+    custom_role = serializers.IntegerField(required=False, allow_null=True)
 
     def validate_email(self, value):
         return value.lower()
@@ -355,13 +410,14 @@ class InvitationSerializer(serializers.ModelSerializer):
     invitee = UserLiteSerializer(read_only=True)
     company_name = serializers.CharField(source='company.name', read_only=True)
     company_logo = serializers.SerializerMethodField()
+    role_label = serializers.SerializerMethodField()
 
     class Meta:
         model = Invitation
         fields = [
             'id', 'company', 'company_name', 'company_logo',
-            'inviter', 'invitee', 'role', 'status',
-            'created_at', 'responded_at',
+            'inviter', 'invitee', 'role', 'custom_role', 'role_label',
+            'status', 'created_at', 'responded_at',
         ]
         read_only_fields = fields
 
@@ -370,12 +426,18 @@ class InvitationSerializer(serializers.ModelSerializer):
             return obj.company.logo.url
         return None
 
+    def get_role_label(self, obj):
+        if obj.custom_role_id:
+            return obj.custom_role.name
+        return obj.get_role_display()
+
 
 class InvitationCreateSerializer(serializers.Serializer):
     email = serializers.EmailField()
     role = serializers.ChoiceField(
         choices=Membership.Role.choices, default='editor',
     )
+    custom_role = serializers.IntegerField(required=False, allow_null=True)
 
     def validate_email(self, value):
         return value.lower()

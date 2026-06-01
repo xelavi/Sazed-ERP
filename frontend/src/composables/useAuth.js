@@ -15,6 +15,7 @@ const user = ref(null)
 const companies = ref([])
 const activeCompany = ref(null)
 const activeRole = ref(null)
+const activePermissions = ref({})
 const isLoading = ref(true)
 const isAuthenticated = computed(() => !!user.value)
 const hasCompany = computed(() => companies.value.length > 0)
@@ -30,12 +31,14 @@ function setSession(data) {
     if (def) {
       activeCompany.value = def
       activeRole.value = def.role
+      activePermissions.value = def.permissions || {}
       setActiveCompany(def.id)
     }
   }
   if (data.company) {
     activeCompany.value = data.company
     activeRole.value = data.role
+    activePermissions.value = data.permissions || {}
     setActiveCompany(data.company.id)
   }
 }
@@ -45,6 +48,7 @@ function clearSession() {
   companies.value = []
   activeCompany.value = null
   activeRole.value = null
+  activePermissions.value = {}
   setActiveCompany(null)
 }
 
@@ -101,6 +105,7 @@ export function useAuth() {
         if (def) {
           activeCompany.value = def
           activeRole.value = def.role
+          activePermissions.value = def.permissions || {}
           setActiveCompany(def.id)
         }
       })
@@ -120,6 +125,7 @@ export function useAuth() {
     const data = await authApi.switchCompany(companyId)
     activeCompany.value = { ...data.company, role: data.role, is_default: true }
     activeRole.value = data.role
+    activePermissions.value = data.permissions || {}
     setActiveCompany(data.company.id)
     // Update companies list
     companies.value = companies.value.map(c => ({
@@ -149,12 +155,28 @@ export function useAuth() {
     return authApi.changePassword(currentPassword, newPassword)
   }
 
+  // ── Module permission helpers ──
+  // owner/admin always have full access regardless of the matrix.
+  function moduleLevel(moduleKey) {
+    if (['owner', 'admin'].includes(activeRole.value)) return 'edit'
+    return activePermissions.value?.[moduleKey] || 'none'
+  }
+
+  function canViewModule(moduleKey) {
+    return ['view', 'edit'].includes(moduleLevel(moduleKey))
+  }
+
+  function canEditModule(moduleKey) {
+    return moduleLevel(moduleKey) === 'edit'
+  }
+
   return {
     // State (reactive, readonly)
     user: readonly(user),
     companies: readonly(companies),
     activeCompany: readonly(activeCompany),
     activeRole: readonly(activeRole),
+    activePermissions: readonly(activePermissions),
     isLoading: readonly(isLoading),
     isAuthenticated,
     hasCompany,
@@ -168,5 +190,8 @@ export function useAuth() {
     switchCompany,
     updateProfile,
     changePassword,
+    moduleLevel,
+    canViewModule,
+    canEditModule,
   }
 }

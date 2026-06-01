@@ -193,8 +193,8 @@ async function handleRegister() {
       email: form.email.trim(),
       password: form.password,
     })
-    toast.success('¡Cuenta creada! Configura tu primera empresa')
-    router.push('/onboarding')
+    toast.success('¡Cuenta creada!')
+    router.push('/')
   } catch (err) {
     if (err.data?.email) {
       errors.email = Array.isArray(err.data.email) ? err.data.email[0] : err.data.email

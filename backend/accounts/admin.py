@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User, Company, Membership, SystemSettings
+from .models import User, Company, Membership, Role, SystemSettings
 
 
 class MembershipInline(admin.TabularInline):
@@ -48,9 +48,16 @@ class CompanyAdmin(admin.ModelAdmin):
 
 @admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
-    list_display = ['user', 'company', 'role', 'is_default', 'joined_at']
+    list_display = ['user', 'company', 'role', 'custom_role', 'is_default', 'joined_at']
     list_filter = ['role', 'is_default']
     search_fields = ['user__email', 'company__name']
+
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ['name', 'company', 'created_at']
+    list_filter = ['company']
+    search_fields = ['name', 'company__name']
 
 
 @admin.register(SystemSettings)

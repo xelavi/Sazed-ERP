@@ -48,6 +48,16 @@
             Editar
           </router-link>
           <button
+            v-if="canManage(activeRole)"
+            class="btn btn-secondary btn-sm"
+            @click="handleOpenOdoo(activeCompany.id)"
+            :disabled="openingOdoo"
+            title="Abrir el módulo de contabilidad en Odoo"
+          >
+            <BookOpen :size="14" />
+            Contabilidad
+          </button>
+          <button
             v-if="isOwner(activeRole) && companies.length > 1"
             class="btn btn-ghost btn-sm btn-danger"
             @click="openDeleteModal(activeCompany)"
@@ -189,6 +199,64 @@
       </div>
     </Teleport>
 
+    <!-- Provisioning progress modal -->
+    <Teleport to="body">
+      <div v-if="provisioningJob" class="modal-overlay">
+        <div class="modal-card provisioning-card">
+          <div class="modal-header">
+            <h3>Configurando contabilidad en Odoo</h3>
+          </div>
+          <div class="modal-body">
+            <div v-if="provisioningJob.status === 'pending' || provisioningJob.status === 'running'" class="prov-state prov-running">
+              <Loader2 :size="32" class="prov-spin" />
+              <p class="prov-title">
+                {{ provisioningJob.status === 'pending' ? 'En cola…' : 'Creando base de datos y módulos contables…' }}
+              </p>
+              <p class="prov-subtitle">
+                Esto puede tardar 1–3 minutos. Puedes cerrar esta ventana y volver más tarde;
+                el proceso continúa en segundo plano.
+              </p>
+            </div>
+            <div v-else-if="provisioningJob.status === 'done'" class="prov-state prov-done">
+              <CheckCircle2 :size="32" />
+              <p class="prov-title">¡Contabilidad lista!</p>
+              <p class="prov-subtitle">
+                Base de datos Odoo <code>{{ provisioningJob.database_name }}</code> creada
+                y conectada con la empresa.
+              </p>
+            </div>
+            <div v-else class="prov-state prov-failed">
+              <AlertTriangle :size="32" />
+              <p class="prov-title">No se pudo configurar Odoo</p>
+              <p class="prov-error">{{ provisioningJob.error_message }}</p>
+              <p class="prov-subtitle">
+                Puedes reintentar más tarde desde Configuración → Integraciones.
+                Mientras tanto, la empresa funciona sin contabilidad.
+              </p>
+            </div>
+
+            <details v-if="provisioningJob.logs" class="prov-logs">
+              <summary>Ver detalles técnicos</summary>
+              <pre>{{ provisioningJob.logs }}</pre>
+            </details>
+
+            <div class="modal-actions">
+              <button
+                v-if="provisioningJob.status === 'done'"
+                class="btn btn-primary"
+                @click="handleOpenOdoo(provisioningJob.company); provisioningJob = null"
+              >
+                <BookOpen :size="14" /> Abrir contabilidad
+              </button>
+              <button class="btn btn-ghost" @click="provisioningJob = null">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Delete company modal -->
     <Teleport to="body">
       <div v-if="deleteTarget" class="modal-overlay" @click.self="closeDeleteModal">
@@ -242,11 +310,12 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Settings, Trash2, X, Building2, AlertTriangle, UserPlus } from 'lucide-vue-next'
+import { Plus, Settings, Trash2, X, Building2, AlertTriangle, UserPlus, BookOpen, Loader2, CheckCircle2 } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
 import { useToast } from '@/composables/useToast'
 import authApi from '@/services/auth'
 import inboxApi from '@/services/inbox'
+import odooApi from '@/services/odoo'
 
 const router = useRouter()
 const { companies, activeCompany, activeRole, switchCompany, fetchMe } = useAuth()
@@ -302,7 +371,7 @@ async function handleCreate() {
   if (!createForm.name.trim()) return
   creating.value = true
   try {
-    await authApi.createCompany({
+    const newCompany = await authApi.createCompany({
       name: createForm.name.trim(),
       tax_id: createForm.tax_id.trim(),
       email: createForm.email.trim(),
@@ -315,10 +384,48 @@ async function handleCreate() {
     createForm.email = ''
     createForm.currency = 'EUR'
     await fetchMe()
+    // Arrancar el seguimiento del provisioning Odoo (no bloquea la UI).
+    if (newCompany?.id) trackProvisioning(newCompany.id)
   } catch (err) {
     toast.error(err.message || 'Error al crear la empresa')
   } finally {
     creating.value = false
+  }
+}
+
+// Odoo provisioning (creación automática de BD tras crear Company)
+const provisioningJob = ref(null)
+
+async function trackProvisioning(companyId) {
+  try {
+    // Primer poll inmediato para mostrar el modal cuanto antes.
+    provisioningJob.value = await odooApi.getProvisioningStatus(companyId)
+    const finalJob = await odooApi.waitForProvisioning(companyId, {
+      intervalMs: 4000,
+      timeoutMs: 5 * 60 * 1000,
+      onProgress: (job) => { provisioningJob.value = job },
+    })
+    provisioningJob.value = finalJob
+    if (finalJob.status === 'done') {
+      toast.success('Contabilidad Odoo configurada')
+    } else {
+      toast.error('Falló la configuración de Odoo. Revisa los detalles.')
+    }
+  } catch (err) {
+    toast.error(err.message || 'No se pudo seguir el progreso de Odoo')
+  }
+}
+
+// Botón "Abrir contabilidad" → SSO + nueva pestaña
+const openingOdoo = ref(false)
+async function handleOpenOdoo(companyId) {
+  openingOdoo.value = true
+  try {
+    await odooApi.openOdooForCompany(companyId)
+  } catch (err) {
+    toast.error(err.message || 'No se pudo abrir Odoo')
+  } finally {
+    openingOdoo.value = false
   }
 }
 
@@ -716,6 +823,83 @@ async function handleDelete() {
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+/* Provisioning modal */
+.provisioning-card {
+  max-width: 520px;
+}
+
+.prov-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0 1rem;
+}
+
+.prov-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0.25rem 0 0;
+}
+
+.prov-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+.prov-error {
+  font-size: var(--font-size-sm);
+  color: var(--error-color);
+  background: var(--error-light, rgba(239, 68, 68, 0.08));
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--border-radius);
+  margin: 0.5rem 0;
+  max-width: 100%;
+  word-break: break-word;
+  text-align: left;
+}
+
+.prov-running { color: var(--primary-color); }
+.prov-done { color: #047857; }
+.prov-failed { color: var(--error-color); }
+
+.prov-spin {
+  animation: prov-spin 1s linear infinite;
+}
+
+@keyframes prov-spin {
+  to { transform: rotate(360deg); }
+}
+
+.prov-logs {
+  margin-top: 1rem;
+  font-size: var(--font-size-xs);
+}
+
+.prov-logs summary {
+  cursor: pointer;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+.prov-logs pre {
+  margin-top: 0.5rem;
+  background: var(--bg-secondary);
+  padding: 0.75rem;
+  border-radius: var(--border-radius-sm);
+  max-height: 200px;
+  overflow: auto;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 @media (max-width: 720px) {

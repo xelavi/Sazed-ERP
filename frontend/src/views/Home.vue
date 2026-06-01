@@ -1,5 +1,48 @@
 <template>
   <div class="home-view">
+    <!-- ── No company: welcome / get started ───────── -->
+    <div v-if="!hasCompany" class="welcome-empty">
+      <div class="welcome-hero">
+        <div class="welcome-icon"><Building2 :size="34" /></div>
+        <h1 class="welcome-title">
+          Te damos la bienvenida{{ firstName !== 'there' ? `, ${firstName}` : '' }}
+        </h1>
+        <p class="welcome-sub">
+          Tu cuenta todavía no está vinculada a ninguna empresa. Para empezar a usar
+          Seshat ERP, crea una empresa o únete a una ya existente.
+        </p>
+      </div>
+
+      <div class="welcome-cards">
+        <div class="welcome-card">
+          <div class="welcome-card-icon tone-primary"><Plus :size="22" /></div>
+          <h2 class="welcome-card-title">Crear una empresa</h2>
+          <p class="welcome-card-text">
+            Configura tu negocio y empieza a gestionar productos, facturas, clientes y mucho más.
+          </p>
+          <router-link to="/onboarding" class="btn btn-primary welcome-cta">
+            Crear empresa
+            <ArrowRight :size="16" />
+          </router-link>
+        </div>
+
+        <div class="welcome-card">
+          <div class="welcome-card-icon tone-info"><Mail :size="22" /></div>
+          <h2 class="welcome-card-title">Unirte a una empresa</h2>
+          <p class="welcome-card-text">
+            ¿Vas a trabajar en una empresa ya registrada? Pide a un administrador que te envíe una
+            invitación. La recibirás en tu buzón y, al aceptarla, tendrás acceso.
+          </p>
+          <router-link to="/inbox" class="btn btn-secondary welcome-cta">
+            Ir al buzón
+            <ArrowRight :size="16" />
+          </router-link>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Dashboard (requires an active company) ──── -->
+    <template v-else>
     <!-- ── Header ──────────────────────────────────── -->
     <header class="view-header">
       <div class="header-left">
@@ -17,6 +60,9 @@
         </router-link>
       </div>
     </header>
+
+    <!-- ── Integraciones / conexiones ──────────────── -->
+    <IntegrationsSection />
 
     <!-- ── KPI Row ─────────────────────────────────── -->
     <section class="kpi-row">
@@ -161,6 +207,7 @@
         </div>
       </div>
     </section>
+    </template>
   </div>
 </template>
 
@@ -169,13 +216,15 @@ import { ref, computed, onMounted } from 'vue'
 import {
   FileText, UserPlus, Wallet, AlertCircle, TrendingUp, Users,
   ArrowRight, CheckCircle2, Activity, Send, PackageX, Euro, Package,
+  Building2, Plus, Mail,
 } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
+import IntegrationsSection from '@/components/IntegrationsSection.vue'
 import dashboardApi from '@/services/dashboard'
 import invoicesApi from '@/services/invoices'
 import inventoryApi from '@/services/inventory'
 
-const { user } = useAuth()
+const { user, hasCompany } = useAuth()
 
 // ─── Greeting & date ──────────────────────────────
 const now = new Date()
@@ -367,12 +416,100 @@ async function loadAll() {
   }
 }
 
-onMounted(loadAll)
+onMounted(() => {
+  if (hasCompany.value) loadAll()
+})
 </script>
 
 <style scoped>
 .home-view {
   width: 100%;
+}
+
+/* ── No-company welcome ───────────────────────── */
+.welcome-empty {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vh, 4rem) 0;
+}
+.welcome-hero {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+.welcome-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  margin: 0 auto var(--spacing-md);
+  display: grid;
+  place-items: center;
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+.welcome-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.welcome-sub {
+  margin: 0.5rem auto 0;
+  max-width: 540px;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.welcome-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+}
+.welcome-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.625rem;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.welcome-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+.welcome-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+.welcome-card-icon.tone-primary { background: var(--primary-light); color: var(--primary-color); }
+.welcome-card-icon.tone-info { background: var(--info-light); color: var(--info-color); }
+.welcome-card-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+.welcome-card-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+  flex: 1;
+}
+.welcome-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .welcome-cards { grid-template-columns: 1fr; }
 }
 
 /* ── Header ───────────────────────────────────── */

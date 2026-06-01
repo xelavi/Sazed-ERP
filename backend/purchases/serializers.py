@@ -1,10 +1,12 @@
 from rest_framework import serializers
 
+from core.tax_utils import apply_line_vat
 from providers.serializers import ProviderListSerializer
 from .models import (
     PurchaseSeries, PurchaseInvoice, PurchaseInvoiceLine,
     PurchaseInvoiceLineTax, PurchasePayment, PurchaseInvoiceTimeline,
     PurchaseQuote, PurchaseQuoteDoc, PurchaseQuoteDocLine,
+    RecurringPurchaseInvoice,
 )
 
 
@@ -29,13 +31,20 @@ class PurchaseInvoiceLineTaxSerializer(serializers.ModelSerializer):
 
 class PurchaseInvoiceLineSerializer(serializers.ModelSerializer):
     taxes = PurchaseInvoiceLineTaxSerializer(many=True, read_only=True)
+    # Porcentaje de IVA editado en el frontend. Se traduce a un
+    # PurchaseInvoiceLineTax al guardar (write-only, no es campo del modelo).
+    tax_percent = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False,
+        allow_null=True, write_only=True,
+    )
 
     class Meta:
         model = PurchaseInvoiceLine
         fields = [
             'id', 'position', 'product', 'description',
             'quantity', 'unit_price', 'discount_type',
-            'discount_value', 'discount_amount', 'subtotal', 'taxes',
+            'discount_value', 'discount_amount', 'subtotal',
+            'taxes', 'tax_percent',
         ]
         read_only_fields = ['id', 'discount_amount', 'subtotal']
 
@@ -137,11 +146,15 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
         lines_data = validated_data.pop('lines', [])
         invoice = PurchaseInvoice.objects.create(**validated_data)
 
+        company = getattr(getattr(invoice, 'provider', None), 'company', None)
         for line_data in lines_data:
             taxes_data = line_data.pop('taxes', [])
+            tax_percent = line_data.pop('tax_percent', None)
             line = PurchaseInvoiceLine.objects.create(invoice=invoice, **line_data)
             for tax_data in taxes_data:
                 PurchaseInvoiceLineTax.objects.create(invoice_line=line, **tax_data)
+            if not taxes_data:
+                apply_line_vat(PurchaseInvoiceLineTax, line, tax_percent, company)
 
         if lines_data:
             invoice.recalculate_totals()
@@ -164,9 +177,11 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
         instance.save()
 
         if lines_data is not None:
+            company = getattr(getattr(instance, 'provider', None), 'company', None)
             instance.lines.all().delete()
             for line_data in lines_data:
                 taxes_data = line_data.pop('taxes', [])
+                tax_percent = line_data.pop('tax_percent', None)
                 line = PurchaseInvoiceLine.objects.create(
                     invoice=instance, **line_data,
                 )
@@ -174,9 +189,57 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
                     PurchaseInvoiceLineTax.objects.create(
                         invoice_line=line, **tax_data,
                     )
+                if not taxes_data:
+                    apply_line_vat(PurchaseInvoiceLineTax, line, tax_percent, company)
             instance.recalculate_totals()
 
         return instance
+
+
+class RecurringPurchaseInvoiceSerializer(serializers.ModelSerializer):
+    """Lectura de un plan de recurrencia de compra."""
+
+    provider_name = serializers.CharField(
+        source='template.provider.name', read_only=True,
+    )
+    template_total = serializers.DecimalField(
+        source='template.total_amount', max_digits=12, decimal_places=2,
+        read_only=True,
+    )
+    frequency_display = serializers.CharField(
+        source='get_frequency_display', read_only=True,
+    )
+    is_finished = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = RecurringPurchaseInvoice
+        fields = [
+            'id', 'template', 'provider_name', 'template_total',
+            'frequency', 'frequency_display', 'interval', 'payment_term_days',
+            'start_date', 'next_run', 'end_date', 'max_occurrences',
+            'occurrences', 'last_run', 'active', 'is_finished',
+            'created_by', 'created_at', 'updated_at',
+        ]
+        read_only_fields = [
+            'id', 'template', 'next_run', 'occurrences', 'last_run',
+            'created_at', 'updated_at',
+        ]
+
+
+class RecurringPurchaseInvoiceCreateSerializer(serializers.Serializer):
+    source_invoice = serializers.PrimaryKeyRelatedField(
+        queryset=PurchaseInvoice.objects.all(),
+    )
+    frequency = serializers.ChoiceField(
+        choices=RecurringPurchaseInvoice.RecurrenceFrequency.choices,
+    )
+    interval = serializers.IntegerField(min_value=1, default=1)
+    payment_term_days = serializers.IntegerField(min_value=0, default=30)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(required=False, allow_null=True)
+    max_occurrences = serializers.IntegerField(
+        min_value=1, required=False, allow_null=True,
+    )
 
 
 # ---------- Quote (Purchase) serializers ----------

@@ -287,6 +287,17 @@
 
             <!-- ========== E) PURCHASES / SUPPLIERS ========== -->
             <div v-if="activeTab === 'purchases'" class="tab-content">
+              <div class="quick-actions">
+                <button class="btn btn-secondary btn-sm" @click="$emit('new-purchase-quote', product)">
+                  <FileText :size="14" />
+                  <span>Nuevo presupuesto</span>
+                </button>
+                <button class="btn btn-primary btn-sm" @click="$emit('new-purchase-invoice', product)">
+                  <Receipt :size="14" />
+                  <span>Nueva factura</span>
+                </button>
+              </div>
+
               <section class="detail-section">
                 <h3 class="section-title"><Truck :size="16" /> Suppliers</h3>
                 <table v-if="product.detail.suppliers.length" class="mini-table">
@@ -323,6 +334,17 @@
 
             <!-- ========== F) SALES ========== -->
             <div v-if="activeTab === 'sales'" class="tab-content">
+              <div class="quick-actions">
+                <button class="btn btn-secondary btn-sm" @click="$emit('new-sales-quote', product)">
+                  <FileText :size="14" />
+                  <span>Nuevo presupuesto</span>
+                </button>
+                <button class="btn btn-primary btn-sm" @click="$emit('new-sales-invoice', product)">
+                  <Receipt :size="14" />
+                  <span>Nueva factura</span>
+                </button>
+              </div>
+
               <section class="detail-section">
                 <h3 class="section-title"><ShoppingCart :size="16" /> Recent Sales</h3>
                 <table v-if="product.detail.recentSales.length" class="mini-table">
@@ -494,7 +516,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['close'])
+defineEmits(['close', 'new-sales-quote', 'new-purchase-quote', 'new-sales-invoice', 'new-purchase-invoice'])
 
 /* ── Local state ── */
 const activeTab = ref('general')
@@ -703,6 +725,12 @@ function formatDate(iso) {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 .detail-section {

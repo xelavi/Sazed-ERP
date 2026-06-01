@@ -1,0 +1,53 @@
+# Stack Odoo Community 17 aislado del backend Django.
+# Arrancar/parar de forma independiente:
+#   docker compose -f docker-compose.odoo.yml up -d
+#   docker compose -f docker-compose.odoo.yml down
+#
+# Variables requeridas en .env (raíz del repo):
+#   ODOO_DB_USER, ODOO_DB_PASSWORD, ODOO_MASTER_PWD
+#
+# Tras arrancar:
+#   http://localhost:8069 → asistente de creación de BD
+#   Idioma "Spanish (ES)", país "Spain", instalar Accounting + l10n_es
+
+services:
+  odoo_db:
+    image: postgres:15-alpine
+    container_name: odoo_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${ODOO_DB_USER}
+      POSTGRES_PASSWORD: ${ODOO_DB_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - odoo_db_data:/var/lib/postgresql/data
+    networks:
+      - odoo_net
+
+  odoo:
+    image: odoo:17
+    container_name: odoo
+    restart: unless-stopped
+    depends_on:
+      - odoo_db
+    ports:
+      - "8069:8069"
+      - "8072:8072"  # longpolling
+    environment:
+      HOST: odoo_db
+      USER: ${ODOO_DB_USER}
+      PASSWORD: ${ODOO_DB_PASSWORD}
+    volumes:
+      - ./odoo_config:/etc/odoo
+      - ./odoo_addons:/mnt/extra-addons
+      - odoo_filestore:/var/lib/odoo
+    networks:
+      - odoo_net
+
+volumes:
+  odoo_db_data:
+  odoo_filestore:
+
+networks:
+  odoo_net:
+    driver: bridge

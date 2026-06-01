@@ -1,12 +1,15 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
+from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from core.recurrence import add_period
 from .models import (
     Invoice, InvoiceLine, InvoiceLineTax,
     InvoiceSeries, InvoiceTimeline, Payment, EventLog,
+    RecurringInvoice,
 )
 from .verifactu import VeriFactuHashService
 
@@ -235,3 +238,133 @@ class InvoiceService:
         )
 
         return dup
+
+
+def _clone_invoice_lines(source, target):
+    """Copia las líneas e impuestos de una factura a otra."""
+    for line in source.lines.all():
+        new_line = InvoiceLine.objects.create(
+            invoice=target,
+            position=line.position,
+            product=line.product,
+            description=line.description,
+            quantity=line.quantity,
+            unit_price=line.unit_price,
+            discount_type=line.discount_type,
+            discount_value=line.discount_value,
+        )
+        for tax in line.taxes.all():
+            InvoiceLineTax.objects.create(
+                invoice_line=new_line,
+                tax_rate=tax.tax_rate,
+                tax_name=tax.tax_name,
+                tax_percent=tax.tax_percent,
+                is_retention=tax.is_retention,
+                tax_amount=tax.tax_amount,
+            )
+
+
+class RecurringInvoiceService:
+    """Gestión de facturas recurrentes de venta."""
+
+    @staticmethod
+    @transaction.atomic
+    def create_plan(source_invoice, data, created_by=''):
+        """Crea un plan de recurrencia a partir de una factura existente.
+
+        Duplica la factura origen en una plantilla oculta (is_template=True);
+        la factura origen no se modifica.
+        """
+        template = Invoice.objects.create(
+            company=source_invoice.company,
+            invoice_type=source_invoice.invoice_type,
+            status='Draft',
+            is_template=True,
+            series=source_invoice.series,
+            customer=source_invoice.customer,
+            issue_date=timezone.now().date(),
+            due_date=timezone.now().date(),
+            payment_method=source_invoice.payment_method,
+            currency=source_invoice.currency,
+            discount_type=source_invoice.discount_type,
+            discount_value=source_invoice.discount_value,
+            customer_notes=source_invoice.customer_notes,
+            internal_notes=source_invoice.internal_notes,
+        )
+        _clone_invoice_lines(source_invoice, template)
+        template.recalculate_totals()
+
+        start_date = data['start_date']
+        plan = RecurringInvoice.objects.create(
+            company=source_invoice.company,
+            template=template,
+            frequency=data['frequency'],
+            interval=data.get('interval', 1) or 1,
+            payment_term_days=data.get('payment_term_days', 30) or 30,
+            start_date=start_date,
+            next_run=start_date,
+            end_date=data.get('end_date'),
+            max_occurrences=data.get('max_occurrences'),
+            created_by=created_by,
+        )
+        return plan
+
+    @staticmethod
+    @transaction.atomic
+    def generate_one(plan):
+        """Genera y aprueba una factura desde la plantilla del plan."""
+        template = plan.template
+        issue = plan.next_run
+        invoice = Invoice.objects.create(
+            company=template.company,
+            invoice_type=template.invoice_type,
+            status='Draft',
+            is_template=False,
+            series=template.series,
+            customer=template.customer,
+            issue_date=issue,
+            due_date=issue + timedelta(days=plan.payment_term_days),
+            payment_method=template.payment_method,
+            currency=template.currency,
+            discount_type=template.discount_type,
+            discount_value=template.discount_value,
+            customer_notes=template.customer_notes,
+            internal_notes=template.internal_notes,
+            created_by='RecurringInvoice',
+        )
+        _clone_invoice_lines(template, invoice)
+        invoice.recalculate_totals()
+
+        InvoiceService.approve(invoice)
+
+        plan.occurrences += 1
+        plan.last_run = issue
+        plan.next_run = add_period(issue, plan.frequency, plan.interval)
+        if plan.is_finished:
+            plan.active = False
+        plan.save(update_fields=[
+            'occurrences', 'last_run', 'next_run', 'active', 'updated_at',
+        ])
+        return invoice
+
+    @staticmethod
+    def generate_due(today=None, company=None):
+        """Genera todas las facturas recurrentes pendientes hasta hoy.
+
+        Devuelve la lista de facturas generadas.
+        """
+        today = today or date.today()
+        plans = RecurringInvoice.objects.filter(
+            active=True, next_run__lte=today,
+        )
+        if company is not None:
+            plans = plans.filter(company=company)
+
+        generated = []
+        for plan in plans.select_related('template'):
+            # Un plan puede tener varios vencimientos atrasados; generar todos.
+            guard = 0
+            while plan.active and plan.next_run <= today and guard < 60:
+                generated.append(RecurringInvoiceService.generate_one(plan))
+                guard += 1
+        return generated

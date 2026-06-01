@@ -28,6 +28,10 @@
           <h3 class="card-title">Datos generales</h3>
           <p class="card-subtitle">Información básica de la empresa</p>
         </div>
+        <div class="role-info-row">
+          <span class="role-info-label">Tu rol</span>
+          <span class="badge" :class="roleBadgeClass(activeRole)">{{ roleLabel(activeRole) }}</span>
+        </div>
         <form @submit.prevent="saveGeneral" class="settings-form">
           <div class="form-group logo-group">
             <label class="form-label">Logo de la empresa</label>
@@ -283,6 +287,7 @@ import {
 import { useAuth } from '@/composables/useAuth'
 import { useToast } from '@/composables/useToast'
 import authApi from '@/services/auth'
+import inboxApi from '@/services/inbox'
 
 const { activeCompany, activeRole } = useAuth()
 const toast = useToast()
@@ -404,14 +409,13 @@ async function handleInvite() {
   if (!inviteForm.email.trim()) return
   inviting.value = true
   try {
-    await authApi.inviteMember(activeCompany.value.id, inviteForm.email.trim(), inviteForm.role)
-    toast.success('Invitación enviada')
+    await inboxApi.createInvitation({ email: inviteForm.email.trim(), role: inviteForm.role })
+    toast.success('Invitación enviada. El usuario la verá en su buzón.')
     showInviteModal.value = false
     inviteForm.email = ''
     inviteForm.role = 'editor'
-    await fetchMembers()
   } catch (err) {
-    toast.error(err.message || 'Error al invitar')
+    toast.error(err.data?.detail || err.message || 'Error al invitar')
   } finally {
     inviting.value = false
   }
@@ -515,6 +519,21 @@ onMounted(async () => {
 .tab-btn.active {
   color: var(--primary-color);
   border-bottom-color: var(--primary-color);
+}
+
+/* Role info */
+.role-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: var(--spacing-sm) 0 var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-md);
+}
+
+.role-info-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
 }
 
 /* Form styles */

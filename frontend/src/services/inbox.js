@@ -49,8 +49,8 @@ export default {
   async listInvitations() {
     return asArray(await get('/invitations/'))
   },
-  async createInvitation({ email, role }) {
-    return post('/invitations/', { email, role })
+  async createInvitation(data) {
+    return post('/invitations/', data)
   },
   async acceptInvitation(id) {
     return post(`/invitations/${id}/accept/`, {})

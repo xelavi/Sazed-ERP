@@ -150,6 +150,86 @@ class Company(models.Model):
         return self.name
 
 
+# ── Module catalog & permission levels ────────────────
+
+# Canonical list of app modules a role can be granted access to.
+# Keys are stable identifiers; labels are shown in the UI (Spanish).
+MODULES = [
+    ('dashboard', 'Inicio'),
+    ('products', 'Productos'),
+    ('inventory', 'Inventario'),
+    ('invoices', 'Facturas de venta'),
+    ('quotes', 'Presupuestos de venta'),
+    ('purchase_invoices', 'Facturas de compra'),
+    ('purchase_quotes', 'Presupuestos de compra'),
+    ('customers', 'Clientes'),
+    ('providers', 'Proveedores'),
+    ('personnel', 'Personal'),
+    ('social_crm', 'Social CRM'),
+]
+MODULE_KEYS = [key for key, _ in MODULES]
+
+# Access level a role grants on a module.
+PERMISSION_NONE = 'none'
+PERMISSION_VIEW = 'view'
+PERMISSION_EDIT = 'edit'
+PERMISSION_LEVELS = (PERMISSION_NONE, PERMISSION_VIEW, PERMISSION_EDIT)
+
+
+def default_permissions(role):
+    """Permission matrix for a builtin role (used when no custom role is set)."""
+    if role in ('owner', 'admin'):
+        return {key: PERMISSION_EDIT for key in MODULE_KEYS}
+    if role == 'editor':
+        # Full access to operational modules, read-only on staff.
+        return {
+            key: (PERMISSION_VIEW if key == 'personnel' else PERMISSION_EDIT)
+            for key in MODULE_KEYS
+        }
+    # viewer (and any unknown role) → read-only everywhere.
+    return {key: PERMISSION_VIEW for key in MODULE_KEYS}
+
+
+def normalize_permissions(raw):
+    """Coerce an arbitrary dict into a full {module: level} matrix."""
+    raw = raw or {}
+    result = {}
+    for key in MODULE_KEYS:
+        level = raw.get(key, PERMISSION_NONE)
+        result[key] = level if level in PERMISSION_LEVELS else PERMISSION_NONE
+    return result
+
+
+# ── Custom Role (per-company) ──────────────────────────
+
+
+class Role(models.Model):
+    """
+    A company-defined role with a per-module permission matrix.
+    Assigned to members via Membership.custom_role. Builtin roles
+    (owner/admin/editor/viewer) are not stored here — see default_permissions().
+    """
+
+    company = models.ForeignKey(
+        'Company', on_delete=models.CASCADE, related_name='roles',
+    )
+    name = models.CharField(max_length=60)
+    permissions = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        unique_together = ['company', 'name']
+
+    def __str__(self):
+        return f'{self.name} ({self.company.name})'
+
+    def save(self, *args, **kwargs):
+        self.permissions = normalize_permissions(self.permissions)
+        super().save(*args, **kwargs)
+
+
 # ── Membership (User ↔ Company with Role) ─────────────
 
 
@@ -173,6 +253,12 @@ class Membership(models.Model):
     )
     role = models.CharField(
         max_length=10, choices=Role.choices, default='viewer',
+    )
+    custom_role = models.ForeignKey(
+        'Role', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='memberships',
+        help_text='Rol personalizado de la empresa. Si se asigna, sus '
+                  'permisos por módulo prevalecen sobre el rol base.',
     )
     is_default = models.BooleanField(
         default=False,
@@ -213,6 +299,26 @@ class Membership(models.Model):
     @property
     def is_owner(self):
         return self.role == 'owner'
+
+    @property
+    def effective_permissions(self):
+        """
+        Per-module permission matrix this membership actually grants.
+        owner/admin always get full access; otherwise a custom role (if any)
+        wins, falling back to the builtin role's defaults.
+        """
+        if self.role in ('owner', 'admin'):
+            return default_permissions(self.role)
+        if self.custom_role_id:
+            return normalize_permissions(self.custom_role.permissions)
+        return default_permissions(self.role)
+
+    @property
+    def role_label(self):
+        """Human label for the assigned role (custom name or builtin)."""
+        if self.custom_role_id and self.role not in ('owner', 'admin'):
+            return self.custom_role.name
+        return self.get_role_display()
 
 
 # ── Inbox: Notifications, Messages, Invitations ───────
@@ -291,6 +397,10 @@ class Invitation(models.Model):
     )
     role = models.CharField(
         max_length=10, choices=Membership.Role.choices, default='editor',
+    )
+    custom_role = models.ForeignKey(
+        'Role', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='invitations',
     )
     status = models.CharField(
         max_length=10, choices=Status.choices, default='pending',

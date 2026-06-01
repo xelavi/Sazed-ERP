@@ -12,7 +12,10 @@ from rest_framework.views import APIView
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import User, Company, Membership, Notification, Message, Invitation, SocialAccount, SystemSettings
+from .models import (
+    User, Company, Membership, Role, Notification, Message, Invitation,
+    SocialAccount, SystemSettings, MODULES,
+)
 from .services import facebook as fb_service
 from rest_framework.exceptions import PermissionDenied
 from .serializers import (
@@ -25,6 +28,7 @@ from .serializers import (
     CompanySerializer,
     CompanyCreateSerializer,
     MembershipSerializer,
+    RoleSerializer,
     InviteMemberSerializer,
     SwitchCompanySerializer,
     NotificationSerializer,
@@ -56,10 +60,14 @@ class RegisterView(generics.CreateAPIView):
             'user': UserSerializer(user).data,
             'company': None,
             'role': None,
+            'role_label': None,
+            'permissions': None,
         }
         if membership:
             response_data['company'] = CompanySerializer(membership.company).data
             response_data['role'] = membership.role
+            response_data['role_label'] = membership.role_label
+            response_data['permissions'] = membership.effective_permissions
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
@@ -83,14 +91,20 @@ class LoginView(generics.GenericAPIView):
 
         company_data = None
         role = None
+        role_label = None
+        perms = None
         if membership:
             company_data = CompanySerializer(membership.company).data
             role = membership.role
+            role_label = membership.role_label
+            perms = membership.effective_permissions
 
         return Response({
             'user': UserSerializer(user).data,
             'company': company_data,
             'role': role,
+            'role_label': role_label,
+            'permissions': perms,
         })
 
 
@@ -117,6 +131,8 @@ def me_view(request):
             'slug': m.company.slug,
             'logo': m.company.logo.url if m.company.logo else None,
             'role': m.role,
+            'role_label': m.role_label,
+            'permissions': m.effective_permissions,
             'is_default': m.is_default,
         })
 
@@ -212,6 +228,8 @@ class CompanyViewSet(viewsets.ModelViewSet):
         return Response({
             'company': CompanySerializer(membership.company).data,
             'role': membership.role,
+            'role_label': membership.role_label,
+            'permissions': membership.effective_permissions,
         })
 
     @action(detail=True, methods=['get', 'post'], url_path='members')
@@ -241,6 +259,20 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
         email = serializer.validated_data['email']
         role = serializer.validated_data['role']
+        custom_role_id = serializer.validated_data.get('custom_role')
+
+        # Resolve an optional custom role (must belong to this company).
+        custom_role = None
+        if custom_role_id:
+            try:
+                custom_role = Role.objects.get(id=custom_role_id, company=company)
+            except Role.DoesNotExist:
+                return Response(
+                    {'detail': 'Rol no válido para esta empresa.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            # A custom role implies a non-privileged base role.
+            role = 'editor'
 
         # Find or note that user doesn't exist yet
         try:
@@ -262,6 +294,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
             user=invite_user,
             company=company,
             role=role,
+            custom_role=custom_role,
             invited_by=request.user,
         )
 
@@ -306,11 +339,50 @@ class CompanyViewSet(viewsets.ModelViewSet):
             target.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        # PATCH — update role and/or user profile fields
+        # Protect the owner's role from being changed.
+        if target.is_owner and (
+            'role' in request.data or 'custom_role' in request.data
+        ):
+            return Response(
+                {'detail': 'No puedes cambiar el rol del propietario.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        membership_updates = []
+
+        # PATCH — update builtin role
         new_role = request.data.get('role')
         if new_role and new_role in dict(Membership.Role.choices):
             target.role = new_role
-            target.save(update_fields=['role'])
+            membership_updates.append('role')
+            # A builtin role and a custom role are mutually exclusive.
+            if target.custom_role_id:
+                target.custom_role = None
+                membership_updates.append('custom_role')
+
+        # PATCH — assign or clear a custom role
+        if 'custom_role' in request.data:
+            custom_role_id = request.data.get('custom_role')
+            if custom_role_id in (None, '', 0):
+                target.custom_role = None
+            else:
+                try:
+                    role_obj = Role.objects.get(id=custom_role_id, company=company)
+                except (Role.DoesNotExist, ValueError, TypeError):
+                    return Response(
+                        {'detail': 'Rol no válido para esta empresa.'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                target.custom_role = role_obj
+                # A custom role implies a non-privileged base role.
+                if target.role in ('owner', 'admin'):
+                    target.role = 'editor'
+                    if 'role' not in membership_updates:
+                        membership_updates.append('role')
+            membership_updates.append('custom_role')
+
+        if membership_updates:
+            target.save(update_fields=list(set(membership_updates)))
 
         # Allow admins to edit user fields of the member
         user_fields = ['first_name', 'last_name']
@@ -321,6 +393,84 @@ class CompanyViewSet(viewsets.ModelViewSet):
             target.user.save(update_fields=list(user_updates.keys()))
 
         return Response(MembershipSerializer(target).data)
+
+    # ── Roles (custom, per-company) ──
+
+    @action(detail=True, methods=['get', 'post'], url_path='roles')
+    def roles(self, request, pk=None):
+        """
+        GET  /api/companies/{id}/roles/ — List custom roles (any member)
+        POST /api/companies/{id}/roles/ — Create a role (managers only)
+        """
+        company = self.get_object()
+        user_membership = Membership.objects.get(
+            user=request.user, company=company,
+        )
+
+        if request.method == 'GET':
+            serializer = RoleSerializer(company.roles.all(), many=True)
+            return Response({
+                'roles': serializer.data,
+                'modules': [{'key': k, 'label': l} for k, l in MODULES],
+            })
+
+        if not user_membership.can_manage:
+            return Response(
+                {'detail': 'No tienes permiso para gestionar roles.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = RoleSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if company.roles.filter(name__iexact=serializer.validated_data['name']).exists():
+            return Response(
+                {'detail': 'Ya existe un rol con ese nombre.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer.save(company=company)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(
+        detail=True, methods=['patch', 'delete'],
+        url_path='roles/(?P<role_id>[0-9]+)',
+    )
+    def manage_role(self, request, pk=None, role_id=None):
+        """
+        PATCH  /api/companies/{id}/roles/{role_id}/ — Update a role
+        DELETE /api/companies/{id}/roles/{role_id}/ — Delete a role
+        """
+        company = self.get_object()
+        user_membership = Membership.objects.get(
+            user=request.user, company=company,
+        )
+        if not user_membership.can_manage:
+            return Response(
+                {'detail': 'No tienes permiso para gestionar roles.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            role_obj = Role.objects.get(id=role_id, company=company)
+        except Role.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if request.method == 'DELETE':
+            # Members keep their builtin role; custom_role is cleared by SET_NULL.
+            role_obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        serializer = RoleSerializer(role_obj, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        new_name = serializer.validated_data.get('name')
+        if new_name and company.roles.filter(
+            name__iexact=new_name,
+        ).exclude(id=role_obj.id).exists():
+            return Response(
+                {'detail': 'Ya existe un rol con ese nombre.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer.save()
+        return Response(serializer.data)
 
 
 # ── User search (within active company) ───────────────
@@ -495,6 +645,19 @@ class InvitationViewSet(viewsets.ModelViewSet):
 
         email = serializer.validated_data['email']
         role = serializer.validated_data['role']
+        custom_role_id = serializer.validated_data.get('custom_role')
+
+        # Resolve an optional custom role (must belong to this company).
+        custom_role = None
+        if custom_role_id:
+            try:
+                custom_role = Role.objects.get(id=custom_role_id, company_id=company_id)
+            except Role.DoesNotExist:
+                return Response(
+                    {'detail': 'Rol no válido para esta empresa.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            role = 'editor'
 
         try:
             invitee = User.objects.get(email=email)
@@ -531,6 +694,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
             inviter=request.user,
             invitee=invitee,
             role=role,
+            custom_role=custom_role,
         )
         return Response(
             InvitationSerializer(invitation).data,
@@ -556,6 +720,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
                 user=request.user,
                 company=invitation.company,
                 role=invitation.role,
+                custom_role=invitation.custom_role,
                 invited_by=invitation.inviter,
             )
 
@@ -603,14 +768,20 @@ def _login_payload(user):
 
     company_data = None
     role = None
+    role_label = None
+    perms = None
     if membership:
         company_data = CompanySerializer(membership.company).data
         role = membership.role
+        role_label = membership.role_label
+        perms = membership.effective_permissions
 
     return {
         'user': UserSerializer(user).data,
         'company': company_data,
         'role': role,
+        'role_label': role_label,
+        'permissions': perms,
     }
 
 

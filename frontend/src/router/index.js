@@ -37,6 +37,12 @@ const routes = [
     component: About
   },
   {
+    path: '/dashboards',
+    name: 'Dashboards',
+    component: () => import('../views/Dashboards.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/products',
     name: 'Products',
     component: () => import('../views/Products.vue'),
@@ -269,11 +275,31 @@ const router = createRouter({
   routes
 })
 
+// Maps a route name to the module key its access is gated on.
+// Social CRM routes are matched by the 'Social' name prefix below.
+const ROUTE_MODULE = {
+  Products: 'products',
+  Inventory: 'inventory',
+  Invoices: 'invoices',
+  SalesQuotes: 'quotes',
+  PurchaseInvoices: 'purchase_invoices',
+  PurchaseQuotes: 'purchase_quotes',
+  Customers: 'customers',
+  Providers: 'providers',
+  Personnel: 'personnel',
+}
+
+function moduleForRoute(name) {
+  if (ROUTE_MODULE[name]) return ROUTE_MODULE[name]
+  if (typeof name === 'string' && name.startsWith('Social')) return 'social_crm'
+  return null
+}
+
 // ── Navigation guard ─────────────────────────
 let initialAuthChecked = false
 
 router.beforeEach(async (to, from, next) => {
-  const { isAuthenticated, fetchMe, isLoading, activeRole, hasCompany } = useAuth()
+  const { isAuthenticated, fetchMe, isLoading, activeRole, hasCompany, canViewModule } = useAuth()
 
   // On first navigation, try to restore session
   if (!initialAuthChecked) {
@@ -295,9 +321,14 @@ router.beforeEach(async (to, from, next) => {
     return next({ path: '/login', query: { redirect: to.fullPath } })
   }
 
-  // Onboarding: authenticated users without companies must set up first
-  if (isAuthenticated.value && !hasCompany.value && to.name !== 'Onboarding' && to.meta.requiresAuth) {
-    return next('/onboarding')
+  // Users without a company have no modules: only a few pages are reachable.
+  // Any module route (and direct links like /products) bounces back to Home.
+  const noCompanyAllowed = ['Home', 'Account', 'Inbox', 'Companies', 'Onboarding']
+  if (
+    isAuthenticated.value && !hasCompany.value &&
+    to.meta.requiresAuth && !noCompanyAllowed.includes(to.name)
+  ) {
+    return next('/')
   }
 
   // If user already has companies and visits onboarding, redirect to home
@@ -307,6 +338,15 @@ router.beforeEach(async (to, from, next) => {
 
   // Role-gated routes
   if (to.meta.requiresRole && !to.meta.requiresRole.includes(activeRole.value)) {
+    return next('/')
+  }
+
+  // Module-gated routes: block access if the active role can't view the module.
+  const moduleKey = moduleForRoute(to.name)
+  if (
+    moduleKey && isAuthenticated.value && hasCompany.value
+    && !canViewModule(moduleKey)
+  ) {
     return next('/')
   }
 

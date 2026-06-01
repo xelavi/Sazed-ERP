@@ -10,16 +10,17 @@ from django.utils import timezone
 from accounts.mixins import CompanyMixin
 from .models import (
     Invoice, InvoiceSeries, Payment, EventLog,
-    Quote, InvoiceLine, InvoiceTimeline,
+    Quote, InvoiceLine, InvoiceTimeline, RecurringInvoice,
 )
 from core.excel import build_xlsx_response
 from .serializers import (
     InvoiceListSerializer, InvoiceDetailSerializer, InvoiceWriteSerializer,
     InvoiceSeriesSerializer, PaymentSerializer,
     QuoteListSerializer, QuoteDetailSerializer, QuoteWriteSerializer,
+    RecurringInvoiceSerializer, RecurringInvoiceCreateSerializer,
 )
 from .filters import InvoiceFilter
-from .services import InvoiceService
+from .services import InvoiceService, RecurringInvoiceService
 from .verifactu import MockAeatService, VeriFactuXmlGenerator, generate_invoice_pdf
 
 
@@ -54,13 +55,19 @@ class InvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
             'customer', 'series',
         ).prefetch_related(
             'lines', 'lines__taxes', 'payments', 'timeline',
-        ).all()
+        ).filter(is_template=False)
         if hasattr(self.request, 'company') and self.request.company:
             return qs.filter(series__company=self.request.company)
         return qs.none()
 
     def perform_create(self, serializer):
-        serializer.save()
+        # Asignar la empresa activa (multitenant). Sin esto la factura
+        # queda con company=None y no se sincroniza a Odoo ni filtra bien.
+        company = getattr(self.request, 'company', None)
+        if company:
+            serializer.save(company=company)
+        else:
+            serializer.save()
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -398,15 +405,15 @@ class QuoteViewSet(CompanyMixin, viewsets.ModelViewSet):
             if ln.tax_percent and ln.tax_percent > 0:
                 from core.models import TaxRate
                 rate = TaxRate.objects.filter(
-                    rate=ln.tax_percent, is_retention=False,
-                ).first()
+                    percent=ln.tax_percent, active=True,
+                ).exclude(tax_type='RETENTION').first()
                 if rate:
                     from .models import InvoiceLineTax
                     InvoiceLineTax.objects.create(
                         invoice_line=new_line,
                         tax_rate=rate,
                         tax_name=rate.name,
-                        tax_percent=rate.rate,
+                        tax_percent=rate.percent,
                         is_retention=False,
                         tax_amount=ln.tax_amount,
                     )
@@ -429,6 +436,62 @@ class QuoteViewSet(CompanyMixin, viewsets.ModelViewSet):
             QuoteDetailSerializer(quote).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+class RecurringInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
+    """Planes de facturación recurrente de venta."""
+
+    queryset = RecurringInvoice.objects.select_related(
+        'template', 'template__customer',
+    ).all()
+    serializer_class = RecurringInvoiceSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = RecurringInvoice.objects.select_related(
+            'template', 'template__customer',
+        ).all()
+        if hasattr(self.request, 'company') and self.request.company:
+            return qs.filter(company=self.request.company)
+        return qs.none()
+
+    def create(self, request, *args, **kwargs):
+        ser = RecurringInvoiceCreateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        data = ser.validated_data
+        source = data.pop('source_invoice')
+        plan = RecurringInvoiceService.create_plan(
+            source, data, created_by=getattr(request.user, 'email', ''),
+        )
+        return Response(
+            RecurringInvoiceSerializer(plan).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        plan = self.get_object()
+        template = plan.template
+        plan.delete()
+        # La plantilla es interna y solo existe para este plan: eliminarla
+        # si no tiene líneas/registros que impidan el borrado.
+        if template and template.is_template and not template.hash_actual:
+            template.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'])
+    def run(self, request, pk=None):
+        """Genera manualmente la siguiente factura del plan (sin esperar al cron)."""
+        plan = self.get_object()
+        if not plan.active:
+            return Response(
+                {'error': 'Este plan de recurrencia no está activo.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        invoice = RecurringInvoiceService.generate_one(plan)
+        return Response({
+            'plan': RecurringInvoiceSerializer(plan).data,
+            'invoice': InvoiceDetailSerializer(invoice).data,
+        }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])

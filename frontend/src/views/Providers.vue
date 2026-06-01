@@ -150,6 +150,7 @@
       :open="detailOpen"
       @close="closeDetail"
       @edit="(p) => { closeDetail(); openProviderForm(p) }"
+      @new-quote="handleNewQuote"
     />
 
     <ProviderFormModal
@@ -163,6 +164,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Plus, Search, ArrowUpDown, Download,
   Building2, User, Pencil, Trash2
@@ -174,6 +176,7 @@ import { saveBlob } from '@/services/api'
 import { mapProviderFromApi, mapProviderDetailFromApi, mapProviderToApi, parseDrfErrors } from '../services/mappers'
 import { useToast } from '@/composables/useToast'
 
+const router = useRouter()
 const toast = useToast()
 const loading = ref(false)
 const exporting = ref(false)
@@ -226,6 +229,11 @@ async function openDetail(provider) {
 
 function closeDetail() {
   detailOpen.value = false
+}
+
+function handleNewQuote(provider) {
+  closeDetail()
+  router.push({ name: 'PurchaseQuotes', query: { newQuote: 'true', providerId: provider.id } })
 }
 
 const formModalOpen = ref(false)

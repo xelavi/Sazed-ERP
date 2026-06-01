@@ -174,14 +174,18 @@
       :quote="formQuote"
       :contacts="providers"
       mode="purchase"
+      :preselectedContactId="preselectedContactId"
+      :preselectedLine="preselectedLine"
       @close="closeForm"
       @save="handleSave"
+      @contact-created="fetchProviders"
     />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { Plus, Search, Pencil, Trash2, FileText, X } from 'lucide-vue-next'
 import QuoteFormModal from '@/components/QuoteFormModal.vue'
 import quotesApi from '@/services/purchaseQuotes'
@@ -193,6 +197,7 @@ import {
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
+const route = useRoute()
 const quotes = ref([])
 const providers = ref([])
 const searchQuery = ref('')
@@ -221,6 +226,22 @@ async function fetchProviders() {
 onMounted(async () => {
   await fetchQuotes()
   await fetchProviders()
+
+  // Coming from Providers / Products to create a new quote prefilled
+  if (route.query.newQuote === 'true') {
+    if (route.query.providerId) {
+      preselectedContactId.value = parseInt(route.query.providerId)
+    }
+    if (route.query.productName) {
+      preselectedLine.value = {
+        description: route.query.productName,
+        quantity: 1,
+        unitPrice: parseFloat(route.query.productPrice) || 0,
+        taxPercent: parseFloat(route.query.productTax) || 21,
+      }
+    }
+    openForm()
+  }
 })
 
 const filteredQuotes = computed(() => {
@@ -240,6 +261,8 @@ const filteredQuotes = computed(() => {
 
 const formOpen = ref(false)
 const formQuote = ref(null)
+const preselectedContactId = ref(null)
+const preselectedLine = ref(null)
 
 function openForm(q = null) {
   formQuote.value = q
@@ -249,6 +272,8 @@ function openForm(q = null) {
 function closeForm() {
   formOpen.value = false
   formQuote.value = null
+  preselectedContactId.value = null
+  preselectedLine.value = null
 }
 
 async function handleSave(formData) {
