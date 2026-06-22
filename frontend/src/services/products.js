@@ -33,7 +33,7 @@ export default {
    * Get all categories
    */
   async getCategories() {
-    return get('/categories/')
+    return get('/products/categories/')
   },
 
   /**

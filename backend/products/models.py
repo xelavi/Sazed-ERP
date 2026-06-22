@@ -37,13 +37,13 @@ class Product(models.Model):
     """Producto o servicio del catálogo."""
 
     class ProductType(models.TextChoices):
-        PRODUCT = 'Product', 'Producto'
-        SERVICE = 'Service', 'Servicio'
+        PRODUCT = 'Product', 'Producte'
+        SERVICE = 'Service', 'Servei'
 
     class Status(models.TextChoices):
-        ACTIVE = 'Active', 'Activo'
-        INACTIVE = 'Inactive', 'Inactivo'
-        ARCHIVED = 'Archived', 'Archivado'
+        ACTIVE = 'Active', 'Actiu'
+        INACTIVE = 'Inactive', 'Inactiu'
+        ARCHIVED = 'Archived', 'Arxivat'
 
     class ShippingClass(models.TextChoices):
         STANDARD = 'Standard', 'Standard'
@@ -288,9 +288,9 @@ class StockMovement(models.Model):
 
     class MovementType(models.TextChoices):
         IN = 'In', 'Entrada'
-        OUT = 'Out', 'Salida'
-        ADJUST = 'Adjust', 'Ajuste'
-        RETURN = 'Return', 'Devolución'
+        OUT = 'Out', 'Sortida'
+        ADJUST = 'Adjust', 'Ajust'
+        RETURN = 'Return', 'Devolució'
 
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name='stock_movements',

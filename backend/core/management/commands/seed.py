@@ -363,7 +363,7 @@ class Command(BaseCommand):
 
         products_data = [
             {
-                'sku': 'ERP-001', 'name': 'Camiseta Algodón Orgánico',
+                'sku': 'ERP-001', 'name': 'Samarreta Cotó Orgànic',
                 'status': 'Active', 'product_type': 'Product',
                 'category': 'Clothing', 'stock': 245, 'reserved': 12,
                 'price': Decimal('29.99'), 'price_excl_tax': Decimal('24.79'),
@@ -371,7 +371,7 @@ class Command(BaseCommand):
                 'min_stock': 50, 'reorder_point': 80,
                 'location': 'A-12-03', 'weight': '0.18 kg',
                 'dimensions': '30 × 25 × 2 cm', 'shipping_class': 'Standard',
-                'description': 'Camiseta de algodón 100% orgánico certificado GOTS, corte regular, costuras reforzadas. Disponible en 4 tallas.',
+                'description': 'Samarreta de cotó 100% orgànic certificat GOTS, tall regular, costures reforçades. Disponible en 4 talles.',
                 'tags': ['Organic', 'T-Shirt', 'Summer'],
                 'channels': ['Web', 'Marketplace'],
                 'variants': [
@@ -390,7 +390,7 @@ class Command(BaseCommand):
                 ],
             },
             {
-                'sku': 'ERP-002', 'name': 'Zapatillas Running Pro',
+                'sku': 'ERP-002', 'name': 'Sabatilles Running Pro',
                 'status': 'Active', 'product_type': 'Product',
                 'category': 'Footwear', 'stock': 58, 'reserved': 3,
                 'price': Decimal('89.95'), 'price_excl_tax': Decimal('74.34'),
@@ -398,7 +398,7 @@ class Command(BaseCommand):
                 'min_stock': 20, 'reorder_point': 30,
                 'location': 'B-04-01', 'weight': '0.62 kg',
                 'dimensions': '35 × 22 × 14 cm', 'shipping_class': 'Standard',
-                'description': 'Zapatillas de running con amortiguación CloudFoam, upper de malla transpirable y suela de caucho continental.',
+                'description': 'Sabatilles de running amb amortiment CloudFoam, upper de malla transpirable i sola de cautxú continental.',
                 'tags': ['Running', 'Sport', 'Sneakers'],
                 'channels': ['Web'],
                 'variants': [
@@ -418,18 +418,18 @@ class Command(BaseCommand):
                 ],
             },
             {
-                'sku': 'ERP-003', 'name': 'Consultoría SEO Mensual',
+                'sku': 'ERP-003', 'name': 'Consultoria SEO Mensual',
                 'status': 'Active', 'product_type': 'Service',
                 'category': 'Services', 'stock': None, 'reserved': 0,
                 'price': Decimal('450.00'), 'price_excl_tax': Decimal('371.90'),
                 'cost': Decimal('120.00'), 'unit': 'hour',
                 'digital': True,
-                'description': 'Servicio mensual de consultoría SEO: auditoría técnica, keyword research, on-page optimization y reporting.',
+                'description': 'Servei mensual de consultoria SEO: auditoria tècnica, keyword research, optimització on-page i reporting.',
                 'tags': ['SEO', 'Digital', 'Marketing'],
                 'channels': ['Web'],
             },
             {
-                'sku': 'ERP-004', 'name': 'Mochila Urbana 25L',
+                'sku': 'ERP-004', 'name': 'Motxilla Urbana 25L',
                 'status': 'Inactive', 'product_type': 'Product',
                 'category': 'Accessories', 'stock': 0, 'reserved': 0,
                 'price': Decimal('54.50'), 'price_excl_tax': Decimal('45.04'),
@@ -437,7 +437,7 @@ class Command(BaseCommand):
                 'min_stock': 10, 'reorder_point': 20,
                 'location': 'C-01-05', 'weight': '0.75 kg',
                 'dimensions': '48 × 32 × 18 cm', 'shipping_class': 'Standard',
-                'description': 'Mochila urbana 25L en poliéster reciclado, compartimento para portátil 15", bolsillo antirrobo trasero.',
+                'description': 'Motxilla urbana 25L de polièster reciclat, compartiment per a portàtil 15", butxaca antirrobatori posterior.',
                 'tags': ['Backpack', 'Urban', 'Eco'],
                 'channels': [],
                 'suppliers_data': [
@@ -445,7 +445,7 @@ class Command(BaseCommand):
                 ],
             },
             {
-                'sku': 'ERP-005', 'name': 'Café Arábica Premium 1kg',
+                'sku': 'ERP-005', 'name': 'Cafè Aràbica Premium 1kg',
                 'status': 'Active', 'product_type': 'Product',
                 'category': 'Food & Drink', 'stock': 320, 'reserved': 45,
                 'price': Decimal('18.75'), 'price_excl_tax': Decimal('17.05'),
@@ -453,7 +453,7 @@ class Command(BaseCommand):
                 'min_stock': 100, 'reorder_point': 150,
                 'location': 'D-08-02', 'weight': '1.05 kg',
                 'dimensions': '28 × 12 × 8 cm', 'lot_tracking': True,
-                'description': 'Café arábica 100% de origen único (Colombia), tueste medio, grano entero. Paquete de 1 kg con válvula de desgasificación.',
+                'description': 'Cafè aràbica 100% d\'origen únic (Colòmbia), torrat mitjà, gra sencer. Paquet d\'1 kg amb vàlvula de desgasificació.',
                 'tags': ['Coffee', 'Organic', 'Premium'],
                 'channels': ['Web', 'Marketplace'],
                 'suppliers_data': [
@@ -461,7 +461,7 @@ class Command(BaseCommand):
                 ],
             },
             {
-                'sku': 'ERP-006', 'name': 'Auriculares Bluetooth NC',
+                'sku': 'ERP-006', 'name': 'Auriculars Bluetooth NC',
                 'status': 'Active', 'product_type': 'Product',
                 'category': 'Electronics', 'stock': 14, 'reserved': 2,
                 'price': Decimal('129.00'), 'price_excl_tax': Decimal('106.61'),
@@ -469,7 +469,7 @@ class Command(BaseCommand):
                 'min_stock': 10, 'reorder_point': 20,
                 'location': 'A-02-07', 'weight': '0.28 kg',
                 'dimensions': '20 × 18 × 8 cm', 'lot_tracking': True,
-                'description': 'Auriculares over-ear Bluetooth 5.3 con cancelación de ruido activa (ANC), 40 h de batería, micrófono dual.',
+                'description': 'Auriculars over-ear Bluetooth 5.3 amb cancel·lació de soroll activa (ANC), 40 h de bateria, micròfon dual.',
                 'tags': ['Bluetooth', 'ANC', 'Headphones'],
                 'channels': ['Marketplace'],
                 'variants': [
@@ -488,12 +488,12 @@ class Command(BaseCommand):
                 'status': 'Archived', 'product_type': 'Product',
                 'category': 'Beauty', 'stock': 3, 'reserved': 0,
                 'price': Decimal('42.00'), 'price_excl_tax': Decimal('34.71'),
-                'cost': Decimal('19.50'), 'unit': 'ud', 'brand': 'BioCosmética',
+                'cost': Decimal('19.50'), 'unit': 'ud', 'brand': 'BioCosmètica',
                 'min_stock': 5, 'reorder_point': 10,
                 'location': 'E-03-01', 'weight': '0.45 kg',
                 'dimensions': '22 × 15 × 10 cm', 'shipping_class': 'Fragile',
                 'lot_tracking': True, 'sellable': False, 'purchasable': False,
-                'description': 'Set de skincare natural con crema hidratante, sérum vitamina C y limpiador facial. Ingredientes orgánicos certificados.',
+                'description': 'Set de skincare natural amb crema hidratant, sèrum vitamina C i netejador facial. Ingredients orgànics certificats.',
                 'tags': ['Skincare', 'Natural', 'Gift Set'],
                 'channels': [],
                 'suppliers_data': [
@@ -501,7 +501,7 @@ class Command(BaseCommand):
                 ],
             },
             {
-                'sku': 'ERP-008', 'name': 'Silla Ergonómica Oficina',
+                'sku': 'ERP-008', 'name': 'Cadira Ergonòmica Oficina',
                 'status': 'Active', 'product_type': 'Product',
                 'category': 'Furniture', 'stock': 27, 'reserved': 5,
                 'price': Decimal('349.00'), 'price_excl_tax': Decimal('288.43'),
@@ -509,7 +509,7 @@ class Command(BaseCommand):
                 'min_stock': 5, 'reorder_point': 10,
                 'location': 'F-01-01', 'weight': '14.5 kg',
                 'dimensions': '68 × 68 × 120 cm', 'shipping_class': 'Bulky',
-                'description': 'Silla ergonómica de oficina con soporte lumbar ajustable, reposabrazos 4D, asiento de malla transpirable y base de aluminio.',
+                'description': 'Cadira ergonòmica d\'oficina amb suport lumbar ajustable, reposabrassos 4D, seient de malla transpirable i base d\'alumini.',
                 'tags': ['Office', 'Ergonomic', 'Chair'],
                 'channels': ['Web'],
                 'variants': [
@@ -525,13 +525,13 @@ class Command(BaseCommand):
                 ],
             },
             {
-                'sku': 'ERP-009', 'name': 'Diseño de Logo Profesional',
+                'sku': 'ERP-009', 'name': 'Disseny de Logo Professional',
                 'status': 'Active', 'product_type': 'Service',
                 'category': 'Services', 'stock': None, 'reserved': 0,
                 'price': Decimal('250.00'), 'price_excl_tax': Decimal('206.61'),
                 'cost': Decimal('60.00'), 'unit': 'project',
                 'digital': True,
-                'description': 'Servicio de diseño de logotipo profesional: briefing, 3 conceptos, 2 rondas de revisión, entrega de archivos en AI, SVG, PNG y PDF.',
+                'description': 'Servei de disseny de logotip professional: briefing, 3 conceptes, 2 rondes de revisió, lliurament d\'arxius en AI, SVG, PNG i PDF.',
                 'tags': ['Design', 'Logo', 'Branding'],
                 'channels': ['Web'],
                 'variants': [
@@ -541,7 +541,7 @@ class Command(BaseCommand):
                 ],
             },
             {
-                'sku': 'ERP-010', 'name': 'Botella Térmica 750ml',
+                'sku': 'ERP-010', 'name': 'Ampolla Tèrmica 750ml',
                 'status': 'Active', 'product_type': 'Product',
                 'category': 'Accessories', 'stock': 189, 'reserved': 0,
                 'price': Decimal('24.99'), 'price_excl_tax': Decimal('20.65'),
@@ -549,7 +549,7 @@ class Command(BaseCommand):
                 'min_stock': 30, 'reorder_point': 50,
                 'location': 'C-02-08', 'weight': '0.35 kg',
                 'dimensions': '27 × 7 × 7 cm',
-                'description': 'Botella térmica de acero inoxidable 304, doble pared al vacío, 750 ml. Mantiene frío 24h y caliente 12h. Libre de BPA.',
+                'description': 'Ampolla tèrmica d\'acer inoxidable 304, doble paret al buit, 750 ml. Manté fred 24h i calent 12h. Lliure de BPA.',
                 'tags': ['Bottle', 'Eco', 'Thermal'],
                 'channels': ['Web', 'Marketplace'],
                 'variants': [
@@ -666,7 +666,7 @@ class Command(BaseCommand):
                 'balance_due': Decimal('0.00'),
                 'locked_at': '2026-01-05T10:00:00Z',
                 'lines': [
-                    {'pos': 1, 'desc': 'Camiseta Algodón Orgánico', 'qty': 50, 'price': Decimal('22.00'), 'discount_type': 'percent', 'discount_value': Decimal('5'), 'subtotal': Decimal('1045.00'), 'tax': 'iva21'},
+                    {'pos': 1, 'desc': 'Samarreta Cotó Orgànic', 'qty': 50, 'price': Decimal('22.00'), 'discount_type': 'percent', 'discount_value': Decimal('5'), 'subtotal': Decimal('1045.00'), 'tax': 'iva21'},
                     {'pos': 2, 'desc': 'Gorra Canvas', 'qty': 20, 'price': Decimal('14.50'), 'subtotal': Decimal('290.00'), 'tax': 'iva21'},
                 ],
                 'payments': [
@@ -683,8 +683,8 @@ class Command(BaseCommand):
                 'balance_due': Decimal('2442.99'),
                 'locked_at': '2026-01-15T10:00:00Z',
                 'lines': [
-                    {'pos': 1, 'desc': 'Silla Ergonómica Oficina – Black', 'qty': 3, 'price': Decimal('295.00'), 'subtotal': Decimal('885.00'), 'tax': 'iva21'},
-                    {'pos': 2, 'desc': 'Mesa Standing Desk', 'qty': 3, 'price': Decimal('420.00'), 'discount_type': 'percent', 'discount_value': Decimal('10'), 'subtotal': Decimal('1134.00'), 'tax': 'iva21'},
+                    {'pos': 1, 'desc': 'Cadira Ergonòmica Oficina – Black', 'qty': 3, 'price': Decimal('295.00'), 'subtotal': Decimal('885.00'), 'tax': 'iva21'},
+                    {'pos': 2, 'desc': 'Taula Standing Desk', 'qty': 3, 'price': Decimal('420.00'), 'discount_type': 'percent', 'discount_value': Decimal('10'), 'subtotal': Decimal('1134.00'), 'tax': 'iva21'},
                 ],
             },
             {
@@ -697,8 +697,8 @@ class Command(BaseCommand):
                 'balance_due': Decimal('952.50'),
                 'locked_at': '2026-01-20T10:00:00Z',
                 'lines': [
-                    {'pos': 1, 'desc': 'Café Arábica Premium 1kg', 'qty': 100, 'price': Decimal('15.00'), 'subtotal': Decimal('1500.00'), 'tax': 'iva10'},
-                    {'pos': 2, 'desc': 'Diseño de Logo Profesional – Standard', 'qty': 1, 'price': Decimal('250.00'), 'subtotal': Decimal('250.00'), 'tax': 'iva21'},
+                    {'pos': 1, 'desc': 'Cafè Aràbica Premium 1kg', 'qty': 100, 'price': Decimal('15.00'), 'subtotal': Decimal('1500.00'), 'tax': 'iva10'},
+                    {'pos': 2, 'desc': 'Disseny de Logo Professional – Standard', 'qty': 1, 'price': Decimal('250.00'), 'subtotal': Decimal('250.00'), 'tax': 'iva21'},
                 ],
                 'payments': [
                     {'date': date(2026, 2, 1), 'amount': Decimal('1000.00'), 'method': 'Transfer', 'reference': 'OP-CM-001'},
@@ -713,8 +713,8 @@ class Command(BaseCommand):
                 'total_amount': Decimal('272.13'), 'paid_amount': Decimal('0.00'),
                 'balance_due': Decimal('272.13'),
                 'lines': [
-                    {'pos': 1, 'desc': 'Zapatillas Running Pro – 42 Black/Red', 'qty': 2, 'price': Decimal('89.95'), 'subtotal': Decimal('179.90'), 'tax': 'iva21'},
-                    {'pos': 2, 'desc': 'Calcetines Técnicos', 'qty': 4, 'price': Decimal('12.50'), 'discount_type': 'percent', 'discount_value': Decimal('10'), 'subtotal': Decimal('45.00'), 'tax': 'iva21'},
+                    {'pos': 1, 'desc': 'Sabatilles Running Pro – 42 Black/Red', 'qty': 2, 'price': Decimal('89.95'), 'subtotal': Decimal('179.90'), 'tax': 'iva21'},
+                    {'pos': 2, 'desc': 'Mitjons Tècnics', 'qty': 4, 'price': Decimal('12.50'), 'discount_type': 'percent', 'discount_value': Decimal('10'), 'subtotal': Decimal('45.00'), 'tax': 'iva21'},
                 ],
             },
             {
@@ -727,7 +727,7 @@ class Command(BaseCommand):
                 'balance_due': Decimal('780.45'),
                 'locked_at': '2026-02-01T10:00:00Z',
                 'lines': [
-                    {'pos': 1, 'desc': 'Auriculares Bluetooth NC – Black', 'qty': 5, 'price': Decimal('129.00'), 'subtotal': Decimal('645.00'), 'tax': 'iva21'},
+                    {'pos': 1, 'desc': 'Auriculars Bluetooth NC – Black', 'qty': 5, 'price': Decimal('129.00'), 'subtotal': Decimal('645.00'), 'tax': 'iva21'},
                 ],
             },
             {
@@ -741,7 +741,7 @@ class Command(BaseCommand):
                 'balance_due': Decimal('0.00'),
                 'locked_at': '2026-01-01T10:00:00Z',
                 'lines': [
-                    {'pos': 1, 'desc': 'Consultoría SEO Mensual – Enero 2026', 'qty': 1, 'price': Decimal('450.00'), 'subtotal': Decimal('450.00'), 'tax': 'iva21', 'retention': 'irpf15'},
+                    {'pos': 1, 'desc': 'Consultoria SEO Mensual – Gener 2026', 'qty': 1, 'price': Decimal('450.00'), 'subtotal': Decimal('450.00'), 'tax': 'iva21', 'retention': 'irpf15'},
                 ],
                 'payments': [
                     {'date': date(2026, 1, 28), 'amount': Decimal('477.00'), 'method': 'DirectDebit', 'reference': 'DD-ACM-2026-01'},
@@ -757,7 +757,7 @@ class Command(BaseCommand):
                 'balance_due': Decimal('0.00'),
                 'locked_at': '2026-02-05T10:00:00Z',
                 'lines': [
-                    {'pos': 1, 'desc': 'Mochila Urbana 25L', 'qty': 2, 'price': Decimal('54.50'), 'subtotal': Decimal('109.00'), 'tax': 'iva21'},
+                    {'pos': 1, 'desc': 'Motxilla Urbana 25L', 'qty': 2, 'price': Decimal('54.50'), 'subtotal': Decimal('109.00'), 'tax': 'iva21'},
                 ],
             },
             {
@@ -769,8 +769,8 @@ class Command(BaseCommand):
                 'total_amount': Decimal('438.47'), 'paid_amount': Decimal('0.00'),
                 'balance_due': Decimal('438.47'),
                 'lines': [
-                    {'pos': 1, 'desc': 'Botella Térmica 750ml – Mint', 'qty': 10, 'price': Decimal('24.99'), 'discount_type': 'percent', 'discount_value': Decimal('15'), 'subtotal': Decimal('212.42'), 'tax': 'iva21'},
-                    {'pos': 2, 'desc': 'Camiseta Algodón Orgánico – M/White', 'qty': 5, 'price': Decimal('29.99'), 'subtotal': Decimal('149.95'), 'tax': 'iva21'},
+                    {'pos': 1, 'desc': 'Ampolla Tèrmica 750ml – Mint', 'qty': 10, 'price': Decimal('24.99'), 'discount_type': 'percent', 'discount_value': Decimal('15'), 'subtotal': Decimal('212.42'), 'tax': 'iva21'},
+                    {'pos': 2, 'desc': 'Samarreta Cotó Orgànic – M/White', 'qty': 5, 'price': Decimal('29.99'), 'subtotal': Decimal('149.95'), 'tax': 'iva21'},
                 ],
             },
             {
@@ -783,7 +783,7 @@ class Command(BaseCommand):
                 'balance_due': Decimal('0.00'),
                 'locked_at': '2026-02-12T10:00:00Z',
                 'lines': [
-                    {'pos': 1, 'desc': 'Camiseta Algodón Orgánico – L/Black (devolución)', 'qty': -1, 'price': Decimal('29.99'), 'subtotal': Decimal('-29.99'), 'tax': 'iva21'},
+                    {'pos': 1, 'desc': 'Samarreta Cotó Orgànic – L/Black (devolució)', 'qty': -1, 'price': Decimal('29.99'), 'subtotal': Decimal('-29.99'), 'tax': 'iva21'},
                 ],
                 'payments': [
                     {'date': date(2026, 2, 13), 'amount': Decimal('-36.29'), 'method': 'Transfer', 'reference': 'REF-RET-012'},
@@ -800,7 +800,7 @@ class Command(BaseCommand):
                 'balance_due': Decimal('477.00'),
                 'locked_at': '2026-02-01T10:00:00Z',
                 'lines': [
-                    {'pos': 1, 'desc': 'Consultoría SEO Mensual – Febrero 2026', 'qty': 1, 'price': Decimal('450.00'), 'subtotal': Decimal('450.00'), 'tax': 'iva21', 'retention': 'irpf15'},
+                    {'pos': 1, 'desc': 'Consultoria SEO Mensual – Febrer 2026', 'qty': 1, 'price': Decimal('450.00'), 'subtotal': Decimal('450.00'), 'tax': 'iva21', 'retention': 'irpf15'},
                 ],
             },
         ]
@@ -905,7 +905,7 @@ class Command(BaseCommand):
                 InvoiceTimeline.objects.create(
                     invoice=invoice,
                     event_type='approved',
-                    action=f'Factura {invoice.number} aprobada',
+                    action=f'Factura {invoice.number} aprovada',
                     actor='System',
                     date=invoice.issue_date,
                 )
@@ -913,7 +913,7 @@ class Command(BaseCommand):
                 InvoiceTimeline.objects.create(
                     invoice=invoice,
                     event_type='voided',
-                    action=f'Factura {invoice.number} anulada',
+                    action=f'Factura {invoice.number} anul·lada',
                     actor='System',
                     date=invoice.issue_date,
                 )

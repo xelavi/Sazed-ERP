@@ -10,7 +10,6 @@ class PurchaseInvoiceFilter(django_filters.FilterSet):
     search = django_filters.CharFilter(method='filter_search')
     status = django_filters.CharFilter(method='filter_status')
     provider = django_filters.NumberFilter(field_name='provider__id')
-    series = django_filters.CharFilter(field_name='series__prefix')
     date_from = django_filters.DateFilter(
         field_name='issue_date', lookup_expr='gte',
     )
@@ -23,7 +22,7 @@ class PurchaseInvoiceFilter(django_filters.FilterSet):
 
     class Meta:
         model = PurchaseInvoice
-        fields = ['status', 'provider', 'series', 'invoice_type']
+        fields = ['status', 'provider', 'invoice_type']
 
     def filter_search(self, queryset, name, value):
         return queryset.filter(

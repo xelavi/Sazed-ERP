@@ -1,16 +1,9 @@
 from django.contrib import admin
 
 from .models import (
-    PurchaseSeries, PurchaseInvoice, PurchaseInvoiceLine,
+    PurchaseInvoice, PurchaseInvoiceLine,
     PurchaseInvoiceLineTax, PurchasePayment, PurchaseInvoiceTimeline,
-    PurchaseQuote,
 )
-
-
-@admin.register(PurchaseSeries)
-class PurchaseSeriesAdmin(admin.ModelAdmin):
-    list_display = ['prefix', 'name', 'next_seq', 'is_default', 'active']
-    list_filter = ['active', 'is_default']
 
 
 class PurchaseInvoiceLineInline(admin.TabularInline):
@@ -35,7 +28,7 @@ class PurchaseInvoiceAdmin(admin.ModelAdmin):
         'number', 'invoice_type', 'status', 'provider',
         'issue_date', 'due_date', 'total_amount', 'balance_due',
     ]
-    list_filter = ['status', 'invoice_type', 'series']
+    list_filter = ['status', 'invoice_type', 'company']
     search_fields = ['number', 'provider__name']
     inlines = [PurchaseInvoiceLineInline, PurchasePaymentInline, PurchaseInvoiceTimelineInline]
     readonly_fields = [
@@ -48,10 +41,3 @@ class PurchaseInvoiceAdmin(admin.ModelAdmin):
 class PurchasePaymentAdmin(admin.ModelAdmin):
     list_display = ['invoice', 'date', 'amount', 'method', 'reference']
     list_filter = ['method']
-
-
-@admin.register(PurchaseQuote)
-class PurchaseQuoteAdmin(admin.ModelAdmin):
-    list_display = ['number', 'provider', 'concept', 'amount', 'status', 'date']
-    list_filter = ['status']
-    search_fields = ['number', 'concept']

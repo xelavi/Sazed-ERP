@@ -8,7 +8,7 @@
         </div>
         <div class="header-actions">
           <button class="btn btn-primary" @click="openForm">
-            <Plus :size="18" /><span>Nuevo influencer</span>
+            <Plus :size="18" /><span>Nou influencer</span>
           </button>
         </div>
       </div>
@@ -18,24 +18,24 @@
       <div class="filters-bar">
         <div class="search-box">
           <Search :size="16" class="search-icon" />
-          <input class="input search-input" v-model="searchQ" placeholder="Buscar por nombre o alias..." />
+          <input class="input search-input" v-model="searchQ" placeholder="Cercar per nom o àlies..." />
         </div>
         <select class="select" v-model="platformFilter">
-          <option value="all">Todas las redes</option>
+          <option value="all">Totes les xarxes</option>
           <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
         </select>
         <select class="select" v-model="nicheFilter">
-          <option value="all">Todos los nichos</option>
+          <option value="all">Tots els nínxols</option>
           <option v-for="n in niches" :key="n" :value="n">{{ n }}</option>
         </select>
         <select class="select" v-model="statusFilter">
-          <option value="all">Todos los estados</option>
-          <option value="active">Activo</option>
-          <option value="prospect">Prospecto</option>
-          <option value="archived">Archivado</option>
+          <option value="all">Tots els estats</option>
+          <option value="active">Actiu</option>
+          <option value="prospect">Prospecte</option>
+          <option value="archived">Arxivat</option>
         </select>
         <select class="select" v-model="followersFilter">
-          <option value="all">Cualquier tamaño</option>
+          <option value="all">Qualsevol mida</option>
           <option value="nano">Nano (&lt;10K)</option>
           <option value="micro">Micro (10K–100K)</option>
           <option value="macro">Macro (100K–1M)</option>
@@ -49,15 +49,15 @@
             <thead>
               <tr>
                 <th>Influencer</th>
-                <th>Red principal</th>
-                <th class="text-right">Seguidores</th>
-                <th>Nicho</th>
-                <th>Contacto</th>
-                <th>Estado</th>
-                <th class="text-right">Colaboraciones</th>
-                <th class="text-right">Ventas generadas</th>
-                <th class="text-right">Valoración</th>
-                <th>Acciones</th>
+                <th>Xarxa principal</th>
+                <th class="text-right">Seguidors</th>
+                <th>Nínxol</th>
+                <th>Contacte</th>
+                <th>Estat</th>
+                <th class="text-right">Col·laboracions</th>
+                <th class="text-right">Vendes generades</th>
+                <th class="text-right">Valoració</th>
+                <th>Accions</th>
               </tr>
             </thead>
             <tbody>
@@ -89,9 +89,9 @@
                 </td>
                 <td>
                   <div class="row-actions">
-                    <button class="icon-btn" @click="$router.push('/social-crm/influencers/' + inf.id)" title="Ver ficha"><Eye :size="15" /></button>
+                    <button class="icon-btn" @click="$router.push('/social-crm/influencers/' + inf.id)" title="Veure fitxa"><Eye :size="15" /></button>
                     <button class="icon-btn" title="Editar"><Pencil :size="15" /></button>
-                    <button class="icon-btn" title="Crear colaboración" @click="$router.push('/social-crm/collaborations')"><Handshake :size="15" /></button>
+                    <button class="icon-btn" title="Crear col·laboració" @click="$router.push('/social-crm/collaborations')"><Handshake :size="15" /></button>
                   </div>
                 </td>
               </tr>
@@ -105,29 +105,29 @@
     <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
       <div class="modal">
         <div class="modal-header">
-          <h2 class="modal-title">Nuevo influencer</h2>
+          <h2 class="modal-title">Nou influencer</h2>
           <button class="icon-btn" @click="showForm = false"><X :size="20" /></button>
         </div>
         <div class="modal-body">
           <div class="form-grid">
-            <div class="field"><label class="field-label">Nombre *</label><input class="input full" v-model="form.name" /></div>
-            <div class="field"><label class="field-label">Alias / Handle *</label><input class="input full" v-model="form.alias" placeholder="@alias" /></div>
-            <div class="field"><label class="field-label">Red principal</label>
+            <div class="field"><label class="field-label">Nom *</label><input class="input full" v-model="form.name" /></div>
+            <div class="field"><label class="field-label">Àlies / Handle *</label><input class="input full" v-model="form.alias" placeholder="@alias" /></div>
+            <div class="field"><label class="field-label">Xarxa principal</label>
               <select class="select full" v-model="form.platform">
                 <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
               </select>
             </div>
-            <div class="field"><label class="field-label">Nicho</label><input class="input full" v-model="form.niche" placeholder="Lifestyle, Moda..." /></div>
-            <div class="field"><label class="field-label">Seguidores</label><input class="input full" type="number" v-model.number="form.followers" /></div>
-            <div class="field"><label class="field-label">Contacto</label><input class="input full" v-model="form.contact" placeholder="email o agencia" /></div>
-            <div class="field"><label class="field-label">Agencia</label><input class="input full" v-model="form.agency" /></div>
-            <div class="field"><label class="field-label">País</label><input class="input full" v-model="form.country" value="España" /></div>
-            <div class="field full-width"><label class="field-label">Notas internas</label><textarea class="input full textarea" v-model="form.notes" rows="3"></textarea></div>
+            <div class="field"><label class="field-label">Nínxol</label><input class="input full" v-model="form.niche" placeholder="Lifestyle, Moda..." /></div>
+            <div class="field"><label class="field-label">Seguidors</label><input class="input full" type="number" v-model.number="form.followers" /></div>
+            <div class="field"><label class="field-label">Contacte</label><input class="input full" v-model="form.contact" placeholder="email o agència" /></div>
+            <div class="field"><label class="field-label">Agència</label><input class="input full" v-model="form.agency" /></div>
+            <div class="field"><label class="field-label">País</label><input class="input full" v-model="form.country" value="Espanya" /></div>
+            <div class="field full-width"><label class="field-label">Notes internes</label><textarea class="input full textarea" v-model="form.notes" rows="3"></textarea></div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
-          <button class="btn btn-primary" @click="saveInfluencer">Añadir influencer</button>
+          <button class="btn btn-secondary" @click="showForm = false">Cancel·lar</button>
+          <button class="btn btn-primary" @click="saveInfluencer">Afegir influencer</button>
         </div>
       </div>
     </div>
@@ -147,7 +147,7 @@ const nicheFilter    = ref('all')
 const statusFilter   = ref('all')
 const followersFilter= ref('all')
 const showForm       = ref(false)
-const form = reactive({ name: '', alias: '', platform: 'instagram', niche: '', followers: 0, contact: '', agency: '', country: 'España', notes: '' })
+const form = reactive({ name: '', alias: '', platform: 'instagram', niche: '', followers: 0, contact: '', agency: '', country: 'Espanya', notes: '' })
 
 const niches = computed(() => [...new Set(influencers.value.map(i => i.niche))])
 
@@ -174,9 +174,9 @@ const filtered = computed(() => {
 
 function platformStyle(key) { const p = getPlatform(key); return { background: p.bg, color: p.color } }
 function statusClass(s) { return s === 'active' ? 'badge-active' : s === 'prospect' ? 'badge-warning' : 'badge-inactive' }
-function statusLabel(s) { return s === 'active' ? 'Activo' : s === 'prospect' ? 'Prospecto' : 'Archivado' }
+function statusLabel(s) { return s === 'active' ? 'Actiu' : s === 'prospect' ? 'Prospecte' : 'Arxivat' }
 
-function openForm() { Object.assign(form, { name: '', alias: '', platform: 'instagram', niche: '', followers: 0, contact: '', agency: '', country: 'España', notes: '' }); showForm.value = true }
+function openForm() { Object.assign(form, { name: '', alias: '', platform: 'instagram', niche: '', followers: 0, contact: '', agency: '', country: 'Espanya', notes: '' }); showForm.value = true }
 function saveInfluencer() {
   if (!form.name) return
   influencers.value.push({ id: Date.now(), ...form, platforms: [form.platform], status: 'prospect', collaborations: 0, salesGenerated: 0, rating: 0, engagementMid: 0, reachMid: 0, clicksMid: 0, conversionsMid: 0, contentQuality: 0, reliability: 0, brandAffinity: 0, reputationRisk: 0 })

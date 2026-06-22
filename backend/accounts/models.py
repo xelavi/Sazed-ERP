@@ -85,7 +85,7 @@ class Company(models.Model):
     """
 
     class Plan(models.TextChoices):
-        FREE = 'free', 'Gratuito'
+        FREE = 'free', 'Gratuït'
         STARTER = 'starter', 'Starter'
         PRO = 'pro', 'Pro'
 
@@ -108,7 +108,7 @@ class Company(models.Model):
     city = models.CharField(max_length=100, blank=True)
     province = models.CharField(max_length=100, blank=True)
     postal_code = models.CharField(max_length=10, blank=True)
-    country = models.CharField(max_length=100, default='España')
+    country = models.CharField(max_length=100, default='Espanya')
 
     # Branding
     logo = models.ImageField(upload_to='companies/logos/', null=True, blank=True)
@@ -153,17 +153,16 @@ class Company(models.Model):
 # ── Module catalog & permission levels ────────────────
 
 # Canonical list of app modules a role can be granted access to.
-# Keys are stable identifiers; labels are shown in the UI (Spanish).
 MODULES = [
-    ('dashboard', 'Inicio'),
-    ('products', 'Productos'),
-    ('inventory', 'Inventario'),
-    ('invoices', 'Facturas de venta'),
-    ('quotes', 'Presupuestos de venta'),
-    ('purchase_invoices', 'Facturas de compra'),
-    ('purchase_quotes', 'Presupuestos de compra'),
-    ('customers', 'Clientes'),
-    ('providers', 'Proveedores'),
+    ('dashboard', 'Inici'),
+    ('products', 'Productes'),
+    ('inventory', 'Inventari'),
+    ('invoices', 'Factures de venda'),
+    ('quotes', 'Pressupostos de venda'),
+    ('purchase_invoices', 'Factures de compra'),
+    ('purchase_quotes', 'Pressupostos de compra'),
+    ('customers', 'Clients'),
+    ('providers', 'Proveïdors'),
     ('personnel', 'Personal'),
     ('social_crm', 'Social CRM'),
 ]
@@ -240,10 +239,10 @@ class Membership(models.Model):
     """
 
     class Role(models.TextChoices):
-        OWNER = 'owner', 'Propietario'
+        OWNER = 'owner', 'Propietari'
         ADMIN = 'admin', 'Administrador'
         EDITOR = 'editor', 'Editor'
-        VIEWER = 'viewer', 'Solo lectura'
+        VIEWER = 'viewer', 'Només lectura'
 
     user = models.ForeignKey(
         'User', on_delete=models.CASCADE, related_name='memberships',
@@ -329,8 +328,8 @@ class Notification(models.Model):
 
     class Kind(models.TextChoices):
         SYSTEM = 'system', 'Sistema'
-        ALERT = 'alert', 'Aviso'
-        ACTIVITY = 'activity', 'Actividad'
+        ALERT = 'alert', 'Avís'
+        ACTIVITY = 'activity', 'Activitat'
 
     recipient = models.ForeignKey(
         'User', on_delete=models.CASCADE, related_name='notifications',
@@ -381,9 +380,9 @@ class Invitation(models.Model):
     """Pending invitation for a user to join a company."""
 
     class Status(models.TextChoices):
-        PENDING = 'pending', 'Pendiente'
-        ACCEPTED = 'accepted', 'Aceptada'
-        REJECTED = 'rejected', 'Rechazada'
+        PENDING = 'pending', 'Pendent'
+        ACCEPTED = 'accepted', 'Acceptada'
+        REJECTED = 'rejected', 'Rebutjada'
 
     company = models.ForeignKey(
         Company, on_delete=models.CASCADE, related_name='invitations',
@@ -433,8 +432,14 @@ class SocialAccount(models.Model):
     """
 
     PROVIDER_FACEBOOK = 'facebook'
+    PROVIDER_YOUTUBE = 'youtube'
+    PROVIDER_TWITTER = 'twitter'
+    PROVIDER_TIKTOK = 'tiktok'
     PROVIDER_CHOICES = [
         (PROVIDER_FACEBOOK, 'Facebook'),
+        (PROVIDER_YOUTUBE, 'YouTube'),
+        (PROVIDER_TWITTER, 'X (Twitter)'),
+        (PROVIDER_TIKTOK, 'TikTok'),
     ]
 
     user = models.ForeignKey(
@@ -447,6 +452,9 @@ class SocialAccount(models.Model):
     token_expires_at = models.DateTimeField(null=True, blank=True)
     scopes = models.JSONField(default=list, blank=True)
     extra_data = models.JSONField(default=dict, blank=True)
+    # Stats fetched from the platform API and persisted so they survive token expiry
+    stats = models.JSONField(default=dict, blank=True)
+    stats_synced_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -456,6 +464,52 @@ class SocialAccount(models.Model):
 
     def __str__(self):
         return f'{self.user.email} · {self.provider}:{self.provider_user_id}'
+
+
+class SocialPost(models.Model):
+    """
+    A video/post fetched from a social platform API and persisted in the DB.
+    Survives token expiry — always shows the last known data.
+    """
+    POST_TYPE_VIDEO = 'video'
+    POST_TYPE_POST  = 'post'
+    POST_TYPE_REEL  = 'reel'
+
+    account = models.ForeignKey(
+        SocialAccount, on_delete=models.CASCADE, related_name='posts',
+    )
+    platform_post_id = models.CharField(max_length=256)
+    provider = models.CharField(max_length=32)
+
+    title        = models.CharField(max_length=512, blank=True)
+    description  = models.TextField(blank=True)
+    thumbnail_url = models.URLField(max_length=1024, blank=True)
+    post_url     = models.URLField(max_length=1024, blank=True)
+    post_type    = models.CharField(max_length=32, default=POST_TYPE_VIDEO)
+    published_at = models.DateTimeField(null=True, blank=True)
+    duration_sec = models.PositiveIntegerField(default=0, help_text='Duration in seconds')
+
+    # Metrics — updated every sync
+    views    = models.PositiveIntegerField(default=0)
+    likes    = models.PositiveIntegerField(default=0)
+    comments = models.PositiveIntegerField(default=0)
+    shares   = models.PositiveIntegerField(default=0)
+
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [('account', 'platform_post_id')]
+        ordering = ['-published_at']
+
+    def __str__(self):
+        return f'{self.provider} · {self.title[:60] or self.platform_post_id}'
+
+    @property
+    def engagement(self):
+        """Engagement rate: (likes + comments) / views * 100."""
+        if not self.views:
+            return 0.0
+        return round((self.likes + self.comments) / self.views * 100, 2)
 
 
 # ── System Settings ────────────────────────────────────

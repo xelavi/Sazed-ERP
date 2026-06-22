@@ -3,9 +3,9 @@
     <div class="view-header">
       <div class="header-content">
         <div class="breadcrumb">
-          <router-link to="/social-crm/posts" class="breadcrumb-link">Publicaciones</router-link>
+          <router-link to="/social-crm/posts" class="breadcrumb-link">Publicacions</router-link>
           <ChevronRight :size="16" class="breadcrumb-sep" />
-          <span class="breadcrumb-current">Detalle</span>
+          <span class="breadcrumb-current">Detall</span>
         </div>
         <div class="header-actions">
           <button class="btn btn-secondary">
@@ -27,16 +27,16 @@
             </div>
             <h2 class="post-title">{{ post.title }}</h2>
             <div class="meta-row">
-              <span class="meta-item"><span class="meta-key">Cuenta:</span> {{ post.accountName }}</span>
-              <span class="meta-item"><span class="meta-key">Campaña:</span> {{ post.campaignName || '—' }}</span>
-              <span class="meta-item"><span class="meta-key">Producto:</span> {{ post.productName || '—' }}</span>
+              <span class="meta-item"><span class="meta-key">Compte:</span> {{ post.accountName }}</span>
+              <span class="meta-item"><span class="meta-key">Campanya:</span> {{ post.campaignName || '—' }}</span>
+              <span class="meta-item"><span class="meta-key">Producte:</span> {{ post.productName || '—' }}</span>
             </div>
             <!-- Simulated preview placeholder -->
             <div class="post-preview">
               <div class="preview-placeholder">
                 <ImageIcon :size="32" class="preview-icon" />
-                <span>Vista previa del contenido</span>
-                <a href="#" class="preview-link" @click.prevent>Ver post original <ExternalLink :size="12" /></a>
+                <span>Vista prèvia del contingut</span>
+                <a href="#" class="preview-link" @click.prevent>Veure post original <ExternalLink :size="12" /></a>
               </div>
             </div>
           </div>
@@ -65,18 +65,18 @@
               </div>
               <div class="eng-desc">
                 <span :class="engClass(post.engagement)">{{ engLabel(post.engagement) }}</span>
-                — media de la cuenta: {{ avgEngagement.toFixed(1) }}%
+                — mitjana del compte: {{ avgEngagement.toFixed(1) }}%
               </div>
             </div>
           </div>
 
-          <!-- Trazabilidad -->
+          <!-- Traçabilitat -->
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Trazabilidad</h3></div>
+            <div class="card-header"><h3 class="card-title">Traçabilitat</h3></div>
             <div class="trace-body">
-              <div class="trace-row"><span class="trace-label">Clics generados</span><span class="trace-val">{{ formatNumber(post.clicks) }}</span></div>
-              <div class="trace-row"><span class="trace-label">Conversiones</span><span class="trace-val">—</span></div>
-              <div class="trace-row"><span class="trace-label">Ventas atribuidas</span><span class="trace-val">—</span></div>
+              <div class="trace-row"><span class="trace-label">Clics generats</span><span class="trace-val">{{ formatNumber(post.clicks) }}</span></div>
+              <div class="trace-row"><span class="trace-label">Conversions</span><span class="trace-val">—</span></div>
+              <div class="trace-row"><span class="trace-label">Vendes atribuïdes</span><span class="trace-val">—</span></div>
               <div class="trace-row"><span class="trace-label">UTM Campaign</span><span class="trace-val text-secondary">{{ post.campaignName ? post.campaignName.toLowerCase().replace(/\s/g,'-') : '—' }}</span></div>
             </div>
           </div>
@@ -85,19 +85,19 @@
         <!-- Comparativa -->
         <div class="full-col">
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Comparativa con otros posts</h3></div>
+            <div class="card-header"><h3 class="card-title">Comparativa amb altres posts</h3></div>
             <div class="compare-grid">
               <div class="compare-item" v-for="m in compareMetrics" :key="m.label">
                 <div class="compare-label">{{ m.label }}</div>
                 <div class="compare-vals">
                   <div>
                     <div class="compare-this">{{ m.format(post[m.field]) }}</div>
-                    <div class="compare-sub">Este post</div>
+                    <div class="compare-sub">Aquest post</div>
                   </div>
                   <div class="compare-sep">/</div>
                   <div>
                     <div class="compare-avg">{{ m.format(m.avg) }}</div>
-                    <div class="compare-sub">Media del periodo</div>
+                    <div class="compare-sub">Mitjana del període</div>
                   </div>
                 </div>
                 <div class="compare-diff" :class="post[m.field] >= m.avg ? 'pos' : 'neg'">
@@ -113,8 +113,8 @@
 
     <div v-else class="not-found">
       <AlertCircle :size="40" />
-      <p>Publicación no encontrada.</p>
-      <router-link to="/social-crm/posts" class="btn btn-secondary">Volver a publicaciones</router-link>
+      <p>Publicació no trobada.</p>
+      <router-link to="/social-crm/posts" class="btn btn-secondary">Tornar a publicacions</router-link>
     </div>
   </div>
 </template>
@@ -134,14 +134,14 @@ function platformStyle(key) {
 }
 
 const postKPIs = [
-  { label: 'Likes',          field: 'likes',       icon: Heart,         format: formatNumber },
-  { label: 'Comentarios',    field: 'comments',    icon: MessageCircle, format: formatNumber },
-  { label: 'Compartidos',    field: 'shares',      icon: Share2,        format: formatNumber },
-  { label: 'Guardados',      field: 'saves',       icon: Bookmark,      format: formatNumber },
-  { label: 'Visualizaciones',field: 'views',       icon: Eye,           format: formatNumber },
-  { label: 'Alcance',        field: 'reach',       icon: BarChart2,     format: formatNumber },
-  { label: 'Impresiones',    field: 'impressions', icon: BarChart2,     format: formatNumber },
-  { label: 'Clics',          field: 'clicks',      icon: MousePointer,  format: formatNumber },
+  { label: 'Likes',           field: 'likes',       icon: Heart,         format: formatNumber },
+  { label: 'Comentaris',      field: 'comments',    icon: MessageCircle, format: formatNumber },
+  { label: 'Compartits',      field: 'shares',      icon: Share2,        format: formatNumber },
+  { label: 'Desats',          field: 'saves',       icon: Bookmark,      format: formatNumber },
+  { label: 'Visualitzacions', field: 'views',       icon: Eye,           format: formatNumber },
+  { label: 'Abast',           field: 'reach',       icon: BarChart2,     format: formatNumber },
+  { label: 'Impressions',     field: 'impressions', icon: BarChart2,     format: formatNumber },
+  { label: 'Clics',           field: 'clicks',      icon: MousePointer,  format: formatNumber },
 ]
 
 const avgEngagement = computed(() => {
@@ -152,16 +152,16 @@ const avgEngagement = computed(() => {
 const compareMetrics = computed(() => {
   const avg = (field) => socialPosts.reduce((s, p) => s + p[field], 0) / socialPosts.length
   return [
-    { label: 'Alcance',     field: 'reach',      avg: Math.round(avg('reach')),      format: formatNumber },
-    { label: 'Engagement',  field: 'engagement', avg: parseFloat(avg('engagement').toFixed(1)), format: v => v + '%' },
-    { label: 'Clics',       field: 'clicks',     avg: Math.round(avg('clicks')),     format: formatNumber },
-    { label: 'Likes',       field: 'likes',      avg: Math.round(avg('likes')),      format: formatNumber },
+    { label: 'Abast',      field: 'reach',      avg: Math.round(avg('reach')),      format: formatNumber },
+    { label: 'Engagement', field: 'engagement', avg: parseFloat(avg('engagement').toFixed(1)), format: v => v + '%' },
+    { label: 'Clics',      field: 'clicks',     avg: Math.round(avg('clicks')),     format: formatNumber },
+    { label: 'Likes',      field: 'likes',      avg: Math.round(avg('likes')),      format: formatNumber },
   ]
 })
 
 function engClass(v) { return v >= 6 ? 'eng-high' : v >= 3 ? 'eng-mid' : 'eng-low' }
 function engColor(v) { return v >= 6 ? '#10B981' : v >= 3 ? '#F59E0B' : '#EF4444' }
-function engLabel(v) { return v >= 6 ? 'Muy alto' : v >= 4 ? 'Alto' : v >= 2 ? 'Medio' : 'Bajo' }
+function engLabel(v) { return v >= 6 ? 'Molt alt' : v >= 4 ? 'Alt' : v >= 2 ? 'Mitjà' : 'Baix' }
 </script>
 
 <style scoped>

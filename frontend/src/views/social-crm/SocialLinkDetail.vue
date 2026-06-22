@@ -3,7 +3,7 @@
     <div class="view-header">
       <div class="header-content">
         <div class="breadcrumb">
-          <router-link to="/social-crm/links" class="breadcrumb-link">Enlaces</router-link>
+          <router-link to="/social-crm/links" class="breadcrumb-link">Enllaços</router-link>
           <ChevronRight :size="16" class="breadcrumb-sep" />
           <span class="breadcrumb-current">{{ lnk?.name }}</span>
         </div>
@@ -17,11 +17,11 @@
       <!-- Base data -->
       <div class="card data-card">
         <div class="data-grid">
-          <div class="data-item"><span class="data-key">Nombre</span><span class="font-medium">{{ lnk.name }}</span></div>
-          <div class="data-item"><span class="data-key">URL destino</span><a :href="lnk.url" target="_blank" class="link-url">{{ lnk.url }}</a></div>
-          <div class="data-item"><span class="data-key">Campaña</span><span>{{ lnk.campaignName || '—' }}</span></div>
+          <div class="data-item"><span class="data-key">Nom</span><span class="font-medium">{{ lnk.name }}</span></div>
+          <div class="data-item"><span class="data-key">URL de destinació</span><a :href="lnk.url" target="_blank" class="link-url">{{ lnk.url }}</a></div>
+          <div class="data-item"><span class="data-key">Campanya</span><span>{{ lnk.campaignName || '—' }}</span></div>
           <div class="data-item"><span class="data-key">Origen</span><span class="platform-pill" :style="platformStyle(lnk.origin)">{{ getPlatform(lnk.origin).label }}</span></div>
-          <div class="data-item"><span class="data-key">Influencer</span><span>{{ lnk.influencerName || 'Orgánico' }}</span></div>
+          <div class="data-item"><span class="data-key">Influencer</span><span>{{ lnk.influencerName || 'Orgànic' }}</span></div>
           <div class="data-item"><span class="data-key">UTMs</span>
             <span class="utm-codes">
               <code>utm_source={{ lnk.utmSource }}</code>
@@ -43,7 +43,7 @@
       <div class="two-col">
         <!-- Conversion funnel -->
         <div class="card">
-          <div class="card-header"><h3 class="card-title">Embudo de conversión</h3></div>
+          <div class="card-header"><h3 class="card-title">Embut de conversió</h3></div>
           <div class="funnel">
             <div
               v-for="(step, i) in funnelSteps"
@@ -66,7 +66,7 @@
 
         <!-- Temporal evolution (simulated) -->
         <div class="card">
-          <div class="card-header"><h3 class="card-title">Evolución temporal (últimos 30 días)</h3></div>
+          <div class="card-header"><h3 class="card-title">Evolució temporal (últims 30 dies)</h3></div>
           <div class="chart-area">
             <div class="bar-chart">
               <div v-for="(d, i) in evoData" :key="i" class="bar-group">
@@ -76,7 +76,7 @@
                 <span class="bar-label">{{ d.label }}</span>
               </div>
             </div>
-            <div class="evo-legend"><span style="color:#667eea">■</span> Clics diarios</div>
+            <div class="evo-legend"><span style="color:#667eea">■</span> Clics diaris</div>
           </div>
         </div>
       </div>
@@ -84,8 +84,8 @@
 
     <div v-else class="not-found">
       <AlertCircle :size="40" />
-      <p>Enlace no encontrado.</p>
-      <router-link to="/social-crm/links" class="btn btn-secondary">Volver</router-link>
+      <p>Enllaç no trobat.</p>
+      <router-link to="/social-crm/links" class="btn btn-secondary">Tornar</router-link>
     </div>
   </div>
 </template>
@@ -100,19 +100,19 @@ const route = useRoute()
 const lnk   = computed(() => socialLinks.find(l => l.id === Number(route.params.id)))
 
 const linkKPIs = [
-  { label: 'Clics',       field: 'clicks',     format: formatNumber },
-  { label: 'Sesiones',    field: 'sessions',   format: formatNumber },
-  { label: 'Carritos',    field: 'carts',      format: formatNumber },
-  { label: 'Compras',     field: 'purchases',  format: formatNumber },
-  { label: 'Ingresos',    field: 'revenue',    format: formatCurrency },
-  { label: 'Conversión',  field: 'conversion', format: v => v.toFixed(2) + '%' },
+  { label: 'Clics',      field: 'clicks',     format: formatNumber },
+  { label: 'Sessions',   field: 'sessions',   format: formatNumber },
+  { label: 'Cistelles',  field: 'carts',      format: formatNumber },
+  { label: 'Compres',    field: 'purchases',  format: formatNumber },
+  { label: 'Ingressos',  field: 'revenue',    format: formatCurrency },
+  { label: 'Conversió',  field: 'conversion', format: v => v.toFixed(2) + '%' },
 ]
 
 const funnelSteps = computed(() => lnk.value ? [
-  { label: 'Clics',    value: lnk.value.clicks },
-  { label: 'Sesiones', value: lnk.value.sessions },
-  { label: 'Carritos', value: lnk.value.carts },
-  { label: 'Compras',  value: lnk.value.purchases },
+  { label: 'Clics',     value: lnk.value.clicks },
+  { label: 'Sessions',  value: lnk.value.sessions },
+  { label: 'Cistelles', value: lnk.value.carts },
+  { label: 'Compres',   value: lnk.value.purchases },
 ] : [])
 
 function funnelWidth(val) { const max = funnelSteps.value[0]?.value || 1; return (val / max) * 100 }
@@ -133,7 +133,7 @@ function platformStyle(key) { const p = getPlatform(key); return { background: p
 function copyLink() {
   if (!lnk.value) return
   const url = `${lnk.value.url}?utm_source=${lnk.value.utmSource}&utm_medium=${lnk.value.utmMedium}&utm_campaign=${lnk.value.utmCampaign}`
-  navigator.clipboard.writeText(url).then(() => alert('URL copiada al portapapeles'))
+  navigator.clipboard.writeText(url).then(() => alert('URL copiada al porta-retalls'))
 }
 </script>
 

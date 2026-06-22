@@ -7,11 +7,11 @@
             <div>
               <h3 class="rec-title">
                 <Repeat :size="18" />
-                Hacer recurrente
+                Fer recurrent
               </h3>
               <p class="rec-sub" v-if="sourceInvoice">
                 Plantilla a partir de
-                <strong>{{ sourceInvoice.number || 'borrador' }}</strong>
+                <strong>{{ sourceInvoice.number || 'esborrany' }}</strong>
                 · {{ formatCurrency(sourceInvoice.totalAmount) }}
               </p>
             </div>
@@ -22,12 +22,12 @@
 
           <div class="rec-body">
             <p class="rec-hint">
-              Se generará y aprobará automáticamente una factura con estas
-              líneas en cada vencimiento. La factura original no se modifica.
+              Es generarà i aprovarà automàticament una factura amb aquestes
+              línies a cada venciment. La factura original no es modifica.
             </p>
 
             <div class="rec-field">
-              <label class="rec-label">Frecuencia</label>
+              <label class="rec-label">Freqüència</label>
               <div class="rec-row">
                 <span class="rec-prefix">Cada</span>
                 <input
@@ -37,22 +37,22 @@
                   v-model.number="form.interval"
                 />
                 <select class="rec-select" v-model="form.frequency">
-                  <option value="weekly">semana(s)</option>
-                  <option value="monthly">mes(es)</option>
+                  <option value="weekly">setmana(es)</option>
+                  <option value="monthly">mes(os)</option>
                   <option value="quarterly">trimestre(s)</option>
                   <option value="semiannual">semestre(s)</option>
-                  <option value="yearly">año(s)</option>
+                  <option value="yearly">any(s)</option>
                 </select>
               </div>
             </div>
 
             <div class="rec-field">
-              <label class="rec-label">Primera emisión</label>
+              <label class="rec-label">Primera emissió</label>
               <input class="rec-input" type="date" v-model="form.start_date" />
             </div>
 
             <div class="rec-field">
-              <label class="rec-label">Vencimiento de pago</label>
+              <label class="rec-label">Venciment de pagament</label>
               <div class="rec-row">
                 <input
                   class="rec-input rec-input-num"
@@ -60,26 +60,26 @@
                   min="0"
                   v-model.number="form.payment_term_days"
                 />
-                <span class="rec-suffix">días tras la emisión</span>
+                <span class="rec-suffix">dies després de l'emissió</span>
               </div>
             </div>
 
             <div class="rec-field">
-              <label class="rec-label">Finalización</label>
+              <label class="rec-label">Finalització</label>
               <select class="rec-select rec-select-full" v-model="endMode">
-                <option value="never">Sin fin (hasta pausarla)</option>
-                <option value="until">En una fecha concreta</option>
-                <option value="count">Tras un nº de facturas</option>
+                <option value="never">Sense fi (fins a pausar-la)</option>
+                <option value="until">En una data concreta</option>
+                <option value="count">Després d'un nre. de factures</option>
               </select>
             </div>
 
             <div v-if="endMode === 'until'" class="rec-field">
-              <label class="rec-label">Hasta el</label>
+              <label class="rec-label">Fins al</label>
               <input class="rec-input" type="date" v-model="form.end_date" />
             </div>
 
             <div v-if="endMode === 'count'" class="rec-field">
-              <label class="rec-label">Número de facturas</label>
+              <label class="rec-label">Nombre de factures</label>
               <input
                 class="rec-input rec-input-num"
                 type="number"
@@ -92,10 +92,10 @@
           </div>
 
           <div class="rec-footer">
-            <button class="btn btn-secondary" @click="$emit('close')">Cancelar</button>
+            <button class="btn btn-secondary" @click="$emit('close')">Cancel·lar</button>
             <button class="btn btn-primary" :disabled="submitting" @click="submit">
               <Repeat :size="16" />
-              {{ submitting ? 'Creando…' : 'Crear recurrencia' }}
+              {{ submitting ? 'Creant…' : 'Crear recurrència' }}
             </button>
           </div>
         </div>
@@ -143,11 +143,11 @@ watch(() => props.open, (isOpen) => {
 function submit() {
   error.value = ''
   if (!form.start_date) {
-    error.value = 'Indica la fecha de la primera emisión.'
+    error.value = 'Indica la data de la primera emissió.'
     return
   }
   if (!form.interval || form.interval < 1) {
-    error.value = 'El intervalo debe ser al menos 1.'
+    error.value = 'L\'interval ha de ser com a mínim 1.'
     return
   }
   const payload = {
@@ -161,13 +161,13 @@ function submit() {
   }
   if (endMode.value === 'until') {
     if (!form.end_date) {
-      error.value = 'Indica la fecha de finalización.'
+      error.value = 'Indica la data de finalització.'
       return
     }
     payload.end_date = form.end_date
   } else if (endMode.value === 'count') {
     if (!form.max_occurrences || form.max_occurrences < 1) {
-      error.value = 'Indica cuántas facturas generar.'
+      error.value = 'Indica quantes factures s\'han de generar.'
       return
     }
     payload.max_occurrences = form.max_occurrences
@@ -177,7 +177,7 @@ function submit() {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
 }
 </script>
 

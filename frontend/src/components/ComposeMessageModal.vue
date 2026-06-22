@@ -4,7 +4,7 @@
       <div class="modal-card">
         <div class="modal-header">
           <div>
-            <h3>{{ isReply ? 'Responder' : 'Nuevo mensaje' }}</h3>
+            <h3>{{ isReply ? 'Respondre' : 'Nou missatge' }}</h3>
             <p v-if="isReply" class="reply-context">
               A {{ replyTo.recipient_name }} · Re: {{ replyTo.subject }}
             </p>
@@ -17,7 +17,7 @@
         <form @submit.prevent="submit" class="modal-body">
           <!-- Recipient -->
           <div v-if="!isReply" class="form-group recipient-group" ref="recipientWrap">
-            <label class="form-label">Para <span class="required">*</span></label>
+            <label class="form-label">Per a <span class="required">*</span></label>
             <div class="recipient-input-wrap">
               <div v-if="selectedRecipient" class="recipient-pill">
                 <div class="pill-avatar">
@@ -34,7 +34,7 @@
                 v-else
                 v-model="search"
                 class="input"
-                placeholder="Nombre o correo del compañero"
+                placeholder="Nom o correu del company"
                 autocomplete="off"
                 @input="onSearchInput"
                 @focus="showSuggestions = true"
@@ -44,9 +44,9 @@
               v-if="!selectedRecipient && showSuggestions && (searching || suggestions.length || search)"
               class="suggestions"
             >
-              <div v-if="searching" class="suggestion-empty">Buscando…</div>
+              <div v-if="searching" class="suggestion-empty">Cercant…</div>
               <div v-else-if="!suggestions.length" class="suggestion-empty">
-                Sin resultados en esta empresa
+                Sense resultats en aquesta empresa
               </div>
               <button
                 v-for="user in suggestions"
@@ -69,33 +69,33 @@
 
           <!-- Subject -->
           <div class="form-group">
-            <label class="form-label">Asunto <span class="required">*</span></label>
+            <label class="form-label">Assumpte <span class="required">*</span></label>
             <input
               v-model="subject"
               class="input"
               required
               maxlength="200"
-              placeholder="Cabezal del mensaje"
+              placeholder="Títol del missatge"
             />
           </div>
 
           <!-- Body -->
           <div class="form-group">
-            <label class="form-label">Mensaje <span class="required">*</span></label>
+            <label class="form-label">Missatge <span class="required">*</span></label>
             <textarea
               v-model="body"
               class="input textarea"
               required
               rows="8"
-              placeholder="Escribe aquí…"
+              placeholder="Escriu aquí…"
             ></textarea>
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="btn btn-ghost" @click="close">Cancelar</button>
+            <button type="button" class="btn btn-ghost" @click="close">Cancel·lar</button>
             <button type="submit" class="btn btn-primary" :disabled="!canSend || sending">
               <Send :size="14" />
-              {{ sending ? 'Enviando…' : 'Enviar' }}
+              {{ sending ? 'Enviant…' : 'Enviar' }}
             </button>
           </div>
         </form>
@@ -186,10 +186,10 @@ async function submit() {
       payload.recipient_id = selectedRecipient.value.id
     }
     const message = await inboxApi.sendMessage(payload)
-    toast.success('Mensaje enviado')
+    toast.success('Missatge enviat')
     emit('sent', message)
   } catch (err) {
-    toast.error(err.message || 'Error al enviar el mensaje')
+    toast.error(err.message || 'Error en enviar el missatge')
   } finally {
     sending.value = false
   }

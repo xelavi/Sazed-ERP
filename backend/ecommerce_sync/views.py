@@ -108,3 +108,63 @@ class StoreTestConnectionView(APIView):
                 {'ok': False, 'error': f'{type(exc).__name__}: {exc}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class StoreFulSyncView(APIView):
+    """`POST /api/integrations/store/full-sync/`.
+
+    Sincronización completa ERP → PrestaShop para la empresa activa del usuario:
+    1. Purga productos huérfanos de la tienda (no enlazados al ERP).
+    2. Sube (crea o actualiza) todos los productos de la empresa, con imagen.
+    3. Sube (crea o actualiza) todos los clientes de la empresa.
+
+    Devuelve un resumen JSON: { purged, products_ok, products_err,
+                                customers_ok, customers_err }.
+    """
+
+    permission_classes = [IsCompanyAdmin]
+
+    def post(self, request):
+        from accounts.models import Company
+        from .sync_service import full_sync_to_store
+        from .models import StoreConnection
+
+        # Determinar la empresa del usuario (la primera en la que es admin).
+        admin_ids = _admin_company_ids(request.user)
+        if not admin_ids:
+            return Response(
+                {'error': 'No ets administrador de cap empresa.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Permitir especificar company_id en el body; si no, usar la primera.
+        company_id = request.data.get('company_id') or next(iter(admin_ids))
+        if int(company_id) not in admin_ids:
+            return Response(
+                {'error': 'No tens permisos sobre aquesta empresa.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            company = Company.objects.get(pk=company_id)
+        except Company.DoesNotExist:
+            return Response({'error': 'Empresa no trobada.'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            result = full_sync_to_store(company, user=request.user)
+            return Response(result)
+        except StoreConnection.DoesNotExist:
+            return Response(
+                {'error': 'Aquesta empresa no té una botiga PrestaShop connectada.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except EcommerceConnectionError as exc:
+            logger.warning('full-sync connection error: %s', exc)
+            return Response({'error': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception('full-sync inesperat')
+            return Response(
+                {'error': f'{type(exc).__name__}: {exc}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+

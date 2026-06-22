@@ -5,7 +5,7 @@ from customers.serializers import CustomerListSerializer
 from .models import (
     InvoiceSeries, Invoice, InvoiceLine,
     InvoiceLineTax, Payment, InvoiceTimeline, EventLog,
-    Quote, QuoteLine, RecurringInvoice,
+    Quote, QuoteLine, QuoteLineTax, RecurringInvoice,
 )
 
 
@@ -207,15 +207,30 @@ class InvoiceWriteSerializer(serializers.ModelSerializer):
 
 # ---------- Quote (Sales) serializers ----------
 
+class QuoteLineTaxSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuoteLineTax
+        fields = [
+            'id', 'tax_rate', 'tax_name', 'tax_percent',
+            'is_retention', 'tax_amount',
+        ]
+
+
 class QuoteLineSerializer(serializers.ModelSerializer):
+    taxes = QuoteLineTaxSerializer(many=True, read_only=True)
+    tax_percent = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False,
+        allow_null=True, write_only=True,
+    )
+
     class Meta:
         model = QuoteLine
         fields = [
             'id', 'position', 'product', 'description',
-            'quantity', 'unit_price', 'tax_percent',
-            'subtotal', 'tax_amount',
+            'quantity', 'unit_price', 'subtotal',
+            'taxes', 'tax_percent',
         ]
-        read_only_fields = ['id', 'subtotal', 'tax_amount']
+        read_only_fields = ['id', 'subtotal']
 
 
 class QuoteListSerializer(serializers.ModelSerializer):
@@ -314,11 +329,22 @@ class QuoteWriteSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
+    def _save_lines(self, quote, lines_data):
+        company = quote.company
+        for line_data in lines_data:
+            taxes_data = line_data.pop('taxes', [])
+            tax_percent = line_data.pop('tax_percent', None)
+            line = QuoteLine.objects.create(quote=quote, **line_data)
+            for tax_data in taxes_data:
+                QuoteLineTax.objects.create(quote_line=line, **tax_data)
+            if not taxes_data:
+                apply_line_vat(QuoteLineTax, line, tax_percent, company,
+                               line_fk_name='quote_line')
+
     def create(self, validated_data):
         lines_data = validated_data.pop('lines', [])
         quote = Quote.objects.create(**validated_data)
-        for line_data in lines_data:
-            QuoteLine.objects.create(quote=quote, **line_data)
+        self._save_lines(quote, lines_data)
         if lines_data:
             quote.recalculate_totals()
         return quote
@@ -330,7 +356,6 @@ class QuoteWriteSerializer(serializers.ModelSerializer):
         instance.save()
         if lines_data is not None:
             instance.lines.all().delete()
-            for line_data in lines_data:
-                QuoteLine.objects.create(quote=instance, **line_data)
+            self._save_lines(instance, lines_data)
             instance.recalculate_totals()
         return instance

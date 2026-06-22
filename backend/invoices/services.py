@@ -5,6 +5,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from accounts.models import Company
 from core.recurrence import add_period
 from .models import (
     Invoice, InvoiceLine, InvoiceLineTax,
@@ -18,12 +19,29 @@ class InvoiceService:
     """Lógica de negocio para facturas."""
 
     @staticmethod
+    @transaction.atomic
     def approve(invoice):
-        """Aprueba factura: asigna número, bloquea, snapshot cliente."""
+        """Aprueba factura: asigna número, bloquea, snapshot cliente.
+
+        Usa SELECT FOR UPDATE en dos niveles para serializar aprobaciones
+        concurrentes de forma correcta:
+          1. Empresa  — serializa la cadena hash VeriFactu entre TODAS las series
+                        de la empresa (evita bifurcación si dos series se aprueban
+                        en paralelo, ya que la cadena es por empresa según RD 1007/2023).
+          2. Serie    — garantiza numeración correlativa sin huecos dentro de la serie.
+        El orden empresa → serie es fijo para evitar deadlocks.
+        """
         if invoice.status != 'Draft':
             raise ValidationError('Solo se pueden aprobar borradores.')
 
-        invoice.number = invoice.series.generate_number()
+        # Paso 1: bloquear la empresa (serializa la cadena hash entre todas sus series).
+        company_id = InvoiceSeries.objects.values_list('company_id', flat=True).get(pk=invoice.series_id)
+        Company.objects.select_for_update().get(pk=company_id)
+
+        # Paso 2: bloquear la serie (garantiza numeración correlativa sin huecos).
+        series = InvoiceSeries.objects.select_for_update().get(pk=invoice.series_id)
+        invoice.series = series
+        invoice.number = series.generate_number()
         invoice.status = 'Approved'
         invoice.locked_at = timezone.now()
         invoice.customer_name_snapshot = invoice.customer.name

@@ -3,13 +3,13 @@
     <div class="view-header">
       <div class="header-content">
         <div class="breadcrumb">
-          <router-link to="/social-crm/collaborations" class="breadcrumb-link">Colaboraciones</router-link>
+          <router-link to="/social-crm/collaborations" class="breadcrumb-link">Col·laboracions</router-link>
           <ChevronRight :size="16" class="breadcrumb-sep" />
           <span class="breadcrumb-current">{{ collab?.influencerName }}</span>
         </div>
         <div class="header-actions" v-if="collab">
           <span class="badge" :class="COLLAB_STATUSES[collab.status].cls">{{ COLLAB_STATUSES[collab.status].label }}</span>
-          <button class="btn btn-secondary" @click="$router.push('/social-crm/metrics')"><Upload :size="18" /><span>Cargar métricas</span></button>
+          <button class="btn btn-secondary" @click="$router.push('/social-crm/metrics')"><Upload :size="18" /><span>Carregar mètriques</span></button>
         </div>
       </div>
     </div>
@@ -18,29 +18,29 @@
       <div class="detail-grid">
         <!-- Deal data -->
         <div class="card">
-          <div class="card-header"><h3 class="card-title">Datos del acuerdo</h3></div>
+          <div class="card-header"><h3 class="card-title">Dades de l'acord</h3></div>
           <div class="info-body">
             <div class="info-row"><span class="info-key">Influencer</span>
               <span class="clickable-link" @click="$router.push('/social-crm/influencers/' + collab.influencerId)">
                 {{ collab.influencerName }} ({{ collab.influencerAlias }})
               </span>
             </div>
-            <div class="info-row"><span class="info-key">Campaña</span>
+            <div class="info-row"><span class="info-key">Campanya</span>
               <span class="clickable-link" @click="$router.push('/social-crm/campaigns/' + collab.campaignId)">
                 {{ collab.campaignName }}
               </span>
             </div>
-            <div class="info-row"><span class="info-key">Formato pactado</span><span>{{ collab.format }}</span></div>
+            <div class="info-row"><span class="info-key">Format pactat</span><span>{{ collab.format }}</span></div>
             <div class="info-row"><span class="info-key">Entregables</span><span class="text-secondary">{{ collab.deliverables }}</span></div>
-            <div class="info-row"><span class="info-key">Coste</span><span class="font-medium">{{ formatCurrency(collab.cost) }}</span></div>
-            <div class="info-row"><span class="info-key">Fecha publicación</span><span>{{ formatDate(collab.publishDate) }}</span></div>
-            <div class="info-row"><span class="info-key">Código descuento</span><code class="code-badge">{{ collab.code || '—' }}</code></div>
+            <div class="info-row"><span class="info-key">Cost</span><span class="font-medium">{{ formatCurrency(collab.cost) }}</span></div>
+            <div class="info-row"><span class="info-key">Data de publicació</span><span>{{ formatDate(collab.publishDate) }}</span></div>
+            <div class="info-row"><span class="info-key">Codi de descompte</span><code class="code-badge">{{ collab.code || '—' }}</code></div>
           </div>
         </div>
 
         <!-- Reported metrics -->
         <div class="card">
-          <div class="card-header"><h3 class="card-title">Métricas reportadas</h3></div>
+          <div class="card-header"><h3 class="card-title">Mètriques reportades</h3></div>
           <div class="metrics-grid">
             <div class="metric-item" v-for="m in collabMetrics" :key="m.field">
               <div class="metric-val">{{ formatNumber(collab[m.field]) || '—' }}</div>
@@ -51,23 +51,23 @@
 
         <!-- Expected vs real -->
         <div class="card">
-          <div class="card-header"><h3 class="card-title">Resultado esperado vs. real</h3></div>
+          <div class="card-header"><h3 class="card-title">Resultat esperat vs. real</h3></div>
           <div class="compare-grid">
             <div class="compare-item" v-for="m in compareItems" :key="m.label">
               <div class="compare-label">{{ m.label }}</div>
               <div class="compare-row">
-                <div class="c-expected"><div class="c-num">{{ m.expected }}</div><div class="c-sub">Esperado</div></div>
+                <div class="c-expected"><div class="c-num">{{ m.expected }}</div><div class="c-sub">Esperat</div></div>
                 <div class="c-sep">vs</div>
                 <div class="c-real"><div class="c-num" :class="m.real >= m.rawExpected ? 'pos' : 'neg'">{{ m.real }}</div><div class="c-sub">Real</div></div>
               </div>
             </div>
           </div>
           <div class="observations" v-if="collab.observations">
-            <div class="obs-label">Observaciones</div>
+            <div class="obs-label">Observacions</div>
             <div class="obs-text">{{ collab.observations }}</div>
           </div>
           <div class="recommendation" v-if="collab.recommendation">
-            <div class="rec-label">Recomendación futura</div>
+            <div class="rec-label">Recomanació futura</div>
             <div class="rec-text">{{ collab.recommendation }}</div>
           </div>
         </div>
@@ -75,7 +75,7 @@
         <!-- Evidences -->
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Evidencias</h3>
+            <h3 class="card-title">Evidències</h3>
             <button class="btn btn-secondary btn-sm"><Paperclip :size="15" /><span>Adjuntar</span></button>
           </div>
           <div class="evidences-list">
@@ -84,11 +84,11 @@
               <span>{{ ev }}</span>
               <button class="icon-btn-sm"><Download :size="13" /></button>
             </div>
-            <div v-if="!collab.evidences.length" class="empty-cell">Sin evidencias adjuntas</div>
+            <div v-if="!collab.evidences.length" class="empty-cell">Sense evidències adjuntes</div>
           </div>
           <div class="validation-banner" v-if="collab.status === 'completed'">
             <CheckCircle :size="16" />
-            <span>Colaboración validada internamente</span>
+            <span>Col·laboració validada internament</span>
           </div>
         </div>
       </div>
@@ -96,8 +96,8 @@
 
     <div v-else class="not-found">
       <AlertCircle :size="40" />
-      <p>Colaboración no encontrada.</p>
-      <router-link to="/social-crm/collaborations" class="btn btn-secondary">Volver</router-link>
+      <p>Col·laboració no trobada.</p>
+      <router-link to="/social-crm/collaborations" class="btn btn-secondary">Tornar</router-link>
     </div>
   </div>
 </template>
@@ -112,23 +112,23 @@ const route  = useRoute()
 const collab = computed(() => socialCollaborations.find(c => c.id === Number(route.params.id)))
 
 const collabMetrics = [
-  { field: 'reach',        label: 'Alcance' },
-  { field: 'impressions',  label: 'Impresiones' },
-  { field: 'views',        label: 'Visualizaciones' },
+  { field: 'reach',        label: 'Abast' },
+  { field: 'impressions',  label: 'Impressions' },
+  { field: 'views',        label: 'Visualitzacions' },
   { field: 'likes',        label: 'Likes' },
-  { field: 'comments',     label: 'Comentarios' },
-  { field: 'shares',       label: 'Compartidos' },
+  { field: 'comments',     label: 'Comentaris' },
+  { field: 'shares',       label: 'Compartits' },
   { field: 'clicks',       label: 'Clics' },
-  { field: 'conversions',  label: 'Conversiones' },
-  { field: 'sales',        label: 'Ventas (€)' },
+  { field: 'conversions',  label: 'Conversions' },
+  { field: 'sales',        label: 'Vendes (€)' },
 ]
 
 const compareItems = computed(() => {
   if (!collab.value) return []
   return [
-    { label: 'Alcance',      rawExpected: collab.value.expectedReach,       expected: formatNumber(collab.value.expectedReach),       real: formatNumber(collab.value.reach) },
-    { label: 'Clics',        rawExpected: collab.value.expectedClicks,       expected: formatNumber(collab.value.expectedClicks),       real: formatNumber(collab.value.clicks) },
-    { label: 'Conversiones', rawExpected: collab.value.expectedConversions,  expected: collab.value.expectedConversions,  real: collab.value.conversions },
+    { label: 'Abast',       rawExpected: collab.value.expectedReach,       expected: formatNumber(collab.value.expectedReach),       real: formatNumber(collab.value.reach) },
+    { label: 'Clics',       rawExpected: collab.value.expectedClicks,       expected: formatNumber(collab.value.expectedClicks),       real: formatNumber(collab.value.clicks) },
+    { label: 'Conversions', rawExpected: collab.value.expectedConversions,  expected: collab.value.expectedConversions,  real: collab.value.conversions },
   ]
 })
 </script>

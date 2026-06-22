@@ -16,7 +16,7 @@
                   <span :class="['badge', currentRoleBadgeClass()]">
                     {{ currentRoleLabel() }}
                   </span>
-                  <span v-if="isSelf" class="self-tag">Tú</span>
+                  <span v-if="isSelf" class="self-tag">Tu</span>
                 </div>
               </div>
             </div>
@@ -43,18 +43,18 @@
               <section class="detail-section">
                 <h4 class="section-title">
                   <User :size="16" />
-                  Información personal
+                  Informació personal
                 </h4>
                 <div class="detail-row">
-                  <span class="detail-label">Nombre</span>
+                  <span class="detail-label">Nom</span>
                   <span class="detail-value">{{ member.user?.first_name || '—' }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Apellidos</span>
+                  <span class="detail-label">Cognoms</span>
                   <span class="detail-value">{{ member.user?.last_name || '—' }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Email</span>
+                  <span class="detail-label">Correu electrònic</span>
                   <span class="detail-value">{{ member.user?.email }}</span>
                 </div>
               </section>
@@ -62,16 +62,16 @@
               <section class="detail-section">
                 <h4 class="section-title">
                   <Shield :size="16" />
-                  Acceso y rol
+                  Accés i rol
                 </h4>
                 <div class="detail-row">
-                  <span class="detail-label">Rol en la empresa</span>
+                  <span class="detail-label">Rol a l'empresa</span>
                   <span :class="['badge', currentRoleBadgeClass()]">
                     {{ currentRoleLabel() }}
                   </span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">En la empresa desde</span>
+                  <span class="detail-label">A l'empresa des de</span>
                   <span class="detail-value">{{ formatDate(member.joined_at) }}</span>
                 </div>
                 <div class="detail-row">
@@ -82,7 +82,7 @@
 
               <section v-if="!canManage" class="readonly-hint">
                 <Lock :size="14" />
-                <span>Solo los administradores pueden editar los datos del personal.</span>
+                <span>Només els administradors poden editar les dades del personal.</span>
               </section>
             </div>
 
@@ -91,29 +91,29 @@
               <section class="detail-section">
                 <h4 class="section-title">
                   <User :size="16" />
-                  Información personal
+                  Informació personal
                 </h4>
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Nombre</label>
+                    <label class="field-label">Nom</label>
                     <input class="input" type="text" v-model="form.first_name" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Apellidos</label>
+                    <label class="field-label">Cognoms</label>
                     <input class="input" type="text" v-model="form.last_name" />
                   </div>
                 </div>
                 <div class="field">
-                  <label class="field-label">Email</label>
+                  <label class="field-label">Correu electrònic</label>
                   <input class="input" type="email" :value="member.user?.email" disabled />
-                  <span class="field-hint">El email no se puede modificar.</span>
+                  <span class="field-hint">El correu electrònic no es pot modificar.</span>
                 </div>
               </section>
 
               <section class="detail-section">
                 <h4 class="section-title">
                   <Shield :size="16" />
-                  Rol en la empresa
+                  Rol a l'empresa
                 </h4>
                 <div class="field">
                   <label class="field-label">Rol</label>
@@ -122,15 +122,15 @@
                     v-model="form.roleToken"
                     :disabled="isOwner || isSelf"
                   >
-                    <option v-if="isOwner" value="builtin:owner">Propietario</option>
-                    <optgroup label="Roles base">
+                    <option v-if="isOwner" value="builtin:owner">Propietari</option>
+                    <optgroup label="Rols base">
                       <option
                         v-for="opt in builtinRoleOptions"
                         :key="opt.value"
                         :value="opt.value"
                       >{{ opt.label }}</option>
                     </optgroup>
-                    <optgroup v-if="customRoles.length" label="Roles personalizados">
+                    <optgroup v-if="customRoles.length" label="Rols personalitzats">
                       <option
                         v-for="r in customRoles"
                         :key="r.id"
@@ -139,24 +139,24 @@
                     </optgroup>
                   </select>
                   <span v-if="isOwner" class="field-hint">
-                    El rol del propietario no se puede cambiar.
+                    El rol del propietari no es pot canviar.
                   </span>
                   <span v-else-if="isSelf" class="field-hint">
-                    No puedes cambiar tu propio rol.
+                    No pots canviar el teu propi rol.
                   </span>
                   <span v-else class="field-hint">
-                    Los roles personalizados definen a qué módulos accede el empleado.
+                    Els rols personalitzats defineixen a quins mòduls accedeix l'empleat.
                   </span>
                 </div>
               </section>
 
               <div class="edit-actions">
                 <button type="button" class="btn btn-secondary" @click="cancelEdit">
-                  Cancelar
+                  Cancel·lar
                 </button>
                 <button type="submit" class="btn btn-primary" :disabled="saving">
                   <Check :size="16" />
-                  {{ saving ? 'Guardando...' : 'Guardar cambios' }}
+                  {{ saving ? 'Desant…' : 'Desar canvis' }}
                 </button>
               </div>
             </form>
@@ -171,7 +171,7 @@
               @click="$emit('delete', member)"
             >
               <Trash2 :size="16" />
-              Eliminar empleado
+              Eliminar empleat
             </button>
             <button class="btn btn-primary" @click="startEdit">
               <Pencil :size="16" />
@@ -224,7 +224,7 @@ function tokenForMember(m) {
 const builtinRoleOptions = [
   { value: 'builtin:admin', label: 'Administrador' },
   { value: 'builtin:editor', label: 'Editor' },
-  { value: 'builtin:viewer', label: 'Solo lectura' },
+  { value: 'builtin:viewer', label: 'Només lectura' },
 ]
 
 const avatarColors = ['#667eea', '#f97316', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4', '#f59e0b']
@@ -291,7 +291,7 @@ function save() {
 /* ── Helpers ── */
 function currentRoleLabel() {
   if (props.member?.role_label) return props.member.role_label
-  const map = { owner: 'Propietario', admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' }
+  const map = { owner: 'Propietari', admin: 'Administrador', editor: 'Editor', viewer: 'Només lectura' }
   return map[props.member?.role] || props.member?.role
 }
 
@@ -305,7 +305,7 @@ function currentRoleBadgeClass() {
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-ES', {
+  return new Date(dateStr).toLocaleDateString('ca-ES', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 }

@@ -151,9 +151,10 @@ class Command(BaseCommand):
                         self.stderr.write(self.style.ERROR(f'   ✗ {msg}'))
 
     def _sync_providers(self, company, stats: Stats, dry_run: bool) -> None:
-        from providers.models import Provider
+        # Provider ha estat fusionat amb Customer (is_supplier=True)
+        from customers.models import Customer
 
-        qs = Provider.objects.filter(company=company).order_by('pk')
+        qs = Customer.objects.filter(company=company, is_supplier=True).order_by('pk')
         self.stdout.write(f'» Contactos (proveedores): {qs.count()}')
         for batch in self._batched(qs):
             with transaction.atomic():
@@ -217,7 +218,7 @@ class Command(BaseCommand):
 
         qs = (
             PurchaseInvoice.objects
-            .filter(series__company=company, issue_date__gte=since.date())
+            .filter(company=company, issue_date__gte=since.date())
             .exclude(status='Draft')
             .order_by('issue_date', 'pk')
         )

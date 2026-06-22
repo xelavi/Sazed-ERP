@@ -5,17 +5,17 @@
         <div class="modal-container">
           <!-- Header -->
           <div class="modal-header">
-            <h2 class="modal-title">{{ isEditing ? 'Edit invoice' : 'New invoice' }}</h2>
+            <h2 class="modal-title">{{ isEditing ? 'Editar factura' : 'Nova factura' }}</h2>
             <div class="modal-header-actions">
-              <button class="btn btn-secondary btn-sm" @click="$emit('close')">Cancel</button>
+              <button class="btn btn-secondary btn-sm" @click="$emit('close')">Cancel·lar</button>
               <button class="btn btn-secondary btn-sm" @click="handleSaveDraft">
                 <Save :size="16" />
-                <span>Save draft</span>
+                <span>Desar esborrany</span>
               </button>
               <div class="approve-btn-wrapper" :data-tooltip="approvalTooltip || undefined">
                 <button class="btn btn-primary btn-sm" @click="handleSaveAndApprove">
                   <CheckCircle2 :size="16" />
-                  <span>Save &amp; approve</span>
+                  <span>Desar i aprovar</span>
                 </button>
               </div>
             </div>
@@ -28,27 +28,27 @@
 
               <!-- ── Header / Customer ── -->
               <section class="form-section">
-                <h3 class="section-title">Invoice details</h3>
-                <p class="section-desc">Set the customer, dates, and payment terms for this invoice.</p>
+                <h3 class="section-title">Dades de la factura</h3>
+                <p class="section-desc">Defineix el client, les dates i les condicions de pagament d'aquesta factura.</p>
 
                 <div class="field">
-                  <label class="field-label">Customer <span class="required">*</span></label>
+                  <label class="field-label">Client <span class="required">*</span></label>
                   <select
                     class="select"
                     :class="{ 'input-error': touched.customer && !form.customerId }"
                     v-model="form.customerId"
                     @blur="touched.customer = true"
                   >
-                    <option value="">Select customer...</option>
+                    <option value="">Selecciona un client…</option>
                     <option v-for="c in customerOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
-                    <option value="__new__">+ Crear nuevo cliente…</option>
+                    <option value="__new__">+ Crear un client nou…</option>
                   </select>
-                  <span v-if="touched.customer && !form.customerId" class="field-error">Customer is required</span>
+                  <span v-if="touched.customer && !form.customerId" class="field-error">El client és obligatori</span>
                 </div>
 
                 <div class="field-row field-row-3">
                   <div class="field">
-                    <label class="field-label">Issue date <span class="required">*</span></label>
+                    <label class="field-label">Data d'emissió <span class="required">*</span></label>
                     <input
                       class="input"
                       :class="{ 'input-error': touched.issueDate && !form.issueDate }"
@@ -56,10 +56,10 @@
                       v-model="form.issueDate"
                       @blur="touched.issueDate = true"
                     />
-                    <span v-if="touched.issueDate && !form.issueDate" class="field-error">Issue date is required</span>
+                    <span v-if="touched.issueDate && !form.issueDate" class="field-error">La data d'emissió és obligatòria</span>
                   </div>
                   <div class="field">
-                    <label class="field-label">Due date <span class="required">*</span></label>
+                    <label class="field-label">Venciment <span class="required">*</span></label>
                     <input
                       class="input"
                       :class="{ 'input-error': touched.dueDate && !form.dueDate }"
@@ -67,17 +67,17 @@
                       v-model="form.dueDate"
                       @blur="touched.dueDate = true"
                     />
-                    <span v-if="touched.dueDate && !form.dueDate" class="field-error">Due date is required</span>
-                    <span v-if="touched.dueDate && form.dueDate && form.issueDate && form.dueDate < form.issueDate" class="field-error">Due date cannot be before issue date</span>
+                    <span v-if="touched.dueDate && !form.dueDate" class="field-error">El venciment és obligatori</span>
+                    <span v-if="touched.dueDate && form.dueDate && form.issueDate && form.dueDate < form.issueDate" class="field-error">El venciment no pot ser anterior a la data d'emissió</span>
                   </div>
                   <div class="field">
-                    <label class="field-label">Payment method</label>
+                    <label class="field-label">Forma de pagament</label>
                     <select class="select" v-model="form.paymentMethod">
-                      <option value="Transfer 30 days">Transfer 30 days</option>
-                      <option value="Transfer">Transfer</option>
-                      <option value="Direct debit">Direct debit</option>
-                      <option value="Card">Card</option>
-                      <option value="Cash">Cash</option>
+                      <option value="Transferència 30 dies">Transferència 30 dies</option>
+                      <option value="Transferència">Transferència</option>
+                      <option value="Domiciliació">Domiciliació</option>
+                      <option value="Targeta">Targeta</option>
+                      <option value="Efectiu">Efectiu</option>
                     </select>
                   </div>
                 </div>
@@ -85,17 +85,17 @@
 
               <!-- ── Lines ── -->
               <section class="form-section">
-                <h3 class="section-title">Invoice lines</h3>
-                <p class="section-desc">Add products or services. Taxes and totals are calculated automatically.</p>
+                <h3 class="section-title">Línies de la factura</h3>
+                <p class="section-desc">Afegeix productes o serveis. Els impostos i els totals es calculen automàticament.</p>
 
                 <div class="lines-editor">
                   <!-- Lines header -->
                   <div class="le-header">
-                    <span class="le-h-desc">Description</span>
-                    <span class="le-h-qty">Qty</span>
-                    <span class="le-h-price">Price</span>
-                    <span class="le-h-discount">Disc.</span>
-                    <span class="le-h-tax">Tax</span>
+                    <span class="le-h-desc">Descripció</span>
+                    <span class="le-h-qty">Qt.</span>
+                    <span class="le-h-price">Preu</span>
+                    <span class="le-h-discount">Desc.</span>
+                    <span class="le-h-tax">IVA</span>
                     <span class="le-h-subtotal">Subtotal</span>
                     <span class="le-h-actions"></span>
                   </div>
@@ -108,7 +108,7 @@
                         :products="products"
                         :linked-product-id="line.productId"
                         price-mode="sale"
-                        placeholder="Producto o servicio..."
+                        placeholder="Producte o servei…"
                         @select="(p) => onProductSelect(line, p)"
                         @clear="onProductClear(line)"
                       />
@@ -151,7 +151,7 @@
                       <span class="subtotal-value">{{ formatCurrency(calcLineSubtotal(line)) }}</span>
                     </div>
                     <div class="le-cell-actions">
-                      <button class="btn-icon-sm" @click="removeLine(idx)" title="Remove line">
+                      <button class="btn-icon-sm" @click="removeLine(idx)" title="Eliminar línia">
                         <Trash2 :size="14" />
                       </button>
                     </div>
@@ -160,7 +160,7 @@
 
                 <button class="btn btn-secondary btn-sm add-line-btn" @click="addLine">
                   <Plus :size="16" />
-                  <span>Add line</span>
+                  <span>Afegir línia</span>
                 </button>
               </section>
 
@@ -169,13 +169,13 @@
                 <h3 class="section-title">Notes</h3>
 
                 <div class="field">
-                  <label class="field-label">Customer notes</label>
-                  <textarea class="input textarea" rows="2" placeholder="Visible on PDF..." v-model="form.customerNotes"></textarea>
+                  <label class="field-label">Notes per al client</label>
+                  <textarea class="input textarea" rows="2" placeholder="Visible al PDF…" v-model="form.customerNotes"></textarea>
                 </div>
 
                 <div class="field">
-                  <label class="field-label">Internal notes</label>
-                  <textarea class="input textarea" rows="2" placeholder="Internal use only..." v-model="form.internalNotes"></textarea>
+                  <label class="field-label">Notes internes</label>
+                  <textarea class="input textarea" rows="2" placeholder="Només per a ús intern…" v-model="form.internalNotes"></textarea>
                 </div>
               </section>
             </div>
@@ -185,7 +185,7 @@
 
               <!-- ── Totals Summary ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Summary</h4>
+                <h4 class="sidebar-card-title">Resum</h4>
 
                 <div class="sidebar-totals">
                   <div class="sidebar-total-row">
@@ -193,7 +193,7 @@
                     <span>{{ formatCurrency(calcSubtotal) }}</span>
                   </div>
                   <div v-if="form.discountValue" class="sidebar-total-row">
-                    <span>Discount</span>
+                    <span>Descompte</span>
                     <span class="discount-val">-{{ formatCurrency(calcDiscountAmount) }}</span>
                   </div>
                   <div v-for="tax in calcTaxSummary" :key="tax.name" class="sidebar-total-row">
@@ -211,8 +211,8 @@
 
               <!-- ── Global Discount ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Global discount</h4>
-                <p class="sidebar-card-desc">Apply an additional discount on the subtotal.</p>
+                <h4 class="sidebar-card-title">Descompte global</h4>
+                <p class="sidebar-card-desc">Aplica un descompte addicional sobre el subtotal.</p>
 
                 <div class="field-row-inline">
                   <div class="field" style="flex:1">
@@ -233,50 +233,50 @@
                   <input type="checkbox" v-model="form.recurring" />
                   <span class="rec-toggle-text">
                     <Repeat :size="14" />
-                    Factura recurrente
+                    Factura recurrent
                   </span>
                 </label>
                 <p class="sidebar-card-desc" style="margin-top:0.5rem">
-                  Se generará y aprobará una factura automáticamente cada periodo.
+                  Es generarà i aprovarà una factura automàticament cada període.
                 </p>
 
                 <template v-if="form.recurring">
                   <div class="field">
-                    <label class="field-label">Frecuencia</label>
+                    <label class="field-label">Freqüència</label>
                     <div class="field-row-inline">
                       <span class="rec-inline-prefix">Cada</span>
                       <input class="input input-sm" style="width:64px;text-align:right" type="number" min="1" v-model.number="form.recInterval" />
                       <select class="select select-sm" style="flex:1" v-model="form.recFrequency">
-                        <option value="weekly">semana(s)</option>
-                        <option value="monthly">mes(es)</option>
+                        <option value="weekly">setmana(es)</option>
+                        <option value="monthly">mes(os)</option>
                         <option value="quarterly">trimestre(s)</option>
                         <option value="semiannual">semestre(s)</option>
-                        <option value="yearly">año(s)</option>
+                        <option value="yearly">any(s)</option>
                       </select>
                     </div>
                   </div>
 
                   <div class="field">
-                    <label class="field-label">Primera emisión automática</label>
+                    <label class="field-label">Primera emissió automàtica</label>
                     <input class="input input-sm" type="date" v-model="form.recStartDate" />
                   </div>
 
                   <div class="field">
-                    <label class="field-label">Finalización</label>
+                    <label class="field-label">Finalització</label>
                     <select class="select select-sm" v-model="form.recEndMode">
-                      <option value="never">Sin fin</option>
-                      <option value="until">En una fecha</option>
-                      <option value="count">Tras N facturas</option>
+                      <option value="never">Sense fi</option>
+                      <option value="until">En una data</option>
+                      <option value="count">Després de N factures</option>
                     </select>
                   </div>
 
                   <div v-if="form.recEndMode === 'until'" class="field">
-                    <label class="field-label">Hasta el</label>
+                    <label class="field-label">Fins al</label>
                     <input class="input input-sm" type="date" v-model="form.recEndDate" />
                   </div>
 
                   <div v-if="form.recEndMode === 'count'" class="field">
-                    <label class="field-label">Nº de facturas</label>
+                    <label class="field-label">Núm. de factures</label>
                     <input class="input input-sm" style="width:90px" type="number" min="1" v-model.number="form.recMaxOccurrences" />
                   </div>
                 </template>
@@ -284,16 +284,16 @@
 
               <!-- ── Currency ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Currency</h4>
+                <h4 class="sidebar-card-title">Moneda</h4>
                 <select class="select select-sm" v-model="form.currency" disabled>
                   <option value="EUR">EUR — Euro</option>
                 </select>
-                <p class="sidebar-card-hint">Multi-currency available in V2</p>
+                <p class="sidebar-card-hint">Multidivisa disponible a la V2</p>
               </div>
 
               <!-- ── Customer snapshot ── -->
               <div v-if="selectedCustomer" class="sidebar-card">
-                <h4 class="sidebar-card-title">Customer info</h4>
+                <h4 class="sidebar-card-title">Dades del client</h4>
                 <div class="customer-preview">
                   <div class="customer-avatar" :style="{ background: selectedCustomer.avatarColor }">
                     {{ selectedCustomer.initials }}
@@ -395,7 +395,7 @@ async function handleCustomerCreated(formData) {
     Swal.fire({
       icon: 'error',
       title: 'Error',
-      text: err.message || 'No se pudo crear el cliente',
+      text: err.message || 'No s\'ha pogut crear el client',
       confirmButtonColor: '#667eea',
       customClass: { popup: 'swal-erp-popup' },
       target: document.body,
@@ -466,7 +466,7 @@ function blankForm() {
     seriesId: null,
     issueDate: new Date().toISOString().split('T')[0],
     dueDate: getDefaultDueDate(),
-    paymentMethod: 'Transfer 30 days',
+    paymentMethod: 'Transferència 30 dies',
     currency: 'EUR',
     lines: [blankLine()],
     discountType: 'percent',
@@ -554,7 +554,7 @@ watch(() => props.open, async (isOpen) => {
       seriesId: inv.seriesId || findSeriesIdByPrefix(inv.series) || (activeSeries.value.find(s => s.is_default) || activeSeries.value[0])?.id || null,
       issueDate: inv.issueDate,
       dueDate: inv.dueDate,
-      paymentMethod: inv.paymentMethod || 'Transfer 30 days',
+      paymentMethod: inv.paymentMethod || 'Transferència 30 dies',
       currency: inv.currency || 'EUR',
       lines: inv.lines.map(l => ({
         id: lineCounter++,
@@ -687,34 +687,34 @@ const isFormValid = computed(() => {
 
 const approvalMissing = computed(() => {
   const missing = []
-  if (!form.customerId) missing.push('Customer is required')
-  if (!form.issueDate) missing.push('Issue date is required')
-  if (!form.dueDate) missing.push('Due date is required')
+  if (!form.customerId) missing.push('El client és obligatori')
+  if (!form.issueDate) missing.push('La data d\'emissió és obligatòria')
+  if (!form.dueDate) missing.push('El venciment és obligatori')
   const validLines = form.lines.filter(l => l.description && l.quantity > 0 && l.unitPrice >= 0)
-  if (validLines.length === 0) missing.push('At least 1 valid line (description + qty + price)')
+  if (validLines.length === 0) missing.push('Almenys 1 línia vàlida (descripció + qt. + preu)')
   return missing
 })
 
 const approvalTooltip = computed(() => {
   if (!approvalMissing.value.length) return null
-  return 'Requirements to approve:\n• ' + approvalMissing.value.join('\n• ')
+  return 'Requisits per aprovar:\n• ' + approvalMissing.value.join('\n• ')
 })
 
 function getValidationErrors(requireAll = false) {
   const errors = []
-  if (!form.customerId) errors.push('Customer is required')
-  if (!form.issueDate) errors.push('Issue date is required')
-  if (!form.dueDate) errors.push('Due date is required')
+  if (!form.customerId) errors.push('El client és obligatori')
+  if (!form.issueDate) errors.push('La data d\'emissió és obligatòria')
+  if (!form.dueDate) errors.push('El venciment és obligatori')
   const validLines = form.lines.filter(l => l.description && l.quantity > 0 && l.unitPrice >= 0)
-  if (requireAll && validLines.length === 0) errors.push('At least one line with description, quantity, and price is required')
-  if (form.dueDate && form.issueDate && form.dueDate < form.issueDate) errors.push('Due date cannot be before issue date')
+  if (requireAll && validLines.length === 0) errors.push('Cal almenys una línia amb descripció, quantitat i preu')
+  if (form.dueDate && form.issueDate && form.dueDate < form.issueDate) errors.push('El venciment no pot ser anterior a la data d\'emissió')
   return errors
 }
 
 function showValidationAlert(errors) {
   Swal.fire({
     icon: 'warning',
-    title: 'Required fields missing',
+    title: 'Falten camps obligatoris',
     html: `<ul style="text-align:left;margin:0;padding-left:1.2em">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`,
     confirmButtonText: 'OK',
     confirmButtonColor: '#667eea',
@@ -802,13 +802,13 @@ function buildTimeline(status) {
   const existing = props.invoice?.timeline ? [...props.invoice.timeline] : []
 
   if (props.invoice) {
-    existing.unshift({ type: 'created', action: 'Invoice updated', actor: 'You', date: today })
+    existing.unshift({ type: 'created', action: 'Factura actualitzada', actor: 'Tu', date: today })
   } else {
-    existing.unshift({ type: 'created', action: 'Draft created', actor: 'You', date: today })
+    existing.unshift({ type: 'created', action: 'Esborrany creat', actor: 'Tu', date: today })
   }
 
   if (status === 'Approved') {
-    existing.unshift({ type: 'approved', action: 'Invoice approved', actor: 'You', date: today })
+    existing.unshift({ type: 'approved', action: 'Factura aprovada', actor: 'Tu', date: today })
   }
 
   return existing
@@ -836,7 +836,7 @@ function handleSaveAndApprove() {
   const data = buildInvoiceData('Approved')
   if (data.totalAmount === 0) {
     data.status = 'Paid'
-    data.timeline.unshift({ type: 'paid', action: 'Auto-paid (zero amount)', actor: 'You', date: new Date().toISOString().split('T')[0] })
+    data.timeline.unshift({ type: 'paid', action: 'Pagada automàticament (import zero)', actor: 'Tu', date: new Date().toISOString().split('T')[0] })
   }
   emit('save', data)
   emit('close')
@@ -845,7 +845,7 @@ function handleSaveAndApprove() {
 /* ── Helpers ── */
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
 }
 </script>
 

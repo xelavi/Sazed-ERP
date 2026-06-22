@@ -21,14 +21,6 @@ export default {
     return post(`/providers/${providerId}/activities/`, data)
   },
 
-  async getPurchaseOrders(providerId) {
-    return get(`/providers/${providerId}/purchase-orders/`)
-  },
-
-  async createPurchaseOrder(providerId, data) {
-    return post(`/providers/${providerId}/purchase-orders/`, data)
-  },
-
   async search(query, filters = {}) {
     return get('/providers/', { search: query, ...filters })
   },

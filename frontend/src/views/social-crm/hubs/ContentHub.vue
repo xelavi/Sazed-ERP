@@ -1,34 +1,14 @@
 <template>
   <SocialHubLayout
-    title="Contenido"
-    subtitle="Publicaciones, cuentas conectadas y análisis del rendimiento del contenido."
+    title="Contingut"
+    subtitle="Publicacions, comptes connectats i anàlisi del rendiment del contingut."
     :tabs="tabs"
     v-model="activeTab"
     :panel-open="!!panel.kind"
     @close-panel="closePanel"
   >
     <template #actions>
-      <div class="hub-filter-group">
-        <select v-model="periodFilter" class="hub-mini-select" aria-label="Periodo">
-          <option value="7d">Últimos 7 días</option>
-          <option value="30d">Últimos 30 días</option>
-          <option value="90d">Últimos 3 meses</option>
-          <option value="ytd">Año actual</option>
-        </select>
-        <select v-model="platformFilter" class="hub-mini-select" aria-label="Plataforma">
-          <option value="all">Todas las redes</option>
-          <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
-        </select>
-      </div>
-      <button
-        v-if="activeTab === 'accounts'"
-        class="hub-btn hub-btn-ghost"
-        @click="syncAccounts"
-      >
-        <RefreshCw :size="14" />
-        <span>Sincronizar</span>
-      </button>
-      <button class="hub-btn hub-btn-primary" @click="onPrimaryAction">
+      <button v-if="activeTab !== 'posts'" class="hub-btn hub-btn-primary" @click="onPrimaryAction">
         <Plus :size="16" />
         <span>{{ primaryActionLabel }}</span>
       </button>
@@ -37,26 +17,26 @@
     <!-- ── KPI strip ──────────────────────────────────────────── -->
     <div class="kpi-strip">
       <div class="kpi-tile">
-        <div class="kpi-key">Publicaciones</div>
+        <div class="kpi-key">Publicacions</div>
         <div class="kpi-val">{{ kpis.totalPosts }}</div>
-        <div class="kpi-sub">{{ kpis.activeAccounts }} cuentas activas</div>
+        <div class="kpi-sub">{{ kpis.activeAccounts }} comptes actius</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-key">Alcance total</div>
+        <div class="kpi-key">Abast total</div>
         <div class="kpi-val">{{ formatNumber(kpis.totalReach) }}</div>
-        <div class="kpi-sub">{{ formatNumber(kpis.totalImpressions) }} impresiones</div>
+        <div class="kpi-sub">{{ formatNumber(kpis.totalImpressions) }} impressions</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-key">Engagement medio</div>
+        <div class="kpi-key">Engagement mitjà</div>
         <div class="kpi-val">
           <span :class="engClass(kpis.avgEngagement)">{{ kpis.avgEngagement.toFixed(1) }}%</span>
         </div>
         <div class="kpi-sub">{{ kpis.bestFormat }} top format</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-key">Clics generados</div>
+        <div class="kpi-key">Clics generats</div>
         <div class="kpi-val">{{ formatNumber(kpis.totalClicks) }}</div>
-        <div class="kpi-sub">{{ kpis.disconnectedAccounts > 0 ? `⚠ ${kpis.disconnectedAccounts} cuenta(s) desconectada(s)` : 'Todas las cuentas conectadas' }}</div>
+        <div class="kpi-sub">{{ kpis.disconnectedAccounts > 0 ? `⚠ ${kpis.disconnectedAccounts} compte(s) desconnectat(s)` : 'Tots els comptes connectats' }}</div>
       </div>
     </div>
 
@@ -70,39 +50,54 @@
           <input
             v-model="postSearch"
             class="filter-input search-input"
-            placeholder="Buscar por título, cuenta o campaña..."
+            placeholder="Cerca per títol, compte o campanya..."
           />
         </div>
+        <select v-model="platformFilter" class="filter-input">
+          <option value="all">Totes les xarxes</option>
+          <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
+        </select>
         <select v-model="postType" class="filter-input">
-          <option value="all">Todos los tipos</option>
+          <option value="all">Tots els tipus</option>
           <option v-for="t in CONTENT_TYPES" :key="t" :value="t">{{ t }}</option>
         </select>
         <select v-model="postCampaign" class="filter-input">
-          <option value="all">Todas las campañas</option>
-          <option value="none">Sin campaña</option>
+          <option value="all">Totes les campanyes</option>
+          <option value="none">Sense campanya</option>
           <option v-for="c in socialCampaigns" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
         </select>
         <select v-model="postSort" class="filter-input">
-          <option value="date">Más recientes</option>
-          <option value="reach">Mayor alcance</option>
-          <option value="engagement">Mejor engagement</option>
-          <option value="clicks">Más clics</option>
+          <option value="date">Més recents</option>
+          <option value="reach">Major abast</option>
+          <option value="engagement">Millor engagement</option>
+          <option value="clicks">Més clics</option>
         </select>
-        <div class="result-count">{{ filteredPosts.length }} publicaciones</div>
+        <div class="result-count">{{ filteredPosts.length }} publicacions</div>
+        <button class="hub-btn hub-btn-ghost" :disabled="syncingPosts" @click="syncPosts">
+          <Loader2 v-if="syncingPosts" :size="14" class="spin" />
+          <RefreshCw v-else :size="14" />
+          <span>Sincronitzar</span>
+        </button>
       </div>
 
       <div class="data-card">
         <div class="data-head head-posts">
-          <div class="th">Publicación</div>
-          <div class="th">Red</div>
-          <div class="th">Tipo</div>
-          <div class="th">Campaña</div>
-          <div class="th th-num">Alcance</div>
+          <div class="th">Publicació</div>
+          <div class="th">Xarxa</div>
+          <div class="th">Tipus</div>
+          <div class="th">Campanya</div>
+          <div class="th th-num">Abast</div>
           <div class="th th-num">Likes</div>
           <div class="th th-num">Clics</div>
           <div class="th th-num">Eng.</div>
         </div>
-        <div class="data-rows">
+        <!-- Loading state -->
+        <div v-if="postsLoading" class="empty-row">
+          <Loader2 :size="20" class="spin" />
+          <span>Carregant publicacions…</span>
+        </div>
+
+        <div v-else class="data-rows">
           <button
             v-for="post in filteredPosts"
             :key="post.id"
@@ -112,7 +107,8 @@
           >
             <div class="cell cell-post">
               <div class="post-thumb" :style="thumbStyle(post)">
-                <component :is="typeIcon(post.type)" :size="13" />
+                <img v-if="post.thumbnail" :src="post.thumbnail" class="thumb-img" />
+                <component v-else :is="typeIcon(post.type)" :size="13" />
               </div>
               <div class="post-block">
                 <div class="row-name">{{ post.title }}</div>
@@ -137,9 +133,9 @@
               <span class="eng-pill" :class="engClass(post.engagement)">{{ post.engagement }}%</span>
             </div>
           </button>
-          <div v-if="!filteredPosts.length" class="empty-row">
+          <div v-if="!postsLoading && !filteredPosts.length" class="empty-row">
             <Frown :size="20" />
-            <span>No hay publicaciones con esos filtros.</span>
+            <span>{{ posts.length ? 'No hi ha publicacions amb aquests filtres.' : 'Prem Sincronitzar per importar les publicacions de les teves xarxes.' }}</span>
           </div>
         </div>
       </div>
@@ -149,6 +145,18 @@
          TAB 2 · CUENTAS
        ════════════════════════════════════════════════════════════ -->
     <section v-if="activeTab === 'accounts'" class="tab-section">
+      <div class="filters-row">
+        <select v-model="platformFilter" class="filter-input">
+          <option value="all">Totes les xarxes</option>
+          <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
+        </select>
+        <div class="result-count">{{ filteredAccounts.length }} comptes</div>
+        <button class="hub-btn hub-btn-ghost" style="margin-left:auto" :disabled="syncingPosts" @click="syncPosts">
+          <Loader2 v-if="syncingPosts" :size="14" class="spin" />
+          <RefreshCw v-else :size="14" />
+          <span>Sincronitzar</span>
+        </button>
+      </div>
       <div class="accounts-grid">
         <article
           v-for="acc in filteredAccounts"
@@ -163,7 +171,7 @@
             </span>
             <span class="acc-status" :class="acc.status === 'connected' ? 'st-on' : 'st-off'">
               <span class="status-dot"></span>
-              {{ acc.status === 'connected' ? 'Conectada' : 'Desconectada' }}
+              {{ acc.status === 'connected' ? 'Connectat' : 'Desconnectat' }}
             </span>
           </div>
           <div class="acc-name">{{ acc.name }}</div>
@@ -171,7 +179,7 @@
           <div class="acc-stats">
             <div class="acc-stat">
               <div class="as-val">{{ formatNumber(acc.followers) }}</div>
-              <div class="as-key">Seguidores</div>
+              <div class="as-key">Seguidors</div>
             </div>
             <div class="acc-stat">
               <div class="as-val">{{ acc.posts }}</div>
@@ -181,6 +189,7 @@
           <div class="acc-foot">
             <span>Última sync.</span>
             <span class="muted">{{ formatRelativeDate(acc.lastSync) }}</span>
+
           </div>
           <div class="acc-arrow">
             <ArrowUpRight :size="14" />
@@ -189,23 +198,23 @@
 
         <div v-if="!filteredAccounts.length" class="empty-row">
           <Frown :size="20" />
-          <span>No hay cuentas con esos filtros.</span>
+          <span>No hi ha comptes amb aquests filtres.</span>
         </div>
       </div>
     </section>
 
     <!-- ════════════════════════════════════════════════════════════
-         TAB 3 · ANÁLISIS
+         TAB 3 · ANÀLISI
        ════════════════════════════════════════════════════════════ -->
     <section v-if="activeTab === 'analytics'" class="tab-section analytics-tab">
       <!-- Performance by format -->
       <div class="analytics-card">
         <header class="ac-header">
           <div>
-            <h3 class="ac-title">Rendimiento por formato</h3>
-            <p class="ac-sub">Engagement medio por tipo de contenido publicado</p>
+            <h3 class="ac-title">Rendiment per format</h3>
+            <p class="ac-sub">Engagement mitjà per tipus de contingut publicat</p>
           </div>
-          <span class="ac-counter">{{ contentByFormat.length }} formatos</span>
+          <span class="ac-counter">{{ contentByFormat.length }} formats</span>
         </header>
         <div class="format-grid">
           <article
@@ -231,7 +240,7 @@
               ></div>
             </div>
             <div class="fmt-stats">
-              <span>{{ formatNumber(fmt.avgReach) }} alcance</span>
+              <span>{{ formatNumber(fmt.avgReach) }} d'abast</span>
               <span>·</span>
               <span>{{ formatNumber(fmt.avgClicks) }} clics</span>
             </div>
@@ -244,8 +253,8 @@
         <div class="analytics-card">
           <header class="ac-header">
             <div>
-              <h3 class="ac-title">Por red social</h3>
-              <p class="ac-sub">Volumen y rendimiento agregado</p>
+              <h3 class="ac-title">Per xarxa social</h3>
+              <p class="ac-sub">Volum i rendiment agregat</p>
             </div>
           </header>
           <div class="platform-rows">
@@ -268,7 +277,7 @@
                 </div>
                 <div class="plt-cell">
                   <div class="plt-val font-mono">{{ formatNumber(plt.totalReach) }}</div>
-                  <div class="plt-key">alcance</div>
+                  <div class="plt-key">abast</div>
                 </div>
                 <div class="plt-cell">
                   <div class="plt-val font-mono">{{ formatNumber(plt.totalClicks) }}</div>
@@ -282,8 +291,8 @@
         <div class="analytics-card">
           <header class="ac-header">
             <div>
-              <h3 class="ac-title">Mejor franja horaria</h3>
-              <p class="ac-sub">Engagement medio por hora de publicación</p>
+              <h3 class="ac-title">Millor franja horària</h3>
+              <p class="ac-sub">Engagement mitjà per hora de publicació</p>
             </div>
           </header>
           <div class="hours-list">
@@ -304,49 +313,6 @@
         </div>
       </div>
 
-      <!-- Top performing posts -->
-      <div class="analytics-card">
-        <header class="ac-header">
-          <div>
-            <h3 class="ac-title">Top 5 publicaciones del periodo</h3>
-            <p class="ac-sub">Ordenadas por engagement</p>
-          </div>
-        </header>
-        <div class="top-posts">
-          <button
-            v-for="(post, i) in topPosts"
-            :key="post.id"
-            class="top-post-row"
-            @click="openPost(post.id)"
-          >
-            <div class="tp-rank">{{ i + 1 }}</div>
-            <div class="post-thumb" :style="thumbStyle(post)">
-              <component :is="typeIcon(post.type)" :size="13" />
-            </div>
-            <div class="tp-info">
-              <div class="tp-title">{{ post.title }}</div>
-              <div class="tp-meta">
-                <span class="platform-pill" :style="platformStyle(post.platform)">
-                  {{ getPlatform(post.platform).label }}
-                </span>
-                <span class="muted">·</span>
-                <span class="muted">{{ formatDate(post.date) }}</span>
-              </div>
-            </div>
-            <div class="tp-stats">
-              <span class="tp-stat">
-                <Eye :size="12" /> {{ formatNumber(post.reach) }}
-              </span>
-              <span class="tp-stat">
-                <Heart :size="12" /> {{ formatNumber(post.likes) }}
-              </span>
-              <span class="eng-pill" :class="engClass(post.engagement)">
-                {{ post.engagement }}%
-              </span>
-            </div>
-          </button>
-        </div>
-      </div>
     </section>
 
     <!-- ── Side panel ─────────────────────────────────────────── -->
@@ -354,6 +320,7 @@
       <PostDetailPanel
         v-if="panel.kind === 'post'"
         :post-id="panel.id"
+        :posts="posts"
         @close="closePanel"
       />
       <AccountDetailPanel
@@ -366,31 +333,90 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import {
-  Search, Plus, Frown, RefreshCw, ArrowUpRight, Eye, Heart,
-  Image as ImageIcon, Film, Layers, Type, MessageSquare, FileText,
+  Search, Plus, Frown, RefreshCw, ArrowUpRight,
+  Image as ImageIcon, Film, Layers, MessageSquare, FileText, Loader2,
 } from 'lucide-vue-next'
 import SocialHubLayout from './SocialHubLayout.vue'
 import PostDetailPanel from './PostDetailPanel.vue'
 import AccountDetailPanel from './AccountDetailPanel.vue'
+import { get, post as apiPost } from '@/services/api'
+import { useToast } from '@/composables/useToast'
 import {
-  socialPosts, socialAccounts, socialCampaigns,
+  socialAccounts, socialCampaigns,
   PLATFORMS, CONTENT_TYPES, getPlatform,
   formatNumber, formatDate,
 } from '@/services/socialCrmData'
+
+const toast = useToast()
+
+// ── Posts state (real API) ─────────────────────────────────────
+const posts         = ref([])
+const postsLoading  = ref(true)
+const syncingPosts  = ref(false)
+
+async function loadPosts() {
+  postsLoading.value = true
+  try {
+    const data = await get('/integrations/social/posts/')
+    posts.value = (data.posts || []).map(normalizePost)
+  } catch {
+    toast.error('No s\'han pogut carregar les publicacions.')
+  } finally {
+    postsLoading.value = false
+  }
+}
+
+async function syncPosts() {
+  syncingPosts.value = true
+  try {
+    await apiPost('/integrations/social/posts/sync/')
+    await loadPosts()
+    toast.success('Publicacions sincronitzades.')
+  } catch {
+    toast.error('Error en sincronitzar les publicacions.')
+  } finally {
+    syncingPosts.value = false
+  }
+}
+
+/** Map API fields to the shape expected by the template */
+function normalizePost(p) {
+  const typeMap = { video: 'Vídeo', post: 'Tweet', reel: 'Reel' }
+  return {
+    id:          p.id,
+    platform:    p.provider,          // 'youtube' | 'twitter' | 'tiktok'
+    type:        typeMap[p.post_type] || 'Vídeo',
+    title:       p.title || p.description?.slice(0, 80) || '(sense títol)',
+    accountName: p.account_name || '',
+    date:        p.published_at || p.synced_at,
+    reach:       p.views || 0,
+    likes:       p.likes || 0,
+    comments:    p.comments || 0,
+    shares:      p.shares || 0,
+    clicks:      p.shares || 0,       // best proxy available
+    impressions: p.views || 0,
+    engagement:  p.engagement || 0,
+    thumbnail:   p.thumbnail_url || '',
+    post_url:    p.post_url || '',
+    campaignId:  null,
+    campaignName: null,
+  }
+}
+
+onMounted(loadPosts)
 
 // ── Tabs ──────────────────────────────────────────────────────
 const activeTab = ref('posts')
 
 const tabs = computed(() => [
-  { key: 'posts',     label: 'Publicaciones', count: socialPosts.length },
-  { key: 'accounts',  label: 'Cuentas',       count: socialAccounts.length },
-  { key: 'analytics', label: 'Análisis' },
+  { key: 'posts',     label: 'Publicacions', count: postsLoading.value ? null : posts.value.length },
+  { key: 'accounts',  label: 'Comptes',      count: socialAccounts.length },
+  { key: 'analytics', label: 'Anàlisi' },
 ])
 
 // ── Global filters ────────────────────────────────────────────
-const periodFilter   = ref('30d')
 const platformFilter = ref('all')
 
 // ── Posts state ───────────────────────────────────────────────
@@ -400,17 +426,14 @@ const postCampaign = ref('all')
 const postSort     = ref('date')
 
 const filteredPosts = computed(() => {
-  let list = [...socialPosts]
+  let list = [...posts.value]
   if (platformFilter.value !== 'all') list = list.filter(p => p.platform === platformFilter.value)
   if (postType.value !== 'all') list = list.filter(p => p.type === postType.value)
-  if (postCampaign.value === 'none') list = list.filter(p => !p.campaignId)
-  else if (postCampaign.value !== 'all') list = list.filter(p => p.campaignId === Number(postCampaign.value))
   if (postSearch.value) {
     const q = postSearch.value.toLowerCase()
     list = list.filter(p =>
       p.title.toLowerCase().includes(q) ||
-      p.accountName.toLowerCase().includes(q) ||
-      (p.campaignName || '').toLowerCase().includes(q)
+      p.accountName.toLowerCase().includes(q)
     )
   }
   return list.sort((a, b) => {
@@ -429,14 +452,12 @@ const filteredAccounts = computed(() => {
   return list
 })
 
-function syncAccounts() {
-  alert('Sincronización iniciada (simulado)')
-}
+function syncAccounts() { syncPosts() }
 
 // ── Analytics derivations ─────────────────────────────────────
 const contentByFormat = computed(() => {
   const map = {}
-  socialPosts.forEach(p => {
+  posts.value.forEach(p => {
     if (!map[p.type]) map[p.type] = { type: p.type, count: 0, totalEng: 0, totalReach: 0, totalClicks: 0 }
     map[p.type].count++
     map[p.type].totalEng += p.engagement
@@ -453,7 +474,7 @@ const contentByFormat = computed(() => {
 
 const contentByPlatform = computed(() => {
   const map = {}
-  socialPosts.forEach(p => {
+  posts.value.forEach(p => {
     if (!map[p.platform]) map[p.platform] = { platform: p.platform, posts: 0, totalEng: 0, totalReach: 0, totalClicks: 0 }
     map[p.platform].posts++
     map[p.platform].totalEng += p.engagement
@@ -475,19 +496,19 @@ const timeSlots = [
 const maxSlotEng = computed(() => Math.max(...timeSlots.map(s => s.engagement)))
 
 const topPosts = computed(() =>
-  [...socialPosts].sort((a, b) => b.engagement - a.engagement).slice(0, 5)
+  [...posts.value].sort((a, b) => b.engagement - a.engagement).slice(0, 5)
 )
 
 // ── KPIs ──────────────────────────────────────────────────────
 const kpis = computed(() => {
-  const posts = socialPosts
-  const totalPosts = posts.length
-  const totalReach = posts.reduce((s, p) => s + p.reach, 0)
-  const totalImpressions = posts.reduce((s, p) => s + p.impressions, 0)
-  const totalClicks = posts.reduce((s, p) => s + p.clicks, 0)
-  const avgEngagement = posts.length ? posts.reduce((s, p) => s + p.engagement, 0) / posts.length : 0
-  const bestFormat = contentByFormat.value[0]?.type || '—'
-  const activeAccounts = socialAccounts.filter(a => a.status === 'connected').length
+  const list = posts.value
+  const totalPosts        = list.length
+  const totalReach        = list.reduce((s, p) => s + p.reach, 0)
+  const totalImpressions  = list.reduce((s, p) => s + p.impressions, 0)
+  const totalClicks       = list.reduce((s, p) => s + p.clicks, 0)
+  const avgEngagement     = list.length ? list.reduce((s, p) => s + p.engagement, 0) / list.length : 0
+  const bestFormat        = contentByFormat.value[0]?.type || '—'
+  const activeAccounts    = socialAccounts.filter(a => a.status === 'connected').length
   const disconnectedAccounts = socialAccounts.filter(a => a.status !== 'connected').length
   return { totalPosts, totalReach, totalImpressions, totalClicks, avgEngagement, bestFormat, activeAccounts, disconnectedAccounts }
 })
@@ -500,12 +521,11 @@ function closePanel() { panel.kind = null; panel.id = null }
 
 // ── Primary action (changes per tab) ──────────────────────────
 const primaryActionLabel = computed(() => {
-  if (activeTab.value === 'posts')    return 'Programar post'
-  if (activeTab.value === 'accounts') return 'Conectar cuenta'
-  return 'Exportar análisis'
+  if (activeTab.value === 'accounts') return 'Connectar un compte'
+  return 'Exportar l\'anàlisi'
 })
 function onPrimaryAction() {
-  alert(`Acción: ${primaryActionLabel.value}`)
+  alert(`Acció: ${primaryActionLabel.value}`)
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -515,23 +535,22 @@ function engBarColor(v) { return v >= 6 ? '#10B981' : v >= 3 ? '#F59E0B' : '#EF4
 
 function typeIcon(type) {
   const map = {
-    'Imagen':   ImageIcon,
+    'Imatge':   ImageIcon,
     'Vídeo':    Film,
     'Reel':     Film,
     'Story':    Layers,
     'Carrusel': Layers,
     'Tweet':    MessageSquare,
-    'Hilo':     MessageSquare,
+    'Fil':      MessageSquare,
     'Short':    Film,
   }
   return map[type] || FileText
 }
 
 function thumbStyle(post) {
+  if (post.thumbnail) return {}   // real image shown via <img>
   const platform = getPlatform(post.platform)
-  return {
-    background: `linear-gradient(135deg, ${platform.color}cc, ${platform.color}66)`,
-  }
+  return { background: `linear-gradient(135deg, ${platform.color}cc, ${platform.color}44)` }
 }
 
 function formatRelativeDate(iso) {
@@ -539,30 +558,16 @@ function formatRelativeDate(iso) {
   const date = new Date(iso)
   const diffMs = Date.now() - date.getTime()
   const diffH  = Math.floor(diffMs / 3600000)
-  if (diffH < 1)  return 'hace minutos'
-  if (diffH < 24) return `hace ${diffH}h`
+  if (diffH < 1)  return 'fa uns minuts'
+  if (diffH < 24) return `fa ${diffH}h`
   const diffD = Math.floor(diffH / 24)
-  if (diffD < 7) return `hace ${diffD}d`
+  if (diffD < 7) return `fa ${diffD}d`
   return formatDate(iso.split('T')[0])
 }
 </script>
 
 <style scoped>
 /* ── Header micro-controls ──────────────────────────── */
-.hub-filter-group { display: flex; gap: 0.375rem; }
-
-.hub-mini-select {
-  padding: 0.4rem 0.625rem;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-.hub-mini-select:hover { border-color: var(--primary-color); }
-
 .hub-btn {
   display: inline-flex;
   align-items: center;
@@ -718,6 +723,17 @@ function formatRelativeDate(iso) {
 .cell-num { justify-content: flex-end; text-align: right; }
 .font-mono { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
 .muted { color: var(--text-secondary); }
+
+.thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 7px;
+  display: block;
+}
+
+.spin { animation: spin-anim 0.8s linear infinite; }
+@keyframes spin-anim { to { transform: rotate(360deg); } }
 
 .post-thumb {
   width: 36px;
@@ -946,68 +962,6 @@ function formatRelativeDate(iso) {
 .hour-bar-best { opacity: 1; box-shadow: 0 0 8px rgba(118,75,162,0.4); }
 .hour-val { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); text-align: right; font-feature-settings: "tnum"; }
 .hour-val-best { color: var(--primary-color); font-weight: 800; }
-
-/* Top posts list */
-.top-posts { display: flex; flex-direction: column; }
-.top-post-row {
-  display: grid;
-  grid-template-columns: auto auto 1fr auto;
-  gap: 0.875rem;
-  align-items: center;
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  transition: background 0.12s ease;
-}
-.top-post-row:last-child { border-bottom: none; }
-.top-post-row:hover { background: var(--bg-secondary); }
-
-.tp-rank {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  font-weight: 700;
-  font-size: 0.78rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-feature-settings: "tnum";
-  flex-shrink: 0;
-}
-.top-post-row:hover .tp-rank,
-.top-post-row:nth-child(1) .tp-rank {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-}
-
-.tp-info { min-width: 0; flex: 1; }
-.tp-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tp-meta { display: flex; align-items: center; gap: 0.4rem; margin-top: 2px; font-size: 0.72rem; }
-
-.tp-stats { display: flex; align-items: center; gap: 0.625rem; flex-shrink: 0; }
-.tp-stat {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  font-feature-settings: "tnum";
-}
 
 /* ── Responsive ────────────────────────────────────── */
 @media (max-width: 1280px) {

@@ -1,8 +1,8 @@
 <template>
   <div class="account-view">
     <div class="view-header">
-      <h1>Gestión de cuenta</h1>
-      <p class="view-subtitle">Tus datos personales y de seguridad</p>
+      <h1>Gestió del compte</h1>
+      <p class="view-subtitle">Les teves dades personals i de seguretat</p>
     </div>
 
     <div class="content-wrapper">
@@ -10,8 +10,8 @@
       <div class="card">
         <div class="card-header flex items-center justify-between">
           <div>
-            <h3 class="card-title">Información personal</h3>
-            <p class="card-subtitle">Datos visibles para tu equipo</p>
+            <h3 class="card-title">Informació personal</h3>
+            <p class="card-subtitle">Dades visibles per al teu equip</p>
           </div>
           <button v-if="!editingProfile" class="btn btn-secondary btn-sm" @click="startEditProfile">
             <Pencil :size="14" />
@@ -35,22 +35,22 @@
               class="hidden-input"
               @change="onAvatarChange"
             />
-            <span class="text-xs text-tertiary">JPG, PNG. Máx 2 MB</span>
+            <span class="text-xs text-tertiary">JPG, PNG. Màx. 2 MB</span>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Nombre <span class="required">*</span></label>
+              <label class="form-label">Nom <span class="required">*</span></label>
               <input v-model="profileForm.first_name" class="input" required />
             </div>
             <div class="form-group">
-              <label class="form-label">Apellidos</label>
+              <label class="form-label">Cognoms</label>
               <input v-model="profileForm.last_name" class="input" />
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Teléfono</label>
+            <label class="form-label">Telèfon</label>
             <input
               v-model="profileForm.phone"
               class="input"
@@ -60,16 +60,16 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Email</label>
+            <label class="form-label">Correu electrònic</label>
             <input :value="user?.email" class="input" disabled />
-            <span class="field-hint">El email no se puede cambiar</span>
+            <span class="field-hint">El correu electrònic no es pot canviar</span>
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn btn-ghost" @click="cancelEditProfile">Cancelar</button>
+            <button type="button" class="btn btn-ghost" @click="cancelEditProfile">Cancel·lar</button>
             <button type="submit" class="btn btn-primary" :disabled="savingProfile">
               <span v-if="savingProfile" class="loading-spinner loading-spinner-sm"></span>
-              {{ savingProfile ? 'Guardando...' : 'Guardar cambios' }}
+              {{ savingProfile ? 'Desant…' : 'Desar canvis' }}
             </button>
           </div>
         </form>
@@ -80,15 +80,15 @@
             <span v-else class="avatar-initials-lg">{{ user?.initials || '?' }}</span>
           </div>
           <div class="profile-info">
-            <p class="profile-name">{{ user?.full_name || 'Sin nombre' }}</p>
+            <p class="profile-name">{{ user?.full_name || 'Sense nom' }}</p>
             <p class="profile-email">{{ user?.email }}</p>
-            <p class="profile-joined">Miembro desde {{ formatDate(user?.date_joined) }}</p>
+            <p class="profile-joined">Membre des de {{ formatDate(user?.date_joined) }}</p>
           </div>
         </div>
 
         <div v-if="!editingProfile" class="info-grid">
           <div class="info-row">
-            <span class="info-label">Teléfono</span>
+            <span class="info-label">Telèfon</span>
             <span class="info-value">{{ user?.phone || '—' }}</span>
           </div>
         </div>
@@ -97,18 +97,18 @@
       <!-- Security Card -->
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">Seguridad</h3>
-          <p class="card-subtitle">Gestiona tu contraseña de acceso</p>
+          <h3 class="card-title">Seguretat</h3>
+          <p class="card-subtitle">Gestiona la teva contrasenya d'accés</p>
         </div>
         <div class="security-content">
           <div class="security-row">
             <div>
-              <p class="security-label">Contraseña</p>
-              <p class="security-detail">Última actualización desconocida</p>
+              <p class="security-label">Contrasenya</p>
+              <p class="security-detail">Última actualització desconeguda</p>
             </div>
             <button class="btn btn-secondary btn-sm" @click="showPasswordModal = true">
               <Lock :size="14" />
-              Cambiar contraseña
+              Canviar la contrasenya
             </button>
           </div>
         </div>
@@ -121,14 +121,14 @@
       <div v-if="showPasswordModal" class="modal-overlay" @click.self="showPasswordModal = false">
         <div class="modal-card">
           <div class="modal-header">
-            <h3>Cambiar contraseña</h3>
+            <h3>Canviar la contrasenya</h3>
             <button class="modal-close" @click="showPasswordModal = false">
               <X :size="20" />
             </button>
           </div>
           <form @submit.prevent="handleChangePassword" class="modal-body">
             <div class="form-group">
-              <label class="form-label">Contraseña actual</label>
+              <label class="form-label">Contrasenya actual</label>
               <input
                 v-model="passwordForm.current"
                 type="password"
@@ -139,19 +139,19 @@
               <span v-if="passwordErrors.current" class="field-error">{{ passwordErrors.current }}</span>
             </div>
             <div class="form-group">
-              <label class="form-label">Nueva contraseña</label>
+              <label class="form-label">Nova contrasenya</label>
               <input
                 v-model="passwordForm.newPassword"
                 type="password"
                 class="input"
                 required
                 autocomplete="new-password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínim 8 caràcters"
               />
               <span v-if="passwordErrors.newPassword" class="field-error">{{ passwordErrors.newPassword }}</span>
             </div>
             <div class="form-group">
-              <label class="form-label">Confirmar nueva contraseña</label>
+              <label class="form-label">Confirma la nova contrasenya</label>
               <input
                 v-model="passwordForm.confirm"
                 type="password"
@@ -162,9 +162,9 @@
               <span v-if="passwordErrors.confirm" class="field-error">{{ passwordErrors.confirm }}</span>
             </div>
             <div class="modal-actions">
-              <button type="button" class="btn btn-ghost" @click="showPasswordModal = false">Cancelar</button>
+              <button type="button" class="btn btn-ghost" @click="showPasswordModal = false">Cancel·lar</button>
               <button type="submit" class="btn btn-primary" :disabled="savingPassword">
-                {{ savingPassword ? 'Guardando...' : 'Cambiar contraseña' }}
+                {{ savingPassword ? 'Desant…' : 'Canviar la contrasenya' }}
               </button>
             </div>
           </form>
@@ -211,7 +211,7 @@ function onAvatarChange(e) {
   const file = e.target.files[0]
   if (!file) return
   if (file.size > 2 * 1024 * 1024) {
-    toast.error('La imagen no puede superar 2 MB')
+    toast.error('La imatge no pot superar els 2 MB')
     return
   }
   avatarFile.value = file
@@ -228,10 +228,10 @@ async function saveProfile() {
     }
     if (avatarFile.value) data.avatar = avatarFile.value
     await updateProfile(data)
-    toast.success('Perfil actualizado')
+    toast.success('Perfil actualitzat')
     editingProfile.value = false
   } catch {
-    toast.error('Error al actualizar el perfil')
+    toast.error('Error en actualitzar el perfil')
   } finally {
     savingProfile.value = false
   }
@@ -247,18 +247,18 @@ async function handleChangePassword() {
   Object.keys(passwordErrors).forEach(k => delete passwordErrors[k])
 
   if (passwordForm.newPassword.length < 8) {
-    passwordErrors.newPassword = 'Mínimo 8 caracteres'
+    passwordErrors.newPassword = 'Mínim 8 caràcters'
     return
   }
   if (passwordForm.newPassword !== passwordForm.confirm) {
-    passwordErrors.confirm = 'Las contraseñas no coinciden'
+    passwordErrors.confirm = 'Les contrasenyes no coincideixen'
     return
   }
 
   savingPassword.value = true
   try {
     await changePassword(passwordForm.current, passwordForm.newPassword)
-    toast.success('Contraseña actualizada')
+    toast.success('Contrasenya actualitzada')
     showPasswordModal.value = false
     passwordForm.current = ''
     passwordForm.newPassword = ''
@@ -269,7 +269,7 @@ async function handleChangePassword() {
         ? err.data.current_password[0]
         : err.data.current_password
     } else {
-      toast.error(err.message || 'Error al cambiar la contraseña')
+      toast.error(err.message || 'Error en canviar la contrasenya')
     }
   } finally {
     savingPassword.value = false
@@ -278,7 +278,7 @@ async function handleChangePassword() {
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' })
 }
 
 </script>

@@ -33,7 +33,11 @@ class InvoiceSeries(models.Model):
         return f'{self.prefix} — {self.name}'
 
     def generate_number(self):
-        """Genera el siguiente número de factura en la serie, saltando los ya usados."""
+        """Genera el siguiente número de factura en la serie, saltando los ya usados.
+
+        Debe llamarse dentro de una transacción con SELECT FOR UPDATE sobre self
+        para evitar condiciones de carrera en entornos con usuarios concurrentes.
+        """
         year = date.today().year
         seq_match = re.search(r'\{SEQ:(\d+)\}', self.pattern)
         width = int(seq_match.group(1)) if seq_match else 4
@@ -448,7 +452,9 @@ class Quote(models.Model):
         total_tax = Decimal('0.00')
         for ln in lines:
             subtotal += ln.subtotal
-            total_tax += ln.tax_amount
+            for lt in ln.taxes.all():
+                if not lt.is_retention:
+                    total_tax += lt.tax_amount
         self.subtotal = subtotal
         self.total_tax = total_tax
         self.total_amount = subtotal + total_tax
@@ -469,13 +475,7 @@ class QuoteLine(models.Model):
         max_digits=10, decimal_places=3, default=1,
     )
     unit_price = models.DecimalField(max_digits=12, decimal_places=4)
-    tax_percent = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0,
-    )
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    tax_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
 
     class Meta:
         ordering = ['position']
@@ -483,8 +483,23 @@ class QuoteLine(models.Model):
     def save(self, *args, **kwargs):
         gross = (self.quantity or Decimal('0')) * (self.unit_price or Decimal('0'))
         self.subtotal = gross.quantize(Decimal('0.01'))
-        self.tax_amount = (gross * (self.tax_percent or Decimal('0')) / Decimal('100')).quantize(Decimal('0.01'))
         super().save(*args, **kwargs)
+
+
+class QuoteLineTax(models.Model):
+    """Impost d'una línia de pressupost de venda (consistent amb InvoiceLineTax)."""
+
+    quote_line = models.ForeignKey(
+        QuoteLine, on_delete=models.CASCADE, related_name='taxes',
+    )
+    tax_rate = models.ForeignKey('core.TaxRate', on_delete=models.PROTECT)
+    tax_name = models.CharField(max_length=50)
+    tax_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    is_retention = models.BooleanField(default=False)
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f'{self.tax_name} on quote line {self.quote_line.position}'
 
 
 class RecurringInvoice(models.Model):

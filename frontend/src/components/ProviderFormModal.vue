@@ -5,7 +5,7 @@
         <div class="modal-container">
           <!-- Header -->
           <div class="modal-header">
-            <h2 class="modal-title">{{ isEditing ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+            <h2 class="modal-title">{{ isEditing ? 'Editar proveïdor' : 'Nou proveïdor' }}</h2>
             <button class="modal-close" @click="$emit('close')">
               <X :size="20" />
             </button>
@@ -16,143 +16,143 @@
             <div class="modal-main">
 
               <section class="form-section">
-                <h3 class="section-title">Información básica</h3>
-                <p class="section-desc">Datos principales del proveedor.</p>
+                <h3 class="section-title">Informació bàsica</h3>
+                <p class="section-desc">Dades principals del proveïdor.</p>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Tipo de contacto <span class="required">*</span></label>
+                    <label class="field-label">Tipus de contacte <span class="required">*</span></label>
                     <select class="select" v-model="form.type">
                       <option value="Company">Empresa</option>
                       <option value="Person">Persona</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label class="field-label">Estado</label>
+                    <label class="field-label">Estat</label>
                     <select class="select" v-model="form.status">
-                      <option value="Active">Activo</option>
-                      <option value="Inactive">Inactivo</option>
+                      <option value="Active">Actiu</option>
+                      <option value="Inactive">Inactiu</option>
                     </select>
                   </div>
                 </div>
 
                 <div class="field">
-                  <label class="field-label">{{ form.type === 'Company' ? 'Nombre de la empresa' : 'Nombre completo' }} <span class="required">*</span></label>
-                  <input class="input" type="text" :placeholder="form.type === 'Company' ? 'Ej: Acme Corp.' : 'Ej: María López'" v-model="form.name" />
+                  <label class="field-label">{{ form.type === 'Company' ? 'Nom de l\'empresa' : 'Nom complet' }} <span class="required">*</span></label>
+                  <input class="input" type="text" :placeholder="form.type === 'Company' ? 'Ex: Acme Corp.' : 'Ex: Maria López'" v-model="form.name" />
                 </div>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Email <span class="required">*</span></label>
-                    <input class="input" type="email" placeholder="correo@ejemplo.com" v-model="form.email" />
+                    <label class="field-label">Correu electrònic <span class="required">*</span></label>
+                    <input class="input" type="email" placeholder="correu@exemple.com" v-model="form.email" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Teléfono</label>
+                    <label class="field-label">Telèfon</label>
                     <input class="input" type="tel" placeholder="+34 600 000 000" v-model="form.phone" />
                   </div>
                 </div>
 
                 <div v-if="form.type === 'Company'" class="field">
                   <label class="field-label">NIF / CIF</label>
-                  <input class="input" type="text" placeholder="Ej: B-12345678" v-model="form.vatId" />
+                  <input class="input" type="text" placeholder="Ex: B-12345678" v-model="form.vatId" />
                 </div>
 
                 <div class="field">
                   <label class="field-label">Web</label>
-                  <input class="input" type="url" placeholder="https://www.ejemplo.com" v-model="form.website" />
+                  <input class="input" type="url" placeholder="https://www.exemple.com" v-model="form.website" />
                 </div>
               </section>
 
               <section class="form-section">
-                <h3 class="section-title">Dirección</h3>
-                <p class="section-desc">Dirección fiscal del proveedor.</p>
+                <h3 class="section-title">Adreça</h3>
+                <p class="section-desc">Adreça fiscal del proveïdor.</p>
 
                 <div class="field">
-                  <label class="field-label">Dirección</label>
-                  <input class="input" type="text" placeholder="Calle, número, piso..." v-model="form.address" />
+                  <label class="field-label">Adreça</label>
+                  <input class="input" type="text" placeholder="Carrer, número, pis…" v-model="form.address" />
                 </div>
 
                 <div class="field-row field-row-3">
                   <div class="field">
-                    <label class="field-label">Ciudad</label>
-                    <input class="input" type="text" placeholder="Madrid" v-model="form.city" />
+                    <label class="field-label">Ciutat</label>
+                    <input class="input" type="text" placeholder="Barcelona" v-model="form.city" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Provincia</label>
-                    <input class="input" type="text" placeholder="Madrid" v-model="form.province" />
+                    <label class="field-label">Província</label>
+                    <input class="input" type="text" placeholder="Barcelona" v-model="form.province" />
                   </div>
                   <div class="field">
                     <label class="field-label">C.P.</label>
-                    <input class="input" type="text" placeholder="28001" v-model="form.postalCode" />
+                    <input class="input" type="text" placeholder="08001" v-model="form.postalCode" />
                   </div>
                 </div>
 
                 <div class="field">
                   <label class="field-label">País</label>
                   <select class="select" v-model="form.country">
-                    <option value="España">España</option>
+                    <option value="España">Espanya</option>
                     <option value="Portugal">Portugal</option>
-                    <option value="Francia">Francia</option>
-                    <option value="Alemania">Alemania</option>
-                    <option value="Italia">Italia</option>
-                    <option value="Reino Unido">Reino Unido</option>
-                    <option value="Estados Unidos">Estados Unidos</option>
+                    <option value="Francia">França</option>
+                    <option value="Alemania">Alemanya</option>
+                    <option value="Italia">Itàlia</option>
+                    <option value="Reino Unido">Regne Unit</option>
+                    <option value="Estados Unidos">Estats Units</option>
                   </select>
                 </div>
               </section>
 
               <section v-if="form.type === 'Company'" class="form-section">
-                <h3 class="section-title">Información fiscal</h3>
-                <p class="section-desc">Datos fiscales y condiciones de pago por defecto.</p>
+                <h3 class="section-title">Informació fiscal</h3>
+                <p class="section-desc">Dades fiscals i condicions de pagament per defecte.</p>
 
                 <div class="field">
-                  <label class="field-label">Razón social</label>
-                  <input class="input" type="text" placeholder="Razón social completa" v-model="form.legalName" />
+                  <label class="field-label">Raó social</label>
+                  <input class="input" type="text" placeholder="Raó social completa" v-model="form.legalName" />
                 </div>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Forma de pago</label>
+                    <label class="field-label">Forma de pagament</label>
                     <select class="select" v-model="form.paymentMethod">
-                      <option value="Transferencia 30 días">Transferencia 30 días</option>
-                      <option value="Transferencia">Transferencia</option>
-                      <option value="Domiciliación">Domiciliación</option>
-                      <option value="Tarjeta">Tarjeta</option>
-                      <option value="Efectivo">Efectivo</option>
+                      <option value="Transferència 30 dies">Transferència 30 dies</option>
+                      <option value="Transferència">Transferència</option>
+                      <option value="Domiciliació">Domiciliació</option>
+                      <option value="Targeta">Targeta</option>
+                      <option value="Efectiu">Efectiu</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label class="field-label">Cuenta bancaria (IBAN)</label>
+                    <label class="field-label">Compte bancari (IBAN)</label>
                     <input class="input" type="text" placeholder="ES00 0000 0000 0000 0000 0000" v-model="form.bankAccount" />
                   </div>
                 </div>
               </section>
 
               <section class="form-section">
-                <h3 class="section-title">Notas internas</h3>
-                <textarea class="input textarea" rows="3" placeholder="Añade notas internas sobre este proveedor..." v-model="form.internalNotes"></textarea>
+                <h3 class="section-title">Notes internes</h3>
+                <textarea class="input textarea" rows="3" placeholder="Afegeix notes internes sobre aquest proveïdor…" v-model="form.internalNotes"></textarea>
               </section>
             </div>
 
             <div class="modal-sidebar">
 
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Preview</h4>
+                <h4 class="sidebar-card-title">Previsualització</h4>
                 <div class="avatar-preview">
                   <div class="preview-avatar" :style="{ background: previewGradient }">
                     {{ previewInitials }}
                   </div>
-                  <span class="preview-name">{{ form.name || 'Nombre del proveedor' }}</span>
-                  <span class="preview-email">{{ form.email || 'email@ejemplo.com' }}</span>
+                  <span class="preview-name">{{ form.name || 'Nom del proveïdor' }}</span>
+                  <span class="preview-email">{{ form.email || 'correu@exemple.com' }}</span>
                 </div>
               </div>
 
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Etiquetas</h4>
-                <p class="sidebar-card-desc">Organiza tus proveedores con etiquetas personalizadas.</p>
+                <h4 class="sidebar-card-title">Etiquetes</h4>
+                <p class="sidebar-card-desc">Organitza els teus proveïdors amb etiquetes personalitzades.</p>
 
                 <div class="field">
-                  <input class="input" type="text" placeholder="Busca o crea tags" v-model="tagInput" @keydown.enter.prevent="addTag" />
+                  <input class="input" type="text" placeholder="Cerca o crea etiquetes" v-model="tagInput" @keydown.enter.prevent="addTag" />
                   <div v-if="form.tags.length" class="tags-list">
                     <span v-for="(tag, i) in form.tags" :key="i" class="tag-chip">
                       {{ tag }}
@@ -165,11 +165,11 @@
               </div>
 
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Contacto vinculado</h4>
-                <p class="sidebar-card-desc">Vincula este proveedor con una empresa o persona.</p>
+                <h4 class="sidebar-card-title">Contacte vinculat</h4>
+                <p class="sidebar-card-desc">Vincula aquest proveïdor amb una empresa o persona.</p>
 
                 <div class="field">
-                  <input class="input" type="text" placeholder="Busca un contacto..." v-model="form.linkedContact" />
+                  <input class="input" type="text" placeholder="Cerca un contacte…" v-model="form.linkedContact" />
                 </div>
               </div>
             </div>
@@ -180,7 +180,7 @@
             <button class="btn btn-secondary" @click="$emit('close')">Descartar</button>
             <button class="btn btn-primary" @click="handleSave">
               <Check :size="18" />
-              <span>Guardar</span>
+              <span>Desar</span>
             </button>
           </div>
         </div>
@@ -231,7 +231,7 @@ function blankForm() {
     postalCode: '',
     country: 'España',
     legalName: '',
-    paymentMethod: 'Transferencia 30 días',
+    paymentMethod: 'Transferència 30 dies',
     bankAccount: '',
     internalNotes: '',
     tags: [],
@@ -272,7 +272,7 @@ watch(() => props.open, (isOpen) => {
       postalCode: p.detail?.postalCode || '',
       country: p.detail?.country || 'España',
       legalName: p.detail?.legalName || '',
-      paymentMethod: p.detail?.paymentMethod || 'Transferencia 30 días',
+      paymentMethod: p.detail?.paymentMethod || 'Transferència 30 dies',
       bankAccount: p.detail?.bankAccount || '',
       internalNotes: p.detail?.internalNotes || '',
       tags: [...(p.detail?.tags || [])],
@@ -298,14 +298,14 @@ function removeTag(index) {
 
 function handleSave() {
   const errors = []
-  if (!form.name.trim()) errors.push('El nombre es obligatorio')
-  if (!form.email.trim()) errors.push('El email es obligatorio')
-  if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.push('El email no es válido')
+  if (!form.name.trim()) errors.push('El nom és obligatori')
+  if (!form.email.trim()) errors.push('El correu electrònic és obligatori')
+  if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.push('El correu electrònic no és vàlid')
 
   if (errors.length) {
     Swal.fire({
       icon: 'warning',
-      title: 'Campos obligatorios',
+      title: 'Camps obligatoris',
       html: `<ul style="text-align:left;margin:0;padding-left:1.2em">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`,
       confirmButtonText: 'OK',
       confirmButtonColor: '#667eea',

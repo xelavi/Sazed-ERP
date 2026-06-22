@@ -13,7 +13,6 @@ const VERSION = 'v19.0'
 // pages_manage_metadata, instagram_manage_insights, business_management
 // require Advanced Access (App Review) — add them after review is approved.
 const SCOPE = [
-  'email',
   'public_profile',
   'pages_show_list',
   'pages_read_engagement',

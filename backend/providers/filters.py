@@ -1,19 +1,19 @@
 import django_filters
 from django.db.models import Q
 
-from .models import Provider
+from customers.models import Customer
 
 
 class ProviderFilter(django_filters.FilterSet):
     search = django_filters.CharFilter(method='filter_search')
     contact_type = django_filters.ChoiceFilter(
-        field_name='contact_type', choices=Provider.ContactType.choices,
+        field_name='contact_type', choices=Customer.ContactType.choices,
     )
-    status = django_filters.ChoiceFilter(choices=Provider.Status.choices)
+    status = django_filters.ChoiceFilter(choices=Customer.Status.choices)
     city = django_filters.CharFilter(field_name='city', lookup_expr='icontains')
 
     class Meta:
-        model = Provider
+        model = Customer
         fields = ['contact_type', 'status', 'city']
 
     def filter_search(self, queryset, name, value):

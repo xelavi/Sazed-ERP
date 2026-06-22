@@ -2,44 +2,15 @@ from rest_framework import serializers
 
 from core.models import Tag
 from core.serializers import TagSerializer
-from .models import Provider, ProviderNote, ProviderActivity, PurchaseOrder
-
-try:
-    from purchases.models import PurchaseQuote
-except ImportError:
-    PurchaseQuote = None
-
-
-class ProviderNoteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProviderNote
-        fields = ['id', 'author', 'content', 'created_at']
-        read_only_fields = ['id', 'created_at']
-
-
-class ProviderActivitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProviderActivity
-        fields = ['id', 'activity_type', 'date', 'subject', 'notes', 'created_at']
-        read_only_fields = ['id', 'created_at']
-
-
-class PurchaseOrderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PurchaseOrder
-        fields = [
-            'id', 'number', 'concept', 'total_amount', 'balance_due',
-            'date', 'notes', 'status', 'created_at', 'updated_at',
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+from customers.models import Customer, CustomerNote, CustomerActivity
+from customers.serializers import CustomerNoteSerializer, CustomerActivitySerializer
 
 
 class ProviderListSerializer(serializers.ModelSerializer):
-
     linked = serializers.SerializerMethodField()
 
     class Meta:
-        model = Provider
+        model = Customer
         fields = [
             'id', 'name', 'contact_type', 'email', 'city', 'status',
             'vat_id', 'avatar_color', 'initials', 'linked',
@@ -51,21 +22,18 @@ class ProviderListSerializer(serializers.ModelSerializer):
 
 
 class ProviderDetailSerializer(serializers.ModelSerializer):
-
     tags = TagSerializer(many=True, read_only=True)
     tag_ids = serializers.PrimaryKeyRelatedField(
         source='tags', many=True, write_only=True,
-        queryset=Tag.objects.all(),
-        required=False,
+        queryset=Tag.objects.all(), required=False,
     )
     linked = serializers.SerializerMethodField()
     linked_contact_ids = serializers.PrimaryKeyRelatedField(
         source='linked_contacts', many=True, write_only=True,
-        queryset=Provider.objects.all(), required=False,
+        queryset=Customer.objects.filter(is_supplier=True), required=False,
     )
-    notes = ProviderNoteSerializer(many=True, read_only=True)
-    activities = ProviderActivitySerializer(many=True, read_only=True)
-    purchase_orders = PurchaseOrderSerializer(many=True, read_only=True)
+    notes = CustomerNoteSerializer(many=True, read_only=True)
+    activities = CustomerActivitySerializer(many=True, read_only=True)
     purchase_invoices_count = serializers.SerializerMethodField()
 
     total_purchased = serializers.DecimalField(
@@ -74,10 +42,9 @@ class ProviderDetailSerializer(serializers.ModelSerializer):
     pending_balance = serializers.DecimalField(
         max_digits=12, decimal_places=2, read_only=True,
     )
-    total_documents = serializers.IntegerField(read_only=True)
 
     class Meta:
-        model = Provider
+        model = Customer
         fields = [
             'id', 'name', 'contact_type', 'email', 'phone', 'website',
             'status', 'vat_id', 'legal_name',
@@ -85,8 +52,8 @@ class ProviderDetailSerializer(serializers.ModelSerializer):
             'payment_method', 'bank_account',
             'avatar_color', 'initials', 'internal_notes',
             'tags', 'tag_ids', 'linked', 'linked_contact_ids',
-            'notes', 'activities', 'purchase_orders', 'purchase_invoices_count',
-            'total_purchased', 'pending_balance', 'total_documents',
+            'notes', 'activities', 'purchase_invoices_count',
+            'total_purchased', 'pending_balance',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -95,25 +62,21 @@ class ProviderDetailSerializer(serializers.ModelSerializer):
         return list(obj.linked_contacts.values_list('name', flat=True))
 
     def get_purchase_invoices_count(self, obj):
-        if hasattr(obj, 'purchase_invoices'):
-            return obj.purchase_invoices.count()
-        return 0
+        return obj.purchase_invoices.filter(is_template=False).count()
 
 
 class ProviderWriteSerializer(serializers.ModelSerializer):
-
     tag_ids = serializers.PrimaryKeyRelatedField(
         source='tags', many=True, write_only=True,
-        queryset=Tag.objects.all(),
-        required=False,
+        queryset=Tag.objects.all(), required=False,
     )
     linked_contact_ids = serializers.PrimaryKeyRelatedField(
         source='linked_contacts', many=True, write_only=True,
-        queryset=Provider.objects.all(), required=False,
+        queryset=Customer.objects.filter(is_supplier=True), required=False,
     )
 
     class Meta:
-        model = Provider
+        model = Customer
         fields = [
             'id', 'name', 'contact_type', 'email', 'phone', 'website',
             'status', 'vat_id', 'legal_name',
@@ -127,12 +90,14 @@ class ProviderWriteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags = validated_data.pop('tags', [])
         linked = validated_data.pop('linked_contacts', [])
-        provider = Provider.objects.create(**validated_data)
+        validated_data['is_supplier'] = True
+        validated_data.setdefault('is_customer', False)
+        customer = Customer.objects.create(**validated_data)
         if tags:
-            provider.tags.set(tags)
+            customer.tags.set(tags)
         if linked:
-            provider.linked_contacts.set(linked)
-        return provider
+            customer.linked_contacts.set(linked)
+        return customer
 
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags', None)

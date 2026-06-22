@@ -25,7 +25,7 @@ const view = computed(() => getKpiView(props.analytics, props.kpi, props.chart, 
 
   <div v-else-if="view.empty" class="chart-empty">
     <Inbox :size="26" />
-    <span>Sin datos en este periodo</span>
+    <span>Sense dades en aquest període</span>
   </div>
 
   <KpiStat

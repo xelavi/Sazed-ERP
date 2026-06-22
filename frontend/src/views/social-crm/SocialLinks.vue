@@ -3,12 +3,12 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Enlaces y trazabilidad</h1>
+          <h1 class="view-title">Enllaços i traçabilitat</h1>
           <span class="count-badge">{{ filtered.length }}</span>
         </div>
         <div class="header-actions">
           <button class="btn btn-secondary"><Download :size="18" /><span>Exportar</span></button>
-          <button class="btn btn-primary" @click="openForm"><Plus :size="18" /><span>Crear enlace</span></button>
+          <button class="btn btn-primary" @click="openForm"><Plus :size="18" /><span>Crear enllaç</span></button>
         </div>
       </div>
     </div>
@@ -16,16 +16,16 @@
     <div class="content-wrapper">
       <div class="filters-bar">
         <select class="select" v-model="campaignFilter">
-          <option value="all">Todas las campañas</option>
+          <option value="all">Totes les campanyes</option>
           <option v-for="c in socialCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
         <select class="select" v-model="originFilter">
-          <option value="all">Todas las redes</option>
+          <option value="all">Totes les xarxes</option>
           <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
         </select>
         <select class="select" v-model="influencerFilter">
-          <option value="all">Todos los influencers</option>
-          <option value="organic">Solo orgánico</option>
+          <option value="all">Tots els influencers</option>
+          <option value="organic">Només orgànic</option>
           <option v-for="i in socialInfluencers" :key="i.id" :value="i.id">{{ i.alias }}</option>
         </select>
       </div>
@@ -35,18 +35,18 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Nombre del enlace</th>
-                <th>Campaña</th>
+                <th>Nom de l'enllaç</th>
+                <th>Campanya</th>
                 <th>Origen</th>
                 <th>UTM Source</th>
                 <th>UTM Campaign</th>
                 <th class="text-right">Clics</th>
-                <th class="text-right">Sesiones</th>
-                <th class="text-right">Carritos</th>
-                <th class="text-right">Compras</th>
-                <th class="text-right">Ingresos</th>
+                <th class="text-right">Sessions</th>
+                <th class="text-right">Cistelles</th>
+                <th class="text-right">Compres</th>
+                <th class="text-right">Ingressos</th>
                 <th class="text-right">Conv. %</th>
-                <th>Acciones</th>
+                <th>Accions</th>
               </tr>
             </thead>
             <tbody>
@@ -72,8 +72,8 @@
                 <td class="text-right"><span :class="convClass(lnk.conversion)">{{ lnk.conversion.toFixed(2) }}%</span></td>
                 <td @click.stop>
                   <div class="row-actions">
-                    <button class="icon-btn" @click="$router.push('/social-crm/links/' + lnk.id)" title="Ver detalle"><Eye :size="15" /></button>
-                    <button class="icon-btn" title="Copiar enlace" @click.stop="copyLink(lnk)"><Copy :size="15" /></button>
+                    <button class="icon-btn" @click="$router.push('/social-crm/links/' + lnk.id)" title="Veure detall"><Eye :size="15" /></button>
+                    <button class="icon-btn" title="Copiar enllaç" @click.stop="copyLink(lnk)"><Copy :size="15" /></button>
                   </div>
                 </td>
               </tr>
@@ -87,20 +87,20 @@
     <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
       <div class="modal">
         <div class="modal-header">
-          <h2 class="modal-title">Crear enlace trackeable</h2>
+          <h2 class="modal-title">Crear enllaç traçable</h2>
           <button class="icon-btn" @click="showForm = false"><X :size="20" /></button>
         </div>
         <div class="modal-body">
           <div class="form-grid">
-            <div class="field full-width"><label class="field-label">Nombre del enlace *</label><input class="input full" v-model="form.name" placeholder="Bio Link Primavera - Ana" /></div>
-            <div class="field full-width"><label class="field-label">URL destino *</label><input class="input full" v-model="form.url" placeholder="https://mystore.es/coleccion" /></div>
-            <div class="field"><label class="field-label">Campaña</label>
+            <div class="field full-width"><label class="field-label">Nom de l'enllaç *</label><input class="input full" v-model="form.name" placeholder="Bio Link Primavera - Ana" /></div>
+            <div class="field full-width"><label class="field-label">URL de destinació *</label><input class="input full" v-model="form.url" placeholder="https://mystore.es/coleccio" /></div>
+            <div class="field"><label class="field-label">Campanya</label>
               <select class="select full" v-model.number="form.campaignId">
-                <option :value="null">Sin campaña</option>
+                <option :value="null">Sense campanya</option>
                 <option v-for="c in socialCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
             </div>
-            <div class="field"><label class="field-label">Red / Origen</label>
+            <div class="field"><label class="field-label">Xarxa / Origen</label>
               <select class="select full" v-model="form.origin">
                 <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
               </select>
@@ -112,8 +112,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
-          <button class="btn btn-primary" @click="saveLink">Crear enlace</button>
+          <button class="btn btn-secondary" @click="showForm = false">Cancel·lar</button>
+          <button class="btn btn-primary" @click="saveLink">Crear enllaç</button>
         </div>
       </div>
     </div>
@@ -146,7 +146,7 @@ function convClass(v) { return v >= 5 ? 'conv-high' : v >= 2 ? 'conv-mid' : 'con
 
 function copyLink(lnk) {
   const url = `${lnk.url}?utm_source=${lnk.utmSource}&utm_medium=${lnk.utmMedium}&utm_campaign=${lnk.utmCampaign}&utm_content=${lnk.utmContent}`
-  navigator.clipboard.writeText(url).then(() => alert('Enlace copiado al portapapeles'))
+  navigator.clipboard.writeText(url).then(() => alert('Enllaç copiat al porta-retalls'))
 }
 
 function openForm() { Object.assign(form, { name: '', url: '', campaignId: null, origin: 'instagram', utmSource: '', utmMedium: 'social', utmCampaign: '', utmContent: '' }); showForm.value = true }

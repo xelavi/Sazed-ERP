@@ -5,7 +5,7 @@
         <div class="modal-container">
           <!-- Header -->
           <div class="modal-header">
-            <h2 class="modal-title">{{ isEditing ? 'Editar producto' : 'Nuevo producto' }}</h2>
+            <h2 class="modal-title">{{ isEditing ? 'Editar producte' : 'Nou producte' }}</h2>
             <button class="modal-close" @click="$emit('close')">
               <X :size="20" />
             </button>
@@ -16,53 +16,53 @@
             <!-- ==================== MAIN COLUMN ==================== -->
             <div class="modal-main">
 
-              <!-- ── Información básica ── -->
+              <!-- ── Informació bàsica ── -->
               <section class="form-section">
-                <h3 class="section-title">Información básica</h3>
-                <p class="section-desc">Describe tu producto. Podrás utilizarlo en documentos y en tu catálogo.</p>
+                <h3 class="section-title">Informació bàsica</h3>
+                <p class="section-desc">Descriu el teu producte. El podràs utilitzar en documents i al teu catàleg.</p>
 
                 <div class="field">
-                  <label class="field-label">Nombre del producto <span class="required">*</span></label>
-                  <input class="input" type="text" placeholder="Añade un nombre a tu producto" v-model="form.name" />
+                  <label class="field-label">Nom del producte <span class="required">*</span></label>
+                  <input class="input" type="text" placeholder="Afegeix un nom al teu producte" v-model="form.name" />
                 </div>
 
                 <div class="field">
                   <label class="field-label">SKU</label>
-                  <input class="input" type="text" placeholder="Ej: ERP-011" v-model="form.sku" />
+                  <input class="input" type="text" placeholder="Ex: ERP-011" v-model="form.sku" />
                 </div>
 
                 <div class="field">
-                  <label class="field-label">Descripción</label>
-                  <textarea class="input textarea" rows="3" placeholder="Especifica las características del artículo" v-model="form.description"></textarea>
+                  <label class="field-label">Descripció</label>
+                  <textarea class="input textarea" rows="3" placeholder="Especifica les característiques de l'article" v-model="form.description"></textarea>
                 </div>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Tipo</label>
+                    <label class="field-label">Tipus</label>
                     <select class="select" v-model="form.type">
-                      <option value="Product">Producto</option>
-                      <option value="Service">Servicio</option>
+                      <option value="Product">Producte</option>
+                      <option value="Service">Servei</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label class="field-label">Estado</label>
+                    <label class="field-label">Estat</label>
                     <select class="select" v-model="form.status">
-                      <option value="Active">Activo</option>
-                      <option value="Inactive">Inactivo</option>
-                      <option value="Archived">Archivado</option>
+                      <option value="Active">Actiu</option>
+                      <option value="Inactive">Inactiu</option>
+                      <option value="Archived">Arxivat</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label class="field-label">Unidad</label>
-                    <input class="input" type="text" placeholder="ud, kg, hora…" v-model="form.unit" />
+                    <label class="field-label">Unitat</label>
+                    <input class="input" type="text" placeholder="u, kg, hora…" v-model="form.unit" />
                   </div>
                 </div>
               </section>
 
-              <!-- ── Ventas ── -->
+              <!-- ── Vendes ── -->
               <section class="form-section">
-                <h3 class="section-title">Ventas</h3>
-                <p class="section-desc">Indica el subtotal y el impuesto aplicable. El importe total se calculará de forma automática.</p>
+                <h3 class="section-title">Vendes</h3>
+                <p class="section-desc">Indica el subtotal i l'impost aplicable. L'import total es calcularà automàticament.</p>
 
                 <div class="subsection-label">TARIFA PRINCIPAL</div>
                 <div class="field-row field-row-3">
@@ -74,12 +74,12 @@
                     </div>
                   </div>
                   <div class="field">
-                    <label class="field-label">Impuestos</label>
+                    <label class="field-label">Impostos</label>
                     <select class="select" v-model="form.tax">
                       <option value="21% IVA">IVA 21%</option>
                       <option value="10% IVA">IVA 10%</option>
                       <option value="4% IVA">IVA 4%</option>
-                      <option value="0% IVA">Exento</option>
+                      <option value="0% IVA">Exempt</option>
                     </select>
                   </div>
                   <div class="field">
@@ -92,133 +92,132 @@
                 </div>
               </section>
 
-              <!-- ── Compras ── -->
+              <!-- ── Compres ── -->
               <section class="form-section">
-                <h3 class="section-title">Compras</h3>
-                <p class="section-desc">Establece el coste medio y el precio de compra para documentos de compra.</p>
+                <h3 class="section-title">Compres</h3>
+                <p class="section-desc">Estableix el cost mitjà i el preu de compra per als documents de compra.</p>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Coste medio</label>
+                    <label class="field-label">Cost mitjà</label>
                     <div class="input-suffix">
                       <input class="input" type="number" step="0.01" min="0" placeholder="0" v-model.number="form.cost" />
                       <span class="suffix">€</span>
                     </div>
                   </div>
                   <div class="field">
-                    <label class="field-label">Proveedor por defecto</label>
-                    <input class="input" type="text" placeholder="Busca y selecciona proveedores" v-model="form.supplier" />
+                    <label class="field-label">Proveïdor per defecte</label>
+                    <select class="select" v-model="form.supplier">
+                      <option value="">Sense proveïdor</option>
+                      <option v-for="prov in providers" :key="prov.id" :value="prov.name">{{ prov.name }}</option>
+                    </select>
                   </div>
                 </div>
               </section>
 
-              <!-- ── Inventario ── -->
+              <!-- ── Inventari ── -->
               <section class="form-section">
-                <h3 class="section-title">Inventario</h3>
-                <p class="section-desc">Controla las existencias, puntos de pedido y ubicación en almacén.</p>
+                <h3 class="section-title">Inventari</h3>
+                <p class="section-desc">Controla les existències, els punts de comanda i la ubicació al magatzem.</p>
 
                 <div class="field-row field-row-3">
                   <div class="field">
-                    <label class="field-label">Stock actual</label>
+                    <label class="field-label">Estoc actual</label>
                     <input class="input" type="number" min="0" placeholder="0" v-model.number="form.stock" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Stock mínimo</label>
+                    <label class="field-label">Estoc mínim</label>
                     <input class="input" type="number" min="0" placeholder="0" v-model.number="form.minStock" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Punto de pedido</label>
+                    <label class="field-label">Punt de comanda</label>
                     <input class="input" type="number" min="0" placeholder="0" v-model.number="form.reorderPoint" />
                   </div>
                 </div>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Almacén</label>
-                    <input class="input" type="text" placeholder="Ej: Warehouse Madrid" v-model="form.warehouse" />
+                    <label class="field-label">Magatzem</label>
+                    <select class="select" v-model="form.warehouseId" @change="onWarehouseChange">
+                      <option :value="null">Sense magatzem</option>
+                      <option v-for="wh in warehouses" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
+                    </select>
                   </div>
                   <div class="field">
-                    <label class="field-label">Ubicación</label>
-                    <input class="input" type="text" placeholder="Ej: A-12-03" v-model="form.location" />
+                    <label class="field-label">Ubicació</label>
+                    <input class="input" type="text" placeholder="Ex: A-12-03" v-model="form.location" />
                   </div>
                 </div>
 
                 <div class="field-row">
                   <label class="toggle-field">
                     <input type="checkbox" class="checkbox" v-model="form.lotTracking" />
-                    <span>Seguimiento por lotes</span>
+                    <span>Seguiment per lots</span>
                   </label>
                 </div>
               </section>
 
-              <!-- ── Envío ── -->
+              <!-- ── Enviament ── -->
               <section class="form-section">
-                <h3 class="section-title">Envío</h3>
-                <p class="section-desc">Peso, dimensiones y clase de envío del producto.</p>
+                <h3 class="section-title">Enviament</h3>
+                <p class="section-desc">Pes, dimensions i classe d'enviament del producte.</p>
 
                 <div class="field-row field-row-3">
                   <div class="field">
-                    <label class="field-label">Peso</label>
-                    <input class="input" type="text" placeholder="Ej: 0.18 kg" v-model="form.weight" />
+                    <label class="field-label">Pes</label>
+                    <input class="input" type="text" placeholder="Ex: 0,18 kg" v-model="form.weight" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Dimensiones</label>
-                    <input class="input" type="text" placeholder="Ej: 30 × 25 × 2 cm" v-model="form.dimensions" />
+                    <label class="field-label">Dimensions</label>
+                    <input class="input" type="text" placeholder="Ex: 30 × 25 × 2 cm" v-model="form.dimensions" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Clase de envío</label>
+                    <label class="field-label">Classe d'enviament</label>
                     <select class="select" v-model="form.shippingClass">
-                      <option value="Standard">Standard</option>
-                      <option value="Bulky">Bulky</option>
-                      <option value="Fragile">Fragile</option>
+                      <option value="Standard">Estàndard</option>
+                      <option value="Bulky">Voluminós</option>
+                      <option value="Fragile">Fràgil</option>
                     </select>
                   </div>
                 </div>
 
                 <label class="toggle-field">
                   <input type="checkbox" class="checkbox" v-model="form.digital" />
-                  <span>Producto digital (sin envío físico)</span>
+                  <span>Producte digital (sense enviament físic)</span>
                 </label>
               </section>
 
-              <!-- ── Notas ── -->
+              <!-- ── Notes ── -->
               <section class="form-section">
-                <h3 class="section-title">Notas internas</h3>
-                <textarea class="input textarea" rows="3" placeholder="Añade notas internas sobre este producto…" v-model="form.notes"></textarea>
+                <h3 class="section-title">Notes internes</h3>
+                <textarea class="input textarea" rows="3" placeholder="Afegeix notes internes sobre aquest producte…" v-model="form.notes"></textarea>
               </section>
             </div>
 
             <!-- ==================== SIDEBAR COLUMN ==================== -->
             <div class="modal-sidebar">
 
-              <!-- ── Categorización ── -->
+              <!-- ── Categorització ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Categorización</h4>
-                <p class="sidebar-card-desc">Información adicional para completar la ficha del producto.</p>
+                <h4 class="sidebar-card-title">Categorització</h4>
+                <p class="sidebar-card-desc">Informació addicional per completar la fitxa del producte.</p>
 
                 <div class="field">
-                  <label class="field-label">Categoría</label>
-                  <select class="select" v-model="form.category">
-                    <option value="">Selecciona categoría</option>
-                    <option value="Clothing">Clothing</option>
-                    <option value="Footwear">Footwear</option>
-                    <option value="Accessories">Accessories</option>
-                    <option value="Electronics">Electronics</option>
-                    <option value="Food & Drink">Food & Drink</option>
-                    <option value="Furniture">Furniture</option>
-                    <option value="Beauty">Beauty</option>
-                    <option value="Services">Services</option>
+                  <label class="field-label">Categoria</label>
+                  <select class="select" v-model="form.categoryId">
+                    <option :value="null">Selecciona una categoria</option>
+                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                   </select>
                 </div>
 
                 <div class="field">
                   <label class="field-label">Marca</label>
-                  <input class="input" type="text" placeholder="Nombre de la marca" v-model="form.brand" />
+                  <input class="input" type="text" placeholder="Nom de la marca" v-model="form.brand" />
                 </div>
 
                 <div class="field">
-                  <label class="field-label">Etiquetas</label>
-                  <input class="input" type="text" placeholder="Busca o crea tags" v-model="tagInput" @keydown.enter.prevent="addTag" />
+                  <label class="field-label">Etiquetes</label>
+                  <input class="input" type="text" placeholder="Cerca o crea etiquetes" v-model="tagInput" @keydown.enter.prevent="addTag" />
                   <div v-if="form.tags.length" class="tags-list">
                     <span v-for="(tag, i) in form.tags" :key="i" class="tag-chip">
                       {{ tag }}
@@ -230,15 +229,15 @@
                 </div>
               </div>
 
-              <!-- ── Canales de venta ── -->
+              <!-- ── Canals de venda ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Canales de venta</h4>
-                <p class="sidebar-card-desc">Selecciona dónde se publicará este producto.</p>
+                <h4 class="sidebar-card-title">Canals de venda</h4>
+                <p class="sidebar-card-desc">Selecciona on es publicarà aquest producte.</p>
 
                 <label class="toggle-field">
                   <input type="checkbox" class="checkbox" v-model="channelWeb" />
                   <Globe :size="16" class="toggle-icon" />
-                  <span>Web / Online Store</span>
+                  <span>Web / Botiga en línia</span>
                 </label>
                 <label class="toggle-field">
                   <input type="checkbox" class="checkbox" v-model="channelMarketplace" />
@@ -247,10 +246,10 @@
                 </label>
               </div>
 
-              <!-- ── Imagen del producto ── -->
+              <!-- ── Imatge del producte ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Imagen del producto</h4>
-                <p class="sidebar-card-desc">Sube una imagen de tu producto. Podrás utilizarla en documentos y en tu catálogo.</p>
+                <h4 class="sidebar-card-title">Imatge del producte</h4>
+                <p class="sidebar-card-desc">Puja una imatge del teu producte. La podràs utilitzar en documents i al teu catàleg.</p>
 
                 <input
                   ref="fileInput"
@@ -261,7 +260,7 @@
                 />
 
                 <div v-if="form.imagePreview" class="image-preview">
-                  <img :src="form.imagePreview" alt="Vista previa" />
+                  <img :src="form.imagePreview" alt="Vista prèvia" />
                   <button class="image-remove" type="button" @click="removeImage">
                     <X :size="14" />
                   </button>
@@ -277,22 +276,22 @@
                   @drop.prevent="onDrop"
                 >
                   <Upload :size="28" class="upload-icon" />
-                  <span class="upload-text">Selecciona o arrastra aquí tus archivos</span>
-                  <span class="upload-hint">Hasta 30 MB y 7680 × 4320 píxeles<br>(JPEG, JPG, PNG)</span>
+                  <span class="upload-text">Selecciona o arrossega aquí els teus fitxers</span>
+                  <span class="upload-hint">Fins a 30 MB i 7680 × 4320 píxels<br>(JPEG, JPG, PNG)</span>
                 </div>
               </div>
 
-              <!-- ── Opciones ── -->
+              <!-- ── Opcions ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Opciones</h4>
+                <h4 class="sidebar-card-title">Opcions</h4>
 
                 <label class="toggle-field">
                   <input type="checkbox" class="checkbox" v-model="form.sellable" />
-                  <span>Se puede vender</span>
+                  <span>Es pot vendre</span>
                 </label>
                 <label class="toggle-field">
                   <input type="checkbox" class="checkbox" v-model="form.purchasable" />
-                  <span>Se puede comprar</span>
+                  <span>Es pot comprar</span>
                 </label>
               </div>
             </div>
@@ -303,7 +302,7 @@
             <button class="btn btn-secondary" @click="$emit('close')">Descartar</button>
             <button class="btn btn-primary" @click="handleSave">
               <Check :size="18" />
-              <span>Guardar</span>
+              <span>Desar</span>
             </button>
           </div>
         </div>
@@ -313,9 +312,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, computed } from 'vue'
+import { ref, reactive, watch, computed, onMounted, nextTick } from 'vue'
 import { X, Upload, Globe, Store, Check } from 'lucide-vue-next'
 import Swal from 'sweetalert2'
+import productsApi from '@/services/products'
+import coreApi from '@/services/core'
+import providersApi from '@/services/providers'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -334,19 +336,21 @@ function blankForm() {
     description: '',
     type: 'Product',
     status: 'Active',
-    unit: 'ud',
+    unit: 'u',
     category: '',
+    categoryId: null,
     brand: '',
     tags: [],
     price: null,
     priceExclTax: null,
     tax: '21% IVA',
+    taxRateId: null,
     cost: null,
     supplier: '',
     stock: null,
     minStock: null,
     reorderPoint: null,
-    warehouse: '',
+    warehouseId: null,
     location: '',
     lotTracking: false,
     weight: '',
@@ -363,21 +367,66 @@ function blankForm() {
 
 const form = reactive(blankForm())
 const tagInput = ref('')
+
+/* ── Càlcul automàtic del total (PVP) a partir del subtotal i l'IVA ── */
+const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100
+
+const taxRate = computed(() => {
+  const m = String(form.tax || '').match(/(\d+(?:[.,]\d+)?)/)
+  return m ? parseFloat(m[1].replace(',', '.')) / 100 : 0
+})
+
+// Evita recalcular mentre es carrega un producte existent al formulari
+let suppressPriceSync = false
+
+watch(
+  () => [form.priceExclTax, form.tax],
+  () => {
+    if (suppressPriceSync) return
+    if (form.priceExclTax === null || form.priceExclTax === '' || isNaN(form.priceExclTax)) return
+    form.price = round2(Number(form.priceExclTax) * (1 + taxRate.value))
+  }
+)
+
 const channelWeb = ref(false)
 const channelMarketplace = ref(false)
 const fileInput = ref(null)
 const isDragging = ref(false)
+const categories = ref([])
+const warehouses = ref([])
+const providers = ref([])
+
+onMounted(async () => {
+  try {
+    const data = await productsApi.getCategories()
+    categories.value = Array.isArray(data) ? data : (data.results ?? [])
+  } catch {
+    categories.value = []
+  }
+  try {
+    const data = await coreApi.warehouses.getAll()
+    warehouses.value = Array.isArray(data) ? data : (data.results ?? [])
+  } catch {
+    warehouses.value = []
+  }
+  try {
+    const data = await providersApi.getAll()
+    providers.value = Array.isArray(data) ? data : (data.results ?? [])
+  } catch {
+    providers.value = []
+  }
+})
 
 /* ── Image upload ── */
 function setImage(file) {
   if (!file) return
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png']
   if (!validTypes.includes(file.type)) {
-    Swal.fire({ icon: 'warning', title: 'Formato no válido', text: 'Solo se admiten archivos JPEG, JPG o PNG.', confirmButtonColor: '#667eea', target: document.body, heightAuto: false })
+    Swal.fire({ icon: 'warning', title: 'Format no vàlid', text: 'Només s\'admeten fitxers JPEG, JPG o PNG.', confirmButtonColor: '#667eea', target: document.body, heightAuto: false })
     return
   }
   if (file.size > 30 * 1024 * 1024) {
-    Swal.fire({ icon: 'warning', title: 'Archivo demasiado grande', text: 'La imagen no puede superar los 30 MB.', confirmButtonColor: '#667eea', target: document.body, heightAuto: false })
+    Swal.fire({ icon: 'warning', title: 'Fitxer massa gran', text: 'La imatge no pot superar els 30 MB.', confirmButtonColor: '#667eea', target: document.body, heightAuto: false })
     return
   }
   form.imageFile = file
@@ -403,25 +452,28 @@ function removeImage() {
 watch(() => props.open, (isOpen) => {
   if (isOpen && props.product) {
     const p = props.product
+    suppressPriceSync = true
     Object.assign(form, {
       name: p.name,
       sku: p.sku,
       description: p.detail?.description || '',
       type: p.type,
       status: p.status,
-      unit: p.detail?.unit || 'ud',
+      unit: p.detail?.unit || 'u',
       category: p.category,
+      categoryId: p.categoryId || null,
       brand: p.detail?.brand || '',
       tags: [...(p.detail?.tags || [])],
       price: p.price,
       priceExclTax: p.detail?.priceExclTax || null,
       tax: p.tax,
+      taxRateId: p.taxRateId || null,
       cost: p.cost,
       supplier: p.supplier || '',
       stock: p.stock,
       minStock: p.detail?.minStock || null,
       reorderPoint: p.detail?.reorderPoint || null,
-      warehouse: p.detail?.warehouse || '',
+      warehouseId: p.detail?.warehouseId || null,
       location: p.detail?.location || '',
       lotTracking: p.detail?.lotTracking || false,
       weight: p.detail?.weight || '',
@@ -442,7 +494,15 @@ watch(() => props.open, (isOpen) => {
     channelMarketplace.value = false
     tagInput.value = ''
   }
+  // Reactiva el càlcul automàtic un cop el formulari ja s'ha poblat
+  nextTick(() => { suppressPriceSync = false })
 })
+
+/* ── Warehouse ── */
+function onWarehouseChange() {
+  const wh = warehouses.value.find(w => w.id === form.warehouseId)
+  if (wh?.address) form.location = wh.address
+}
 
 /* ── Tags ── */
 function addTag() {
@@ -460,14 +520,14 @@ function removeTag(index) {
 /* ── Save ── */
 function handleSave() {
   const errors = []
-  if (!form.name.trim()) errors.push('Product name is required')
-  if (form.price !== null && form.price < 0) errors.push('Price cannot be negative')
-  if (form.cost !== null && form.cost < 0) errors.push('Cost cannot be negative')
+  if (!form.name.trim()) errors.push('El nom del producte és obligatori')
+  if (form.price !== null && form.price < 0) errors.push('El preu no pot ser negatiu')
+  if (form.cost !== null && form.cost < 0) errors.push('El cost no pot ser negatiu')
 
   if (errors.length) {
     Swal.fire({
       icon: 'warning',
-      title: 'Required fields missing',
+      title: 'Falten camps obligatoris',
       html: `<ul style="text-align:left;margin:0;padding-left:1.2em">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`,
       confirmButtonText: 'OK',
       confirmButtonColor: '#667eea',

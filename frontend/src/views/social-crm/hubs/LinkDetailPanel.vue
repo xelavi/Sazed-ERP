@@ -15,7 +15,7 @@
         <code class="url-text">{{ shortUrl }}</code>
         <button class="url-copy" @click="copyUrl" :class="{ copied }">
           <component :is="copied ? Check : Copy" :size="12" />
-          <span>{{ copied ? 'Copiado' : 'Copiar' }}</span>
+          <span>{{ copied ? 'Copiat' : 'Copiar' }}</span>
         </button>
       </div>
     </div>
@@ -23,11 +23,11 @@
     <!-- KPIs -->
     <div class="quick-stats">
       <div class="qs-cell qs-revenue">
-        <div class="qs-key">Ingresos</div>
+        <div class="qs-key">Ingressos</div>
         <div class="qs-val">{{ formatCurrency(lnk.revenue) }}</div>
       </div>
       <div class="qs-cell">
-        <div class="qs-key">Conversión</div>
+        <div class="qs-key">Conversió</div>
         <div class="qs-val">
           <span class="conv-pill" :class="convClass(lnk.conversion)">
             {{ lnk.conversion.toFixed(2) }}%
@@ -38,7 +38,7 @@
 
     <!-- Funnel visualization -->
     <section class="panel-section">
-      <h3 class="section-title">Embudo de conversión</h3>
+      <h3 class="section-title">Embut de conversió</h3>
       <div class="funnel">
         <div
           v-for="(step, i) in funnelSteps"
@@ -64,7 +64,7 @@
           <div v-if="i > 0" class="funnel-pct">
             <ArrowDown :size="10" />
             {{ ((step.value / funnelSteps[i-1].value) * 100).toFixed(1) }}%
-            <span class="muted">paso a paso</span>
+            <span class="muted">pas a pas</span>
           </div>
         </div>
       </div>
@@ -72,7 +72,7 @@
 
     <!-- Daily evolution chart -->
     <section class="panel-section">
-      <h3 class="section-title">Evolución (30 días)</h3>
+      <h3 class="section-title">Evolució (30 dies)</h3>
       <div class="evo-chart">
         <div
           v-for="(d, i) in evoData"
@@ -92,7 +92,7 @@
       <div class="evo-legend">
         <span class="legend-item">
           <span class="legend-dot"></span>
-          Clics diarios
+          Clics diaris
         </span>
         <span class="legend-stat">Total: {{ formatNumber(lnk.clicks) }}</span>
       </div>
@@ -100,7 +100,7 @@
 
     <!-- UTM details -->
     <section class="panel-section">
-      <h3 class="section-title">Parámetros UTM</h3>
+      <h3 class="section-title">Paràmetres UTM</h3>
       <div class="utm-list">
         <div v-for="utm in utmRows" :key="utm.key" class="utm-row">
           <span class="utm-key">{{ utm.key }}</span>
@@ -111,18 +111,18 @@
 
     <!-- Linked entities -->
     <section class="panel-section">
-      <h3 class="section-title">Vinculaciones</h3>
+      <h3 class="section-title">Vinculacions</h3>
       <dl class="info-list">
         <div class="info-row">
-          <dt>Campaña</dt>
+          <dt>Campanya</dt>
           <dd>{{ lnk.campaignName || '—' }}</dd>
         </div>
         <div class="info-row">
           <dt>Influencer</dt>
-          <dd>{{ lnk.influencerName || 'Orgánico' }}</dd>
+          <dd>{{ lnk.influencerName || 'Orgànic' }}</dd>
         </div>
         <div class="info-row">
-          <dt>URL destino</dt>
+          <dt>URL destí</dt>
           <dd>
             <a :href="lnk.url" target="_blank" class="dest-link">
               {{ lnk.url }}
@@ -135,7 +135,7 @@
 
     <!-- Footer -->
     <div class="panel-footer">
-      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Cerrar</button>
+      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Tancar</button>
       <button class="panel-btn panel-btn-primary" @click="copyUrl">
         <Copy :size="13" />
         Copiar URL completa
@@ -145,7 +145,7 @@
 
   <div v-else class="panel-empty">
     <AlertCircle :size="20" />
-    <span>Enlace no encontrado.</span>
+    <span>Enllaç no trobat.</span>
   </div>
 </template>
 
@@ -185,10 +185,10 @@ const fullUrl = computed(() => {
 })
 
 const funnelSteps = computed(() => lnk.value ? [
-  { label: 'Clics',    value: lnk.value.clicks },
-  { label: 'Sesiones', value: lnk.value.sessions },
-  { label: 'Carritos', value: lnk.value.carts },
-  { label: 'Compras',  value: lnk.value.purchases },
+  { label: 'Clics',      value: lnk.value.clicks },
+  { label: 'Sessions',   value: lnk.value.sessions },
+  { label: 'Cistelles',  value: lnk.value.carts },
+  { label: 'Compres',    value: lnk.value.purchases },
 ] : [])
 
 const funnelColors = ['#667eea', '#764ba2', '#F59E0B', '#10B981']

@@ -284,24 +284,29 @@ def push_sales_invoice(invoice, company, *, post: bool = True, user=None) -> int
         ID en Odoo (`account.move.id`).
 
     Notas:
-        - Idempotencia: si `invoice.odoo_id` está poblado, hace `write`.
-        - Para create: no se intenta matching por número (Odoo asigna su
-          propia secuencia al confirmar). Toda factura sin `odoo_id` se crea.
+        - Idempotencia: si `invoice.odoo_id` está poblado y ya está posted
+          en Odoo, se salta el write (las facturas conciliadas no se pueden
+          modificar). Solo se crea si no tiene odoo_id.
     """
     connection = OdooConnection.objects.get(company=company, is_active=True)
     client = get_client_for(connection)
     adapter = SalesInvoiceAdapter(client)
     payload = adapter.to_odoo(invoice, company=company)
 
-    odoo_id = _run_push(
-        company=company, user=user,
-        entity_type='sales_invoice', entity_id=str(invoice.pk),
-        payload=payload,
-        find_existing=lambda: None,  # nunca buscamos por matching natural
-        write=lambda oid, data: client.update_invoice(oid, data),
-        create=lambda data: client.create_invoice(data),
-        current_odoo_id=invoice.odoo_id,
-    )
+    # Si ya existe en Odoo y está confirmada, no intentamos write (daría RPCError)
+    if invoice.odoo_id and _is_invoice_posted(client, invoice.odoo_id):
+        odoo_id = invoice.odoo_id
+        logger.debug('sales_invoice %s ya está posted en Odoo (%s); se salta write.', invoice.pk, odoo_id)
+    else:
+        odoo_id = _run_push(
+            company=company, user=user,
+            entity_type='sales_invoice', entity_id=str(invoice.pk),
+            payload=payload,
+            find_existing=lambda: None,
+            write=lambda oid, data: client.update_invoice(oid, data),
+            create=lambda data: client.create_invoice(data),
+            current_odoo_id=invoice.odoo_id,
+        )
 
     if invoice.odoo_id != odoo_id:
         invoice.odoo_id = odoo_id
@@ -336,15 +341,20 @@ def push_purchase_invoice(invoice, company, *, post: bool = False, user=None) ->
     adapter = PurchaseInvoiceAdapter(client)
     payload = adapter.to_odoo(invoice, company=company)
 
-    odoo_id = _run_push(
-        company=company, user=user,
-        entity_type='purchase_invoice', entity_id=str(invoice.pk),
-        payload=payload,
-        find_existing=lambda: None,
-        write=lambda oid, data: client.update_invoice(oid, data),
-        create=lambda data: client.create_invoice(data),
-        current_odoo_id=invoice.odoo_id,
-    )
+    # Si ya existe en Odoo y está confirmada, no intentamos write (daría RPCError)
+    if invoice.odoo_id and _is_invoice_posted(client, invoice.odoo_id):
+        odoo_id = invoice.odoo_id
+        logger.debug('purchase_invoice %s ya está posted en Odoo (%s); se salta write.', invoice.pk, odoo_id)
+    else:
+        odoo_id = _run_push(
+            company=company, user=user,
+            entity_type='purchase_invoice', entity_id=str(invoice.pk),
+            payload=payload,
+            find_existing=lambda: None,
+            write=lambda oid, data: client.update_invoice(oid, data),
+            create=lambda data: client.create_invoice(data),
+            current_odoo_id=invoice.odoo_id,
+        )
 
     if invoice.odoo_id != odoo_id:
         invoice.odoo_id = odoo_id
@@ -366,6 +376,21 @@ def push_purchase_invoice(invoice, company, *, post: bool = False, user=None) ->
 
     _touch_connection(connection, success=True)
     return odoo_id
+
+
+def _is_invoice_posted(client: OdooClient, odoo_id: int) -> bool:
+    """Comprova si una factura a Odoo ja està en estat 'posted' (confirmada).
+
+    Retorna True si està posted o cancel (qualsevol estat que ja no es pot modificar).
+    Retorna False si està en draft o si no es pot determinar (safe fallback).
+    """
+    try:
+        invoice = client.get_invoice(odoo_id, ['state'])
+        if invoice:
+            return invoice.get('state') in ('posted', 'cancel')
+    except Exception:  # noqa: BLE001
+        pass
+    return False
 
 
 def _post_invoice_safely(

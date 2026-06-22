@@ -21,7 +21,7 @@
 
     <!-- Performance vs Expected -->
     <section class="panel-section">
-      <h3 class="section-title">Rendimiento vs. esperado</h3>
+      <h3 class="section-title">Rendiment vs. esperat</h3>
       <div class="perf-grid">
         <div class="perf-row" v-for="m in perfMetrics" :key="m.key">
           <div class="perf-name">{{ m.label }}</div>
@@ -43,7 +43,7 @@
 
     <!-- Engagement metrics -->
     <section class="panel-section">
-      <h3 class="section-title">Métricas reportadas</h3>
+      <h3 class="section-title">Mètriques reportades</h3>
       <div class="metrics-grid">
         <div class="metric-cell">
           <Heart :size="14" />
@@ -53,28 +53,28 @@
         <div class="metric-cell">
           <MessageCircle :size="14" />
           <div class="m-val">{{ formatNumber(collab.comments) }}</div>
-          <div class="m-key">Comentarios</div>
+          <div class="m-key">Comentaris</div>
         </div>
         <div class="metric-cell">
           <Share2 :size="14" />
           <div class="m-val">{{ formatNumber(collab.shares) }}</div>
-          <div class="m-key">Compartidos</div>
+          <div class="m-key">Compartits</div>
         </div>
         <div class="metric-cell">
           <Eye :size="14" />
           <div class="m-val">{{ formatNumber(collab.impressions) }}</div>
-          <div class="m-key">Impresiones</div>
+          <div class="m-key">Impressions</div>
         </div>
       </div>
     </section>
 
-    <!-- Acuerdo -->
+    <!-- Acord -->
     <section class="panel-section">
-      <h3 class="section-title">Acuerdo</h3>
+      <h3 class="section-title">Acord</h3>
       <dl class="info-list">
-        <div class="info-row"><dt>Formato</dt><dd>{{ collab.format }}</dd></div>
-        <div class="info-row"><dt>Publicación</dt><dd>{{ formatDate(collab.publishDate) }}</dd></div>
-        <div class="info-row"><dt>Coste</dt><dd class="font-mono">{{ formatCurrency(collab.cost) }}</dd></div>
+        <div class="info-row"><dt>Format</dt><dd>{{ collab.format }}</dd></div>
+        <div class="info-row"><dt>Publicació</dt><dd>{{ formatDate(collab.publishDate) }}</dd></div>
+        <div class="info-row"><dt>Cost</dt><dd class="font-mono">{{ formatCurrency(collab.cost) }}</dd></div>
         <div class="info-row" v-if="roas">
           <dt>ROAS</dt>
           <dd>
@@ -86,13 +86,13 @@
 
     <!-- Deliverables -->
     <section v-if="collab.deliverables" class="panel-section">
-      <h3 class="section-title">Entregables</h3>
+      <h3 class="section-title">Lliurables</h3>
       <p class="deliverables-text">{{ collab.deliverables }}</p>
     </section>
 
     <!-- Evidences -->
     <section v-if="collab.evidences?.length" class="panel-section">
-      <h3 class="section-title">Evidencias</h3>
+      <h3 class="section-title">Evidències</h3>
       <ul class="ev-list">
         <li v-for="ev in collab.evidences" :key="ev" class="ev-item">
           <Paperclip :size="13" />
@@ -103,7 +103,7 @@
 
     <!-- Observations -->
     <section v-if="collab.observations || collab.recommendation" class="panel-section">
-      <h3 class="section-title">Observaciones</h3>
+      <h3 class="section-title">Observacions</h3>
       <p v-if="collab.observations" class="notes-text">{{ collab.observations }}</p>
       <p v-if="collab.recommendation" class="reco-text">
         <ThumbsUp :size="13" />
@@ -113,7 +113,7 @@
 
     <!-- Footer actions -->
     <div class="panel-footer">
-      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Cerrar</button>
+      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Tancar</button>
       <button class="panel-btn panel-btn-primary">
         <Pencil :size="14" />
         Editar
@@ -123,7 +123,7 @@
 
   <div v-else class="panel-empty">
     <AlertCircle :size="20" />
-    <span>Colaboración no encontrada.</span>
+    <span>Col·laboració no trobada.</span>
   </div>
 </template>
 
@@ -149,9 +149,9 @@ const collab = computed(() => socialCollaborations.find(c => c.id === props.coll
 const perfMetrics = computed(() => {
   if (!collab.value) return []
   return [
-    { key: 'reach',       label: 'Alcance',     actual: collab.value.reach,       expected: collab.value.expectedReach,       format: 'number' },
+    { key: 'reach',       label: 'Abast',       actual: collab.value.reach,       expected: collab.value.expectedReach,       format: 'number' },
     { key: 'clicks',      label: 'Clics',       actual: collab.value.clicks,      expected: collab.value.expectedClicks,      format: 'number' },
-    { key: 'conversions', label: 'Conversiones',actual: collab.value.conversions, expected: collab.value.expectedConversions, format: 'number' },
+    { key: 'conversions', label: 'Conversions', actual: collab.value.conversions, expected: collab.value.expectedConversions, format: 'number' },
   ].filter(m => m.expected > 0 || m.actual > 0)
 })
 

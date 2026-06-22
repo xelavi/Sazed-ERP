@@ -36,11 +36,12 @@ def resolve_vat_rate(percent, company=None):
     return qs.first()
 
 
-def apply_line_vat(line_tax_model, line, tax_percent, company=None):
+def apply_line_vat(line_tax_model, line, tax_percent, company=None, line_fk_name='invoice_line'):
     """Crea la línea de impuesto para `line` a partir de un porcentaje de IVA.
 
     No hace nada si el porcentaje es 0/None o no existe un TaxRate equivalente.
     El importe se calcula sobre el subtotal de la línea (ya neto de su descuento).
+    `line_fk_name` permet especificar el nom del FK (p.ex. 'quote_line' per a QuoteLineTax).
     """
     rate = resolve_vat_rate(tax_percent, company)
     if rate is None:
@@ -49,7 +50,7 @@ def apply_line_vat(line_tax_model, line, tax_percent, company=None):
     base = line.subtotal or Decimal('0')
     tax_amount = (base * rate.percent / Decimal('100')).quantize(CENTS)
     return line_tax_model.objects.create(
-        invoice_line=line,
+        **{line_fk_name: line},
         tax_rate=rate,
         tax_name=rate.name,
         tax_percent=rate.percent,

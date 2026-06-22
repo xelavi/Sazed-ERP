@@ -5,13 +5,13 @@
         <div class="modal-container">
           <div class="modal-header">
             <h2 class="modal-title">
-              {{ isEditing ? 'Edit quote' : (mode === 'purchase' ? 'New purchase quote' : 'New quote') }}
+              {{ isEditing ? 'Editar pressupost' : (mode === 'purchase' ? 'Nou pressupost de compra' : 'Nou pressupost') }}
             </h2>
             <div class="modal-header-actions">
-              <button class="btn btn-secondary btn-sm" @click="$emit('close')">Cancel</button>
+              <button class="btn btn-secondary btn-sm" @click="$emit('close')">Cancel·lar</button>
               <button class="btn btn-primary btn-sm" @click="handleSave">
                 <Save :size="16" />
-                <span>Save</span>
+                <span>Desar</span>
               </button>
             </div>
           </div>
@@ -19,14 +19,14 @@
           <div class="modal-body">
             <div class="modal-main">
               <section class="form-section">
-                <h3 class="section-title">Quote details</h3>
+                <h3 class="section-title">Dades del pressupost</h3>
 
                 <div class="field">
-                  <label class="field-label">Name <span class="required">*</span></label>
+                  <label class="field-label">Nom <span class="required">*</span></label>
                   <input
                     class="input"
                     type="text"
-                    placeholder="e.g. Servicios consultoría enero..."
+                    placeholder="p. ex. Serveis de consultoria gener…"
                     v-model="form.name"
                   />
                 </div>
@@ -35,45 +35,45 @@
                   <div class="field">
                     <label class="field-label">{{ contactLabel }} <span class="required">*</span></label>
                     <select class="select" v-model="form.contactId">
-                      <option value="">Select {{ contactLabel.toLowerCase() }}...</option>
+                      <option value="">Selecciona {{ contactLabel.toLowerCase() }}…</option>
                       <option v-for="c in contactOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
-                      <option value="__new__">+ Crear nuevo {{ mode === 'purchase' ? 'proveedor' : 'cliente' }}…</option>
+                      <option value="__new__">+ Crear {{ mode === 'purchase' ? 'un proveïdor' : 'un client' }} nou…</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label class="field-label">Status</label>
+                    <label class="field-label">Estat</label>
                     <select class="select" v-model="form.status">
-                      <option value="Draft">Borrador</option>
-                      <option value="Sent">{{ mode === 'purchase' ? 'Solicitado' : 'Enviado' }}</option>
-                      <option value="Accepted">Aceptado</option>
-                      <option value="Rejected">Rechazado</option>
-                      <option value="Expired">Expirado</option>
+                      <option value="Draft">Esborrany</option>
+                      <option value="Sent">{{ mode === 'purchase' ? 'Sol·licitat' : 'Enviat' }}</option>
+                      <option value="Accepted">Acceptat</option>
+                      <option value="Rejected">Rebutjat</option>
+                      <option value="Expired">Caducat</option>
                     </select>
                   </div>
                 </div>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Issue date <span class="required">*</span></label>
+                    <label class="field-label">Data d'emissió <span class="required">*</span></label>
                     <input class="input" type="date" v-model="form.issueDate" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Valid until</label>
+                    <label class="field-label">Vàlid fins</label>
                     <input class="input" type="date" v-model="form.validUntil" />
                   </div>
                 </div>
               </section>
 
               <section class="form-section">
-                <h3 class="section-title">Items</h3>
-                <p class="section-desc">Add products or services. Totals are calculated automatically.</p>
+                <h3 class="section-title">Línies</h3>
+                <p class="section-desc">Afegeix productes o serveis. Els totals es calculen automàticament.</p>
 
                 <div class="lines-editor">
                   <div class="le-header">
-                    <span class="le-h-desc">Description</span>
-                    <span class="le-h-qty">Qty</span>
-                    <span class="le-h-price">Price</span>
-                    <span class="le-h-tax">Tax %</span>
+                    <span class="le-h-desc">Descripció</span>
+                    <span class="le-h-qty">Qt.</span>
+                    <span class="le-h-price">Preu</span>
+                    <span class="le-h-tax">IVA %</span>
                     <span class="le-h-subtotal">Subtotal</span>
                     <span class="le-h-actions"></span>
                   </div>
@@ -84,7 +84,7 @@
                       :products="products"
                       :linked-product-id="line.productId"
                       :price-mode="mode === 'purchase' ? 'purchase' : 'sale'"
-                      placeholder="Producto o servicio..."
+                      placeholder="Producte o servei…"
                       @select="(p) => onProductSelect(line, p)"
                       @clear="onProductClear(line)"
                     />
@@ -97,7 +97,7 @@
                       <option :value="21">21%</option>
                     </select>
                     <span class="subtotal-value">{{ formatCurrency(calcLineSubtotal(line)) }}</span>
-                    <button class="btn-icon-sm" @click="removeLine(idx)" title="Remove">
+                    <button class="btn-icon-sm" @click="removeLine(idx)" title="Eliminar">
                       <Trash2 :size="14" />
                     </button>
                   </div>
@@ -105,18 +105,18 @@
 
                 <button class="btn btn-secondary btn-sm add-line-btn" @click="addLine">
                   <Plus :size="16" />
-                  <span>Add line</span>
+                  <span>Afegir línia</span>
                 </button>
               </section>
 
               <section class="form-section">
                 <h3 class="section-title">Notes</h3>
                 <div class="field">
-                  <label class="field-label">{{ mode === 'purchase' ? 'Provider notes' : 'Customer notes' }}</label>
+                  <label class="field-label">{{ mode === 'purchase' ? 'Notes del proveïdor' : 'Notes per al client' }}</label>
                   <textarea class="input textarea" rows="2" v-model="form.contactNotes"></textarea>
                 </div>
                 <div class="field">
-                  <label class="field-label">Internal notes</label>
+                  <label class="field-label">Notes internes</label>
                   <textarea class="input textarea" rows="2" v-model="form.internalNotes"></textarea>
                 </div>
               </section>
@@ -124,14 +124,14 @@
 
             <div class="modal-sidebar">
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Summary</h4>
+                <h4 class="sidebar-card-title">Resum</h4>
                 <div class="sidebar-totals">
                   <div class="sidebar-total-row">
                     <span>Subtotal</span>
                     <span>{{ formatCurrency(calcSubtotal) }}</span>
                   </div>
                   <div class="sidebar-total-row">
-                    <span>Taxes</span>
+                    <span>Impostos</span>
                     <span>{{ formatCurrency(calcTotalTax) }}</span>
                   </div>
                   <div class="sidebar-total-row total-final-row">
@@ -189,7 +189,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save', 'contact-created'])
 
 const isEditing = computed(() => !!props.quote)
-const contactLabel = computed(() => props.mode === 'purchase' ? 'Provider' : 'Customer')
+const contactLabel = computed(() => props.mode === 'purchase' ? 'Proveïdor' : 'Client')
 
 /* ── Contact options + inline creation ── */
 const extraContacts = ref([]) // contacts created inline from this modal
@@ -246,7 +246,7 @@ async function handleContactCreated(formData) {
     Swal.fire({
       icon: 'error',
       title: 'Error',
-      text: err.message || 'No se pudo crear el contacto',
+      text: err.message || 'No s\'ha pogut crear el contacte',
       confirmButtonColor: '#667eea',
       customClass: { popup: 'swal-erp-popup' },
       target: document.body,
@@ -338,7 +338,7 @@ const calcTotalTax = computed(() =>
 const calcTotal = computed(() => calcSubtotal.value + calcTotalTax.value)
 
 function formatCurrency(v) {
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(v || 0)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(v || 0)
 }
 
 function handleSave() {

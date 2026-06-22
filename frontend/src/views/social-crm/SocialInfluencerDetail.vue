@@ -10,7 +10,7 @@
         <div class="header-actions">
           <span class="badge" v-if="inf" :class="statusClass(inf.status)">{{ statusLabel(inf.status) }}</span>
           <button class="btn btn-secondary"><Pencil :size="18" /><span>Editar</span></button>
-          <button class="btn btn-primary" @click="$router.push('/social-crm/collaborations')"><Plus :size="18" /><span>Crear colaboración</span></button>
+          <button class="btn btn-primary" @click="$router.push('/social-crm/collaborations')"><Plus :size="18" /><span>Crear col·laboració</span></button>
         </div>
       </div>
     </div>
@@ -30,14 +30,14 @@
             </div>
           </div>
           <div class="profile-details">
-            <div class="detail-row"><span class="det-key">Nicho</span><span>{{ inf.niche }}</span></div>
-            <div class="detail-row"><span class="det-key">Contacto</span><span>{{ inf.contact }}</span></div>
-            <div class="detail-row"><span class="det-key">Agencia</span><span>{{ inf.agency || '—' }}</span></div>
+            <div class="detail-row"><span class="det-key">Nínxol</span><span>{{ inf.niche }}</span></div>
+            <div class="detail-row"><span class="det-key">Contacte</span><span>{{ inf.contact }}</span></div>
+            <div class="detail-row"><span class="det-key">Agència</span><span>{{ inf.agency || '—' }}</span></div>
             <div class="detail-row"><span class="det-key">País</span><span>{{ inf.country }}</span></div>
             <div class="detail-row"><span class="det-key">Idioma</span><span>{{ inf.language }}</span></div>
           </div>
           <div class="notes-section">
-            <div class="notes-label">Notas internas</div>
+            <div class="notes-label">Notes internes</div>
             <div class="notes-text">{{ inf.notes || '—' }}</div>
           </div>
         </div>
@@ -45,11 +45,11 @@
         <!-- Metrics -->
         <div class="metrics-col">
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Métricas generales (media)</h3></div>
+            <div class="card-header"><h3 class="card-title">Mètriques generals (mitjana)</h3></div>
             <div class="metrics-grid">
               <div class="metric-item">
                 <div class="metric-val">{{ formatNumber(inf.followers) }}</div>
-                <div class="metric-label">Seguidores</div>
+                <div class="metric-label">Seguidors</div>
               </div>
               <div class="metric-item">
                 <div class="metric-val">{{ inf.engagementMid }}%</div>
@@ -57,26 +57,26 @@
               </div>
               <div class="metric-item">
                 <div class="metric-val">{{ formatNumber(inf.reachMid) }}</div>
-                <div class="metric-label">Alcance medio</div>
+                <div class="metric-label">Abast mitjà</div>
               </div>
               <div class="metric-item">
                 <div class="metric-val">{{ formatNumber(inf.clicksMid) }}</div>
-                <div class="metric-label">Clics medios</div>
+                <div class="metric-label">Clics mitjans</div>
               </div>
               <div class="metric-item">
                 <div class="metric-val">{{ inf.conversionsMid }}</div>
-                <div class="metric-label">Conv. medias</div>
+                <div class="metric-label">Conv. mitjanes</div>
               </div>
               <div class="metric-item">
                 <div class="metric-val">{{ formatCurrency(inf.salesGenerated) }}</div>
-                <div class="metric-label">Ventas totales</div>
+                <div class="metric-label">Vendes totals</div>
               </div>
             </div>
           </div>
 
           <!-- Internal rating -->
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Valoración interna</h3></div>
+            <div class="card-header"><h3 class="card-title">Valoració interna</h3></div>
             <div class="rating-grid" v-if="inf.collaborations > 0">
               <div class="rating-item" v-for="r in ratingDimensions" :key="r.key">
                 <div class="rating-name">{{ r.label }}</div>
@@ -86,28 +86,28 @@
                 <div class="rating-score">{{ inf[r.key].toFixed(1) }}</div>
               </div>
             </div>
-            <div v-else class="empty-cell">Sin colaboraciones — valoración pendiente</div>
+            <div v-else class="empty-cell">Sense col·laboracions — valoració pendent</div>
           </div>
         </div>
 
         <!-- Collaborations history -->
         <div class="card full-col">
           <div class="card-header">
-            <h3 class="card-title">Historial de colaboraciones</h3>
+            <h3 class="card-title">Historial de col·laboracions</h3>
             <span class="count-badge">{{ infCollabs.length }}</span>
           </div>
           <div class="table-wrapper">
             <table class="table">
               <thead>
                 <tr>
-                  <th>Campaña</th>
-                  <th>Formato</th>
-                  <th>Fecha</th>
-                  <th class="text-right">Coste</th>
-                  <th class="text-right">Alcance</th>
-                  <th class="text-right">Conversiones</th>
-                  <th class="text-right">Ventas</th>
-                  <th>Estado</th>
+                  <th>Campanya</th>
+                  <th>Format</th>
+                  <th>Data</th>
+                  <th class="text-right">Cost</th>
+                  <th class="text-right">Abast</th>
+                  <th class="text-right">Conversions</th>
+                  <th class="text-right">Vendes</th>
+                  <th>Estat</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,7 +121,7 @@
                   <td class="text-right font-medium">{{ formatCurrency(c.sales) }}</td>
                   <td><span class="badge" :class="COLLAB_STATUSES[c.status].cls">{{ COLLAB_STATUSES[c.status].label }}</span></td>
                 </tr>
-                <tr v-if="!infCollabs.length"><td colspan="8" class="empty-cell">Sin colaboraciones registradas</td></tr>
+                <tr v-if="!infCollabs.length"><td colspan="8" class="empty-cell">Sense col·laboracions registrades</td></tr>
               </tbody>
             </table>
           </div>
@@ -131,8 +131,8 @@
 
     <div v-else class="not-found">
       <AlertCircle :size="40" />
-      <p>Influencer no encontrado.</p>
-      <router-link to="/social-crm/influencers" class="btn btn-secondary">Volver</router-link>
+      <p>Influencer no trobat.</p>
+      <router-link to="/social-crm/influencers" class="btn btn-secondary">Tornar</router-link>
     </div>
   </div>
 </template>
@@ -148,15 +148,15 @@ const inf   = computed(() => socialInfluencers.find(i => i.id === Number(route.p
 const infCollabs = computed(() => socialCollaborations.filter(c => c.influencerId === inf.value?.id))
 
 const ratingDimensions = [
-  { key: 'contentQuality', label: 'Calidad del contenido' },
-  { key: 'reliability',    label: 'Cumplimiento' },
-  { key: 'brandAffinity',  label: 'Afinidad con la marca' },
-  { key: 'reputationRisk', label: 'Riesgo reputacional (invertido)' },
+  { key: 'contentQuality', label: 'Qualitat del contingut' },
+  { key: 'reliability',    label: 'Compliment' },
+  { key: 'brandAffinity',  label: 'Afinitat amb la marca' },
+  { key: 'reputationRisk', label: 'Risc reputacional (invertit)' },
 ]
 
 function platformStyle(key) { const p = getPlatform(key); return { background: p.bg, color: p.color } }
 function statusClass(s) { return s === 'active' ? 'badge-active' : s === 'prospect' ? 'badge-warning' : 'badge-inactive' }
-function statusLabel(s) { return s === 'active' ? 'Activo' : s === 'prospect' ? 'Prospecto' : 'Archivado' }
+function statusLabel(s) { return s === 'active' ? 'Actiu' : s === 'prospect' ? 'Prospecte' : 'Arxivat' }
 function ratingColor(v) { return v >= 4 ? '#10B981' : v >= 2.5 ? '#F59E0B' : '#EF4444' }
 </script>
 

@@ -3,21 +3,21 @@
     <!-- ── Header ──────────────────────────────────── -->
     <header class="view-header">
       <div class="header-left">
-        <h1 class="view-title">Inventory</h1>
-        <p class="view-subtitle">Manage stock, warehouses &amp; movements</p>
+        <h1 class="view-title">Inventari</h1>
+        <p class="view-subtitle">Gestiona l'estoc, els magatzems i els moviments</p>
       </div>
       <div class="header-actions">
         <button class="btn btn-secondary" @click="openAdjustModal(null)">
           <SlidersHorizontal :size="16" />
-          <span class="btn-label">Adjust</span>
+          <span class="btn-label">Ajustar</span>
         </button>
         <button class="btn btn-secondary" @click="openTransferModal(null)">
           <ArrowLeftRight :size="16" />
-          <span class="btn-label">Transfer</span>
+          <span class="btn-label">Transferir</span>
         </button>
         <button class="btn btn-primary" @click="openRestockModal(null)">
           <PackagePlus :size="16" />
-          <span class="btn-label">Restock</span>
+          <span class="btn-label">Reposar</span>
         </button>
       </div>
     </header>
@@ -25,7 +25,7 @@
     <!-- ── Loading ─────────────────────────────────── -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <p>Loading inventory data…</p>
+      <p>Carregant les dades d'inventari…</p>
     </div>
 
     <template v-else>
@@ -35,35 +35,35 @@
           <div class="kpi-icon kpi-blue"><Package :size="22" /></div>
           <div class="kpi-info">
             <span class="kpi-value">{{ stats.total_products ?? 0 }}</span>
-            <span class="kpi-label">Products</span>
+            <span class="kpi-label">Productes</span>
           </div>
         </div>
         <div class="kpi-card">
           <div class="kpi-icon kpi-green"><Boxes :size="22" /></div>
           <div class="kpi-info">
             <span class="kpi-value">{{ fmt(stats.total_stock) }}</span>
-            <span class="kpi-label">Total Units</span>
+            <span class="kpi-label">Unitats totals</span>
           </div>
         </div>
         <div class="kpi-card clickable" @click="goStockFiltered('low')">
           <div class="kpi-icon kpi-amber"><AlertTriangle :size="22" /></div>
           <div class="kpi-info">
             <span class="kpi-value">{{ stats.low_stock_count ?? 0 }}</span>
-            <span class="kpi-label">Low Stock</span>
+            <span class="kpi-label">Estoc baix</span>
           </div>
         </div>
         <div class="kpi-card clickable" @click="goStockFiltered('out_of_stock')">
           <div class="kpi-icon kpi-red"><PackageX :size="22" /></div>
           <div class="kpi-info">
             <span class="kpi-value">{{ stats.out_of_stock_count ?? 0 }}</span>
-            <span class="kpi-label">Out of Stock</span>
+            <span class="kpi-label">Sense estoc</span>
           </div>
         </div>
         <div class="kpi-card">
           <div class="kpi-icon kpi-purple"><Euro :size="22" /></div>
           <div class="kpi-info">
             <span class="kpi-value">{{ fmtCur(stats.total_value) }}</span>
-            <span class="kpi-label">Inventory Value</span>
+            <span class="kpi-label">Valor de l'inventari</span>
           </div>
         </div>
       </section>
@@ -91,16 +91,16 @@
           <!-- Warehouse Cards -->
           <section class="warehouses-panel">
             <div class="section-header">
-              <h2 class="section-title"><Warehouse :size="20" /> Warehouses</h2>
+              <h2 class="section-title"><Warehouse :size="20" /> Magatzems</h2>
               <button v-if="isAdmin" class="btn btn-primary btn-sm" @click="openWarehouseModal">
-                <Plus :size="14" /> New Warehouse
+                <Plus :size="14" /> Nou magatzem
               </button>
             </div>
             <div v-if="warehouses.length === 0" class="empty-state small">
               <Warehouse :size="40" />
-              <p>No warehouses configured yet</p>
+              <p>Encara no hi ha magatzems configurats</p>
               <button v-if="isAdmin" class="btn btn-primary btn-sm" @click="openWarehouseModal">
-                <Plus :size="14" /> Create Warehouse
+                <Plus :size="14" /> Crear magatzem
               </button>
             </div>
             <div v-else class="warehouse-cards">
@@ -118,14 +118,14 @@
                     </div>
                     <div>
                       <h3>{{ wh.name }}</h3>
-                      <span class="wh-address">{{ wh.address || 'No address' }}</span>
+                      <span class="wh-address">{{ wh.address || 'Sense adreça' }}</span>
                     </div>
                   </div>
                   <div class="wh-actions">
                     <button
                       v-if="isAdmin && wh.id !== null"
                       class="btn-icon btn-danger-ghost"
-                      title="Delete warehouse"
+                      title="Eliminar magatzem"
                       @click.stop="confirmDeleteWarehouse(wh)"
                     >
                       <Trash2 :size="15" />
@@ -136,26 +136,26 @@
                 <div class="wh-stats">
                   <div class="wh-stat">
                     <span class="wh-stat-val">{{ wh.product_count }}</span>
-                    <span class="wh-stat-lbl">Products</span>
+                    <span class="wh-stat-lbl">Productes</span>
                   </div>
                   <div class="wh-stat">
                     <span class="wh-stat-val">{{ fmt(wh.total_stock) }}</span>
-                    <span class="wh-stat-lbl">Units</span>
+                    <span class="wh-stat-lbl">Unitats</span>
                   </div>
                   <div class="wh-stat">
                     <span class="wh-stat-val" :class="{ 'text-warning': wh.low_stock > 0 }">{{ wh.low_stock }}</span>
-                    <span class="wh-stat-lbl">Low Stock</span>
+                    <span class="wh-stat-lbl">Estoc baix</span>
                   </div>
                   <div class="wh-stat">
                     <span class="wh-stat-val">{{ fmtCur(wh.value) }}</span>
-                    <span class="wh-stat-lbl">Value</span>
+                    <span class="wh-stat-lbl">Valor</span>
                   </div>
                 </div>
                 <div class="wh-capacity">
                   <div class="capacity-bar">
                     <div class="capacity-fill" :style="{ width: whCapPct(wh) + '%' }" :class="capClass(wh)"></div>
                   </div>
-                  <span class="capacity-label">{{ whCapPct(wh) }}% of total stock</span>
+                  <span class="capacity-label">{{ whCapPct(wh) }}% de l'estoc total</span>
                 </div>
               </div>
             </div>
@@ -164,13 +164,13 @@
           <!-- Charts Column -->
           <div class="charts-column">
             <section class="chart-card">
-              <h2 class="section-title"><BarChart3 :size="20" /> Stock by Category</h2>
+              <h2 class="section-title"><BarChart3 :size="20" /> Estoc per categoria</h2>
               <div v-if="stockByCategory.length === 0" class="empty-state small">
-                <p>No category data</p>
+                <p>No hi ha dades de categoria</p>
               </div>
               <div v-else class="bar-chart">
                 <div v-for="cat in stockByCategory" :key="cat.category_name" class="bar-row">
-                  <span class="bar-label">{{ cat.category_name }}</span>
+                  <span class="bar-label">{{ categoryLabel(cat.category_name) }}</span>
                   <div class="bar-track">
                     <div class="bar-fill" :style="{ width: catPct(cat.total_stock) + '%', background: catColor(cat.category_name) }"></div>
                   </div>
@@ -179,9 +179,9 @@
               </div>
             </section>
             <section class="chart-card">
-              <h2 class="section-title"><ArrowUpDown :size="20" /> Movements (30 days)</h2>
+              <h2 class="section-title"><ArrowUpDown :size="20" /> Moviments (30 dies)</h2>
               <div v-if="movementSummary.length === 0" class="empty-state small">
-                <p>No movements recorded</p>
+                <p>No hi ha moviments registrats</p>
               </div>
               <div v-else class="movement-rings">
                 <div v-for="mv in movementSummary" :key="mv.movement_type" class="ring-stat">
@@ -193,7 +193,7 @@
                     <span class="ring-number">{{ mv.count }}</span>
                   </div>
                   <span class="ring-label">{{ mvLabel(mv.movement_type) }}</span>
-                  <span class="ring-qty">{{ fmt(mv.total_qty) }} units</span>
+                  <span class="ring-qty">{{ fmt(mv.total_qty) }} unitats</span>
                 </div>
               </div>
             </section>
@@ -208,18 +208,18 @@
         <div class="filters-bar">
           <div class="search-box">
             <Search :size="16" class="search-icon" />
-            <input v-model="stockSearch" type="text" class="input search-input" placeholder="Search by name or SKU…" />
+            <input v-model="stockSearch" type="text" class="input search-input" placeholder="Cerca per nom o SKU…" />
           </div>
           <select v-model="stockWarehouseFilter" class="input filter-select" @change="loadStock">
-            <option value="all">All warehouses</option>
+            <option value="all">Tots els magatzems</option>
             <option v-for="wh in warehouses.filter(w => w.id)" :key="wh.id" :value="String(wh.id)">{{ wh.name }}</option>
-            <option value="0">Unassigned</option>
+            <option value="0">Sense assignar</option>
           </select>
           <select v-model="stockStatusFilter" class="input filter-select" @change="loadStock">
-            <option value="all">All statuses</option>
-            <option value="ok">In Stock</option>
-            <option value="low">Low Stock</option>
-            <option value="out_of_stock">Out of Stock</option>
+            <option value="all">Tots els estats</option>
+            <option value="ok">En estoc</option>
+            <option value="low">Estoc baix</option>
+            <option value="out_of_stock">Sense estoc</option>
           </select>
         </div>
 
@@ -229,28 +229,28 @@
               <thead>
                 <tr>
                   <th class="col-sku">SKU</th>
-                  <th class="col-name">Product</th>
-                  <th class="col-wh">Warehouse</th>
-                  <th class="col-num">Stock</th>
-                  <th class="col-num">Reserved</th>
-                  <th class="col-num">Available</th>
-                  <th class="col-num">Min</th>
-                  <th class="col-status">Status</th>
-                  <th class="col-num">Value</th>
-                  <th class="col-actions">Actions</th>
+                  <th class="col-name">Producte</th>
+                  <th class="col-wh">Magatzem</th>
+                  <th class="col-num">Estoc</th>
+                  <th class="col-num">Reservat</th>
+                  <th class="col-num">Disponible</th>
+                  <th class="col-num">Mín.</th>
+                  <th class="col-status">Estat</th>
+                  <th class="col-num">Valor</th>
+                  <th class="col-actions">Accions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="filteredStock.length === 0">
                   <td colspan="10" class="empty-row">
                     <PackageOpen :size="32" />
-                    <span>No products match your filters</span>
+                    <span>Cap producte coincideix amb els filtres</span>
                   </td>
                 </tr>
                 <tr v-for="p in filteredStock" :key="p.id" class="table-row">
                   <td class="col-sku"><span class="sku-text">{{ p.sku }}</span></td>
                   <td class="col-name">{{ p.name }}</td>
-                  <td class="col-wh">{{ p.warehouse__name || 'Unassigned' }}</td>
+                  <td class="col-wh">{{ p.warehouse__name || 'Sense assignar' }}</td>
                   <td class="col-num">
                     <span :class="stockNumClass(p)">{{ p.stock ?? 0 }}</span>
                   </td>
@@ -262,13 +262,13 @@
                   </td>
                   <td class="col-num">{{ fmtCur((p.stock ?? 0) * (p.cost ?? 0)) }}</td>
                   <td class="col-actions">
-                    <button class="btn-icon" title="Adjust stock" @click="openAdjustModal(p)">
+                    <button class="btn-icon" title="Ajustar estoc" @click="openAdjustModal(p)">
                       <SlidersHorizontal :size="15" />
                     </button>
-                    <button class="btn-icon" title="Transfer" @click="openTransferModal(p)">
+                    <button class="btn-icon" title="Transferir" @click="openTransferModal(p)">
                       <ArrowLeftRight :size="15" />
                     </button>
-                    <button class="btn-icon primary" title="Restock" @click="openRestockModal(p)">
+                    <button class="btn-icon primary" title="Reposar" @click="openRestockModal(p)">
                       <PackagePlus :size="15" />
                     </button>
                   </td>
@@ -277,7 +277,7 @@
             </table>
           </div>
           <div class="table-footer">
-            Showing <strong>{{ filteredStock.length }}</strong> of <strong>{{ stockItems.length }}</strong> products
+            Mostrant <strong>{{ filteredStock.length }}</strong> de <strong>{{ stockItems.length }}</strong> productes
           </div>
         </div>
       </div>
@@ -289,14 +289,14 @@
         <div class="filters-bar">
           <div class="search-box">
             <Search :size="16" class="search-icon" />
-            <input v-model="mvSearch" type="text" class="input search-input" placeholder="Search product…" />
+            <input v-model="mvSearch" type="text" class="input search-input" placeholder="Cerca un producte…" />
           </div>
           <select v-model="mvTypeFilter" class="input filter-select">
-            <option value="all">All types</option>
-            <option value="In">Entries</option>
-            <option value="Out">Exits</option>
-            <option value="Adjust">Adjustments</option>
-            <option value="Return">Returns</option>
+            <option value="all">Tots els tipus</option>
+            <option value="In">Entrades</option>
+            <option value="Out">Sortides</option>
+            <option value="Adjust">Ajustos</option>
+            <option value="Return">Devolucions</option>
           </select>
         </div>
 
@@ -305,20 +305,20 @@
             <table class="table movements-table">
               <thead>
                 <tr>
-                  <th class="col-type">Type</th>
-                  <th class="col-name">Product</th>
-                  <th class="col-num">Qty</th>
-                  <th class="col-ref">Reference</th>
-                  <th class="col-user">User</th>
+                  <th class="col-type">Tipus</th>
+                  <th class="col-name">Producte</th>
+                  <th class="col-num">Qt.</th>
+                  <th class="col-ref">Referència</th>
+                  <th class="col-user">Usuari</th>
                   <th class="col-notes">Notes</th>
-                  <th class="col-date">Date</th>
+                  <th class="col-date">Data</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-if="filteredMovements.length === 0">
                   <td colspan="7" class="empty-row">
                     <ArrowUpDown :size="32" />
-                    <span>No movements match your filters</span>
+                    <span>Cap moviment coincideix amb els filtres</span>
                   </td>
                 </tr>
                 <tr v-for="m in filteredMovements" :key="m.id" class="table-row">
@@ -349,7 +349,7 @@
             </table>
           </div>
           <div class="table-footer">
-            Showing <strong>{{ filteredMovements.length }}</strong> movements
+            Mostrant <strong>{{ filteredMovements.length }}</strong> moviments
           </div>
         </div>
       </div>
@@ -359,16 +359,16 @@
            ════════════════════════════════════════════ -->
       <div v-show="activeTab === 'rules'" class="tab-pane">
         <div class="rules-header">
-          <p class="text-muted">Automatic reorder alerts when stock falls below the minimum threshold.</p>
+          <p class="text-muted">Alertes de reposició automàtiques quan l'estoc baixa del llindar mínim.</p>
           <button class="btn btn-primary btn-sm" @click="showNewRuleForm = true">
-            <Plus :size="14" /> New Rule
+            <Plus :size="14" /> Nova regla
           </button>
         </div>
 
         <div v-if="reorderRulesList.length === 0 && !showNewRuleForm" class="empty-state">
           <Settings :size="48" />
-          <p>No reorder rules configured</p>
-          <button class="btn btn-primary btn-sm" @click="showNewRuleForm = true">Create Rule</button>
+          <p>No hi ha regles de reposició configurades</p>
+          <button class="btn btn-primary btn-sm" @click="showNewRuleForm = true">Crear regla</button>
         </div>
 
         <div v-else class="rules-grid">
@@ -383,23 +383,23 @@
                 <h4>{{ rule.product_name }}</h4>
                 <span class="rule-sku">{{ rule.product_sku }} · {{ rule.warehouse_name }}</span>
               </div>
-              <span class="rule-toggle" :class="{ active: rule.enabled }">{{ rule.enabled ? 'Active' : 'Off' }}</span>
+              <span class="rule-toggle" :class="{ active: rule.enabled }">{{ rule.enabled ? 'Activa' : 'Inactiva' }}</span>
             </div>
             <div class="rule-params">
               <div class="rule-param">
-                <span>Current</span>
+                <span>Actual</span>
                 <strong :class="{ 'text-warning': rule.needs_reorder }">{{ rule.product_stock ?? 0 }}</strong>
               </div>
               <div class="rule-param">
-                <span>Min</span>
+                <span>Mín.</span>
                 <strong>{{ rule.min_stock }}</strong>
               </div>
               <div class="rule-param">
-                <span>Reorder</span>
+                <span>Reposar</span>
                 <strong>+{{ rule.reorder_qty }}</strong>
               </div>
               <div class="rule-param">
-                <span>Max</span>
+                <span>Màx.</span>
                 <strong>{{ rule.max_stock ?? '—' }}</strong>
               </div>
             </div>
@@ -408,45 +408,45 @@
               class="btn btn-primary btn-sm rule-action"
               @click="quickRestock(rule)"
             >
-              <PackagePlus :size="14" /> Restock {{ rule.reorder_qty }} units
+              <PackagePlus :size="14" /> Reposar {{ rule.reorder_qty }} unitats
             </button>
           </div>
         </div>
 
         <!-- New Rule Form -->
         <div v-if="showNewRuleForm" class="new-rule-form card">
-          <h3>New Reorder Rule</h3>
+          <h3>Nova regla de reposició</h3>
           <div class="form-group">
-            <label>Product</label>
+            <label>Producte</label>
             <select v-model="newRule.product_id" class="input">
-              <option value="">Select product…</option>
+              <option value="">Selecciona un producte…</option>
               <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }}</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Warehouse</label>
+            <label>Magatzem</label>
             <select v-model="newRule.warehouse_id" class="input">
-              <option value="">Select warehouse…</option>
+              <option value="">Selecciona un magatzem…</option>
               <option v-for="wh in warehouses.filter(w => w.id)" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
             </select>
           </div>
           <div class="form-row-3">
             <div class="form-group">
-              <label>Min Stock</label>
+              <label>Estoc mínim</label>
               <input v-model.number="newRule.min_stock" type="number" class="input" min="0" />
             </div>
             <div class="form-group">
-              <label>Reorder Qty</label>
+              <label>Quantitat de reposició</label>
               <input v-model.number="newRule.reorder_qty" type="number" class="input" min="1" />
             </div>
             <div class="form-group">
-              <label>Max Stock</label>
-              <input v-model.number="newRule.max_stock" type="number" class="input" min="0" placeholder="Optional" />
+              <label>Estoc màxim</label>
+              <input v-model.number="newRule.max_stock" type="number" class="input" min="0" placeholder="Opcional" />
             </div>
           </div>
           <div class="form-actions">
-            <button class="btn btn-secondary btn-sm" @click="showNewRuleForm = false">Cancel</button>
-            <button class="btn btn-primary btn-sm" @click="saveReorderRule" :disabled="!canSaveRule">Save Rule</button>
+            <button class="btn btn-secondary btn-sm" @click="showNewRuleForm = false">Cancel·lar</button>
+            <button class="btn btn-primary btn-sm" @click="saveReorderRule" :disabled="!canSaveRule">Desar regla</button>
           </div>
         </div>
       </div>
@@ -458,17 +458,17 @@
     <div v-if="deleteWarehouseModal" class="modal-overlay" @click.self="deleteWarehouseModal = false">
       <div class="modal-box modal-sm">
         <div class="modal-header">
-          <h2>Delete Warehouse</h2>
+          <h2>Eliminar magatzem</h2>
           <button class="btn-icon" @click="deleteWarehouseModal = false"><X :size="18" /></button>
         </div>
         <div class="modal-body">
-          <p>Are you sure you want to delete <strong>{{ warehouseToDelete?.name }}</strong>?</p>
-          <p class="text-muted" style="font-size:0.85rem; margin-top:0.5rem;">Products assigned to this warehouse will become unassigned.</p>
+          <p>Segur que vols eliminar <strong>{{ warehouseToDelete?.name }}</strong>?</p>
+          <p class="text-muted" style="font-size:0.85rem; margin-top:0.5rem;">Els productes assignats a aquest magatzem quedaran sense assignar.</p>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="deleteWarehouseModal = false">Cancel</button>
+          <button class="btn btn-secondary" @click="deleteWarehouseModal = false">Cancel·lar</button>
           <button class="btn btn-danger" @click="doDeleteWarehouse">
-            <Trash2 :size="16" /> Delete
+            <Trash2 :size="16" /> Eliminar
           </button>
         </div>
       </div>
@@ -477,23 +477,23 @@
     <div v-if="warehouseModal" class="modal-overlay" @click.self="warehouseModal = false">
       <div class="modal-box modal-sm">
         <div class="modal-header">
-          <h2>New Warehouse</h2>
+          <h2>Nou magatzem</h2>
           <button class="btn-icon" @click="warehouseModal = false"><X :size="18" /></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Name</label>
-            <input v-model="warehouseData.name" type="text" class="input" placeholder="e.g. Main Warehouse" autofocus />
+            <label>Nom</label>
+            <input v-model="warehouseData.name" type="text" class="input" placeholder="p. ex. Magatzem principal" autofocus />
           </div>
           <div class="form-group">
-            <label>Address <span class="optional">(optional)</span></label>
-            <input v-model="warehouseData.address" type="text" class="input" placeholder="e.g. Calle Mayor 1, Madrid" />
+            <label>Adreça <span class="optional">(opcional)</span></label>
+            <input v-model="warehouseData.address" type="text" class="input" placeholder="p. ex. Carrer Major 1, Barcelona" />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="warehouseModal = false">Cancel</button>
+          <button class="btn btn-secondary" @click="warehouseModal = false">Cancel·lar</button>
           <button class="btn btn-primary" @click="doCreateWarehouse" :disabled="!warehouseData.name.trim()">
-            <Plus :size="16" /> Create
+            <Plus :size="16" /> Crear
           </button>
         </div>
       </div>
@@ -505,40 +505,40 @@
     <div v-if="restockModal" class="modal-overlay" @click.self="restockModal = false">
       <div class="modal-box">
         <div class="modal-header">
-          <h2>Restock Product</h2>
+          <h2>Reposar producte</h2>
           <button class="btn-icon" @click="restockModal = false"><X :size="18" /></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Product</label>
+            <label>Producte</label>
             <select v-if="!restockData.product_id" v-model="restockData.product_id" class="input" @change="onRestockProductChange">
-              <option value="">Select product…</option>
-              <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }} ({{ p.stock ?? 0 }} units)</option>
+              <option value="">Selecciona un producte…</option>
+              <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }} ({{ p.stock ?? 0 }} unitats)</option>
             </select>
             <div v-else class="selected-product-info">
               <Package :size="18" />
               <div>
                 <strong>{{ restockData.product_name }}</strong>
-                <span>Current stock: {{ restockData.current_stock ?? 0 }}</span>
+                <span>Estoc actual: {{ restockData.current_stock ?? 0 }}</span>
               </div>
             </div>
           </div>
           <div class="form-group">
-            <label>Quantity to add</label>
-            <input v-model.number="restockData.quantity" type="number" class="input" min="1" placeholder="e.g. 50" />
+            <label>Quantitat a afegir</label>
+            <input v-model.number="restockData.quantity" type="number" class="input" min="1" placeholder="p. ex. 50" />
           </div>
           <div v-if="restockData.product_id && restockData.quantity > 0" class="preview-result">
-            New stock: <strong>{{ (restockData.current_stock ?? 0) + restockData.quantity }}</strong> units
+            Nou estoc: <strong>{{ (restockData.current_stock ?? 0) + restockData.quantity }}</strong> unitats
           </div>
           <div class="form-group">
-            <label>Notes <span class="optional">(optional)</span></label>
-            <input v-model="restockData.notes" type="text" class="input" placeholder="e.g. Supplier delivery #1234" />
+            <label>Notes <span class="optional">(opcional)</span></label>
+            <input v-model="restockData.notes" type="text" class="input" placeholder="p. ex. Lliurament del proveïdor #1234" />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="restockModal = false">Cancel</button>
+          <button class="btn btn-secondary" @click="restockModal = false">Cancel·lar</button>
           <button class="btn btn-primary" @click="doRestock" :disabled="!restockData.product_id || !restockData.quantity || restockData.quantity <= 0">
-            <PackagePlus :size="16" /> Restock
+            <PackagePlus :size="16" /> Reposar
           </button>
         </div>
       </div>
@@ -550,62 +550,62 @@
     <div v-if="adjustModal" class="modal-overlay" @click.self="adjustModal = false">
       <div class="modal-box">
         <div class="modal-header">
-          <h2>Adjust Stock</h2>
+          <h2>Ajustar estoc</h2>
           <button class="btn-icon" @click="adjustModal = false"><X :size="18" /></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Product</label>
+            <label>Producte</label>
             <select v-if="!adjustData.product_id" v-model="adjustData.product_id" class="input" @change="onAdjustProductChange">
-              <option value="">Select product…</option>
-              <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }} ({{ p.stock ?? 0 }} units)</option>
+              <option value="">Selecciona un producte…</option>
+              <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }} ({{ p.stock ?? 0 }} unitats)</option>
             </select>
             <div v-else class="selected-product-info">
               <Package :size="18" />
               <div>
                 <strong>{{ adjustData.product_name }}</strong>
-                <span>Current stock: {{ adjustData.current_stock ?? 0 }}</span>
+                <span>Estoc actual: {{ adjustData.current_stock ?? 0 }}</span>
               </div>
             </div>
           </div>
           <div class="form-group">
-            <label>Adjustment</label>
+            <label>Ajust</label>
             <div class="adjust-row">
               <select v-model="adjustData.type" class="input adjust-type-select">
-                <option value="add">Add (+)</option>
-                <option value="remove">Remove (−)</option>
-                <option value="set">Set to</option>
+                <option value="add">Afegir (+)</option>
+                <option value="remove">Treure (−)</option>
+                <option value="set">Establir a</option>
               </select>
-              <input v-model.number="adjustData.quantity" type="number" class="input" min="0" placeholder="Quantity" />
+              <input v-model.number="adjustData.quantity" type="number" class="input" min="0" placeholder="Quantitat" />
             </div>
           </div>
           <div v-if="adjustData.product_id && adjustData.quantity >= 0" class="preview-result" :class="adjustPreviewClass">
-            New stock: <strong>{{ adjustPreview }}</strong> units
+            Nou estoc: <strong>{{ adjustPreview }}</strong> unitats
             <span v-if="adjustDiff !== 0" class="diff">
               ({{ adjustDiff > 0 ? '+' : '' }}{{ adjustDiff }})
             </span>
           </div>
           <div class="form-group">
-            <label>Reason</label>
+            <label>Motiu</label>
             <select v-model="adjustData.reason" class="input">
-              <option value="">Select reason…</option>
-              <option value="Recount">Physical recount</option>
-              <option value="Damage">Damage / breakage</option>
-              <option value="Loss">Loss / shrinkage</option>
-              <option value="Correction">Data correction</option>
-              <option value="Return">Customer return</option>
-              <option value="Other">Other</option>
+              <option value="">Selecciona un motiu…</option>
+              <option value="Recount">Recompte físic</option>
+              <option value="Damage">Dany / trencament</option>
+              <option value="Loss">Pèrdua / minva</option>
+              <option value="Correction">Correcció de dades</option>
+              <option value="Return">Devolució de client</option>
+              <option value="Other">Altres</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Notes <span class="optional">(optional)</span></label>
-            <input v-model="adjustData.notes" type="text" class="input" placeholder="Additional details…" />
+            <label>Notes <span class="optional">(opcional)</span></label>
+            <input v-model="adjustData.notes" type="text" class="input" placeholder="Detalls addicionals…" />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="adjustModal = false">Cancel</button>
+          <button class="btn btn-secondary" @click="adjustModal = false">Cancel·lar</button>
           <button class="btn btn-primary" @click="doAdjust" :disabled="!canAdjust">
-            <SlidersHorizontal :size="16" /> Apply Adjustment
+            <SlidersHorizontal :size="16" /> Aplicar ajust
           </button>
         </div>
       </div>
@@ -617,37 +617,37 @@
     <div v-if="transferModal" class="modal-overlay" @click.self="transferModal = false">
       <div class="modal-box">
         <div class="modal-header">
-          <h2>Transfer Stock</h2>
+          <h2>Transferir estoc</h2>
           <button class="btn-icon" @click="transferModal = false"><X :size="18" /></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label>Product</label>
+            <label>Producte</label>
             <select v-if="!transferData.product_id" v-model="transferData.product_id" class="input" @change="onTransferProductChange">
-              <option value="">Select product…</option>
-              <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }} ({{ p.stock ?? 0 }} units)</option>
+              <option value="">Selecciona un producte…</option>
+              <option v-for="p in allProducts" :key="p.id" :value="p.id">{{ p.sku }} — {{ p.name }} ({{ p.stock ?? 0 }} unitats)</option>
             </select>
             <div v-else class="selected-product-info">
               <Package :size="18" />
               <div>
                 <strong>{{ transferData.product_name }}</strong>
-                <span>Current stock: {{ transferData.current_stock ?? 0 }}</span>
+                <span>Estoc actual: {{ transferData.current_stock ?? 0 }}</span>
               </div>
             </div>
           </div>
           <div class="transfer-flow">
             <div class="form-group transfer-wh">
-              <label>From</label>
+              <label>Origen</label>
               <select v-model="transferData.from_warehouse_id" class="input">
-                <option value="">Select origin…</option>
+                <option value="">Selecciona l'origen…</option>
                 <option v-for="wh in warehouses.filter(w => w.id)" :key="wh.id" :value="wh.id">{{ wh.name }}</option>
               </select>
             </div>
             <div class="transfer-arrow"><ArrowRight :size="20" /></div>
             <div class="form-group transfer-wh">
-              <label>To</label>
+              <label>Destí</label>
               <select v-model="transferData.to_warehouse_id" class="input">
-                <option value="">Select destination…</option>
+                <option value="">Selecciona el destí…</option>
                 <option
                   v-for="wh in warehouses.filter(w => w.id && w.id !== transferData.from_warehouse_id)"
                   :key="wh.id"
@@ -657,18 +657,18 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Quantity</label>
-            <input v-model.number="transferData.quantity" type="number" class="input" min="1" :max="transferData.current_stock" placeholder="Units to transfer" />
+            <label>Quantitat</label>
+            <input v-model.number="transferData.quantity" type="number" class="input" min="1" :max="transferData.current_stock" placeholder="Unitats a transferir" />
           </div>
           <div class="form-group">
-            <label>Notes <span class="optional">(optional)</span></label>
-            <input v-model="transferData.notes" type="text" class="input" placeholder="e.g. Seasonal redistribution" />
+            <label>Notes <span class="optional">(opcional)</span></label>
+            <input v-model="transferData.notes" type="text" class="input" placeholder="p. ex. Redistribució estacional" />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="transferModal = false">Cancel</button>
+          <button class="btn btn-secondary" @click="transferModal = false">Cancel·lar</button>
           <button class="btn btn-primary" @click="doTransfer" :disabled="!canTransfer">
-            <ArrowLeftRight :size="16" /> Transfer
+            <ArrowLeftRight :size="16" /> Transferir
           </button>
         </div>
       </div>
@@ -689,6 +689,7 @@ import inventoryApi from '@/services/inventory'
 import productsApi from '@/services/products'
 import coreApi from '@/services/core'
 import { useToast } from '@/composables/useToast'
+import { categoryLabel } from '@/config/productCategories'
 
 const toast = useToast()
 
@@ -742,14 +743,14 @@ const isAdmin = ref(true) // defaults true; will be set from membership data
 
 // ── Tabs Config ────────────────────────────────────
 const tabs = computed(() => [
-  { id: 'warehouses', label: 'Warehouses', icon: Warehouse },
-  { id: 'stock', label: 'Stock', icon: ClipboardList },
+  { id: 'warehouses', label: 'Magatzems', icon: Warehouse },
+  { id: 'stock', label: 'Estoc', icon: ClipboardList },
   {
-    id: 'movements', label: 'Movements', icon: ArrowUpDown,
+    id: 'movements', label: 'Moviments', icon: ArrowUpDown,
     badge: movements.value.length || null,
   },
   {
-    id: 'rules', label: 'Reorder Rules', icon: Settings,
+    id: 'rules', label: 'Regles de reposició', icon: Settings,
     badge: reorderRulesList.value.filter(r => r.needs_reorder).length || null,
     badgeClass: reorderRulesList.value.some(r => r.needs_reorder) ? 'badge-warn' : '',
   },
@@ -832,7 +833,7 @@ async function loadOverview() {
     stockByCategory.value = data.stock_by_category
     movementSummary.value = data.movement_summary
   } catch {
-    toast.error('Failed to load inventory data')
+    toast.error('Error en carregar les dades d\'inventari')
   } finally {
     loading.value = false
   }
@@ -845,7 +846,7 @@ async function loadStock() {
     if (stockStatusFilter.value !== 'all') params.stock_status = stockStatusFilter.value
     stockItems.value = await inventoryApi.getAllStock(params)
   } catch {
-    toast.error('Failed to load stock data')
+    toast.error('Error en carregar les dades d\'estoc')
   }
 }
 
@@ -853,7 +854,7 @@ async function loadMovements() {
   try {
     movements.value = await inventoryApi.getMovements(100)
   } catch {
-    toast.error('Failed to load movements')
+    toast.error('Error en carregar els moviments')
   }
 }
 
@@ -861,7 +862,7 @@ async function loadReorderRules() {
   try {
     reorderRulesList.value = await inventoryApi.getReorderRules()
   } catch {
-    toast.error('Failed to load reorder rules')
+    toast.error('Error en carregar les regles de reposició')
   }
 }
 
@@ -965,11 +966,11 @@ async function doRestock() {
       quantity: restockData.value.quantity,
       notes: restockData.value.notes,
     })
-    toast.success(`Restocked ${restockData.value.quantity} units`)
+    toast.success(`S'han reposat ${restockData.value.quantity} unitats`)
     restockModal.value = false
     await refreshAll()
   } catch {
-    toast.error('Restock failed')
+    toast.error('Error en la reposició')
   }
 }
 
@@ -983,11 +984,11 @@ async function doAdjust() {
       notes: adjustData.value.notes,
     })
     const diff = res.new_stock - res.old_stock
-    toast.success(`Stock adjusted: ${res.old_stock} → ${res.new_stock} (${diff >= 0 ? '+' : ''}${diff})`)
+    toast.success(`Estoc ajustat: ${res.old_stock} → ${res.new_stock} (${diff >= 0 ? '+' : ''}${diff})`)
     adjustModal.value = false
     await refreshAll()
   } catch {
-    toast.error('Adjustment failed')
+    toast.error('Error en l\'ajust')
   }
 }
 
@@ -1000,23 +1001,23 @@ async function doTransfer() {
       quantity: transferData.value.quantity,
       notes: transferData.value.notes,
     })
-    toast.success(`Transferred ${res.quantity} units: ${res.from_warehouse} → ${res.to_warehouse}`)
+    toast.success(`S'han transferit ${res.quantity} unitats: ${res.from_warehouse} → ${res.to_warehouse}`)
     transferModal.value = false
     await refreshAll()
   } catch {
-    toast.error('Transfer failed')
+    toast.error('Error en la transferència')
   }
 }
 
 async function saveReorderRule() {
   try {
     await inventoryApi.createReorderRule(newRule.value)
-    toast.success('Reorder rule saved')
+    toast.success('Regla de reposició desada')
     showNewRuleForm.value = false
     newRule.value = { product_id: '', warehouse_id: '', min_stock: 10, reorder_qty: 25, max_stock: null }
     await loadReorderRules()
   } catch {
-    toast.error('Failed to save rule')
+    toast.error('Error en desar la regla')
   }
 }
 
@@ -1031,12 +1032,12 @@ async function doDeleteWarehouse() {
   if (!wh) return
   try {
     await coreApi.warehouses.delete(wh.id)
-    toast.success(`Warehouse "${wh.name}" deleted`)
+    toast.success(`Magatzem "${wh.name}" eliminat`)
     deleteWarehouseModal.value = false
     warehouseToDelete.value = null
     await loadOverview()
   } catch {
-    toast.error('Failed to delete warehouse')
+    toast.error('Error en eliminar el magatzem')
   }
 }
 
@@ -1051,11 +1052,11 @@ async function doCreateWarehouse() {
   if (!name) return
   try {
     await coreApi.warehouses.create({ name, address: warehouseData.value.address.trim() })
-    toast.success(`Warehouse "${name}" created`)
+    toast.success(`Magatzem "${name}" creat`)
     warehouseModal.value = false
     await loadOverview()
   } catch {
-    toast.error('Failed to create warehouse')
+    toast.error('Error en crear el magatzem')
   }
 }
 
@@ -1064,13 +1065,13 @@ async function quickRestock(rule) {
     await inventoryApi.restockProduct({
       product_id: rule.product_id,
       quantity: rule.reorder_qty,
-      notes: `Auto-restock via rule #${rule.id}`,
+      notes: `Reposició automàtica via regla #${rule.id}`,
     })
-    toast.success(`Restocked ${rule.reorder_qty} units of ${rule.product_name}`)
+    toast.success(`S'han reposat ${rule.reorder_qty} unitats de ${rule.product_name}`)
     await refreshAll()
     await loadReorderRules()
   } catch {
-    toast.error('Restock failed')
+    toast.error('Error en la reposició')
   }
 }
 
@@ -1081,8 +1082,8 @@ async function refreshAll() {
 }
 
 // ── Helpers ────────────────────────────────────────
-function fmt(n) { return (n ?? 0).toLocaleString('es-ES') }
-function fmtCur(n) { return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n ?? 0) }
+function fmt(n) { return (n ?? 0).toLocaleString('ca-ES') }
+function fmtCur(n) { return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n ?? 0) }
 
 const WH_COLORS = ['#667eea', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444', '#06b6d4']
 function whColor(id) { return id === null ? '#94a3b8' : WH_COLORS[(id - 1) % WH_COLORS.length] }
@@ -1105,8 +1106,8 @@ function catColor(name) {
 }
 
 function ringPct(mv) { return Math.round((mv.count / totalMv.value) * 100) }
-function mvLabel(t) { return { In: 'Entries', Out: 'Exits', Adjust: 'Adjustments', Return: 'Returns' }[t] || t }
-function statusLabel(s) { return { ok: 'In Stock', low: 'Low Stock', out_of_stock: 'Out of Stock' }[s] || s }
+function mvLabel(t) { return { In: 'Entrades', Out: 'Sortides', Adjust: 'Ajustos', Return: 'Devolucions' }[t] || t }
+function statusLabel(s) { return { ok: 'En estoc', low: 'Estoc baix', out_of_stock: 'Sense estoc' }[s] || s }
 
 function stockNumClass(p) {
   if (p.stock_status === 'out_of_stock') return 'text-error font-bold'
@@ -1117,11 +1118,11 @@ function stockNumClass(p) {
 function fmtRelTime(iso) {
   const d = Date.now() - new Date(iso).getTime()
   const m = Math.floor(d / 60000)
-  if (m < 1) return 'just now'
-  if (m < 60) return `${m}m ago`
+  if (m < 1) return 'ara mateix'
+  if (m < 60) return `fa ${m}m`
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
-  return `${Math.floor(h / 24)}d ago`
+  if (h < 24) return `fa ${h}h`
+  return `fa ${Math.floor(h / 24)}d`
 }
 </script>
 

@@ -34,6 +34,14 @@ class ProductViewSet(CompanyMixin, viewsets.ModelViewSet):
     ordering_fields = ['name', 'sku', 'price', 'stock', 'updated_at', 'created_at']
     ordering = ['-updated_at']
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Exclude archived products unless the caller explicitly filters by status=Archived
+        status_param = self.request.query_params.get('status', '')
+        if status_param.lower() != 'archived':
+            qs = qs.exclude(status='Archived')
+        return qs
+
     def get_serializer_class(self):
         if self.action == 'list':
             return ProductListSerializer
@@ -55,10 +63,10 @@ class ProductViewSet(CompanyMixin, viewsets.ModelViewSet):
         """Descarga el listado de productos en XLSX (respeta filtros y búsqueda)."""
         qs = self.filter_queryset(self.get_queryset())
         headers = [
-            'SKU', 'Nombre', 'Tipo', 'Estado', 'Categoría', 'Marca',
-            'Unidad', 'Precio', 'Precio sin IVA', 'Coste', 'Moneda',
-            'Stock', 'Reservado', 'Stock mínimo', 'Almacén',
-            'Actualizado',
+            'SKU', 'Nom', 'Tipus', 'Estat', 'Categoria', 'Marca',
+            'Unitat', 'Preu', 'Preu sense IVA', 'Cost', 'Moneda',
+            'Estoc', 'Reservat', 'Estoc mínim', 'Magatzem',
+            'Actualitzat',
         ]
         rows = []
         for p in qs:

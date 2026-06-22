@@ -102,8 +102,8 @@ def dashboard_wallet(request):
 
 
 # ── Analytics (for the Dashboards module) ────────────────────────────
-MONTH_ABBR = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-              'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+MONTH_ABBR = ['', 'Gen', 'Feb', 'Mar', 'Abr', 'Mai', 'Jun',
+              'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Des']
 
 
 def _last_12_months():
@@ -141,8 +141,8 @@ def _series_from(qs, date_field, value_field, index):
     return out
 
 
-def _breakdown(qs, group_field, value_field, label_empty='Sin asignar', top=6):
-    """Top-N grouped breakdown with the remainder folded into 'Otros'."""
+def _breakdown(qs, group_field, value_field, label_empty='Sense assignar', top=6):
+    """Top-N grouped breakdown with the remainder folded into 'Altres'."""
     rows = (
         qs.values(group_field)
         .annotate(_v=value_field)
@@ -159,7 +159,7 @@ def _breakdown(qs, group_field, value_field, label_empty='Sin asignar', top=6):
         head = items[:top]
         rest = sum(i['value'] for i in items[top:])
         if rest > 0:
-            head.append({'label': 'Otros', 'value': round(rest, 2)})
+            head.append({'label': 'Altres', 'value': round(rest, 2)})
         return head
     return items
 
@@ -171,6 +171,9 @@ def dashboard_analytics(request):
     company = getattr(request, 'company', None)
     labels, index, start = _last_12_months()
 
+    # DEBUG — remove after fixing
+    print(f'[DASHBOARD DEBUG] company={company} (id={company.id if company else None})')
+
     def scoped(qs):
         return qs.filter(company=company) if company else qs
 
@@ -180,14 +183,16 @@ def dashboard_analytics(request):
     )
     inv_window = inv.filter(issue_date__gte=start)
 
-    # Purchase invoices (expenses). PurchaseInvoice has no direct company FK,
-    # so it is scoped through the provider.
+    # Purchase invoices (expenses). Scoped by direct company FK.
     pur = PurchaseInvoice.objects.filter(is_template=False).exclude(
         status__in=['Draft', 'Voided'],
     )
     if company:
-        pur = pur.filter(provider__company=company)
+        pur = pur.filter(company=company)
     pur_window = pur.filter(issue_date__gte=start)
+
+    # DEBUG — remove after fixing
+    print(f'[DASHBOARD DEBUG] inv_window={inv_window.count()}, pur_window={pur_window.count()}')
 
     # Customers
     cust = scoped(Customer.objects)
@@ -213,38 +218,38 @@ def dashboard_analytics(request):
         'revenue': {
             'unit': 'currency', 'series': revenue,
             'breakdowns': {
-                'category': _breakdown(lines, 'product__category__name', Sum('subtotal'), 'Sin categoría'),
-                'product': _breakdown(lines, 'product__name', Sum('subtotal'), 'Sin producto', top=8),
-                'region': _breakdown(inv_window, 'customer__province', Sum('total_amount'), 'Sin región'),
-                'customer': _breakdown(inv_window, 'customer__name', Sum('total_amount'), 'Sin cliente'),
+                'category': _breakdown(lines, 'product__category__name', Sum('subtotal'), 'Sense categoria'),
+                'product': _breakdown(lines, 'product__name', Sum('subtotal'), 'Sense producte', top=8),
+                'region': _breakdown(inv_window, 'customer__province', Sum('total_amount'), 'Sense regió'),
+                'customer': _breakdown(inv_window, 'customer__name', Sum('total_amount'), 'Sense client'),
             },
         },
         'expenses': {
             'unit': 'currency', 'series': expenses,
             'breakdowns': {
-                'provider': _breakdown(pur_window, 'provider__name', Sum('total_amount'), 'Sin proveedor'),
+                'provider': _breakdown(pur_window, 'provider__name', Sum('total_amount'), 'Sense proveïdor'),
             },
         },
         'profit': {'unit': 'currency', 'series': profit, 'breakdowns': {}},
         'invoices': {
             'unit': 'number', 'series': inv_count,
             'breakdowns': {
-                'status': _breakdown(inv_window, 'status', Count('id'), 'Sin estado', top=8),
+                'status': _breakdown(inv_window, 'status', Count('id'), 'Sense estat', top=8),
             },
         },
         'new_customers': {
             'unit': 'number', 'series': new_cust,
             'breakdowns': {
-                'region': _breakdown(cust, 'province', Count('id'), 'Sin región'),
-                'type': _breakdown(cust, 'contact_type', Count('id'), 'Otro', top=8),
+                'region': _breakdown(cust, 'province', Count('id'), 'Sense regió'),
+                'type': _breakdown(cust, 'contact_type', Count('id'), 'Altre', top=8),
             },
         },
         'avg_ticket': {'unit': 'currency', 'series': avg_ticket, 'breakdowns': {}},
         'units_sold': {
             'unit': 'number', 'series': units,
             'breakdowns': {
-                'product': _breakdown(lines, 'product__name', Sum('quantity'), 'Sin producto', top=8),
-                'category': _breakdown(lines, 'product__category__name', Sum('quantity'), 'Sin categoría'),
+                'product': _breakdown(lines, 'product__name', Sum('quantity'), 'Sense producte', top=8),
+                'category': _breakdown(lines, 'product__category__name', Sum('quantity'), 'Sense categoria'),
             },
         },
     }

@@ -9,11 +9,11 @@
         <div class="header-actions">
           <button v-if="canManage" class="btn btn-secondary" @click="openRolesModal">
             <Shield :size="18" />
-            <span>Gestionar roles</span>
+            <span>Gestionar rols</span>
           </button>
           <button v-if="canManage" class="btn btn-primary" @click="showInviteModal = true">
             <UserPlus :size="18" />
-            <span>Invitar empleado</span>
+            <span>Convidar empleat</span>
           </button>
         </div>
       </div>
@@ -26,13 +26,13 @@
           <input
             type="text"
             class="input search-input"
-            placeholder="Buscar por nombre, email..."
+            placeholder="Cerca per nom o correu…"
             v-model="searchQuery"
           />
         </div>
         <div class="filter-actions">
           <select class="select filter-select" v-model="roleFilter">
-            <option value="all">Todos los roles</option>
+            <option value="all">Tots els rols</option>
             <option v-for="opt in roleFilterOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </option>
@@ -46,10 +46,10 @@
             <thead>
               <tr>
                 <th class="col-avatar"></th>
-                <th class="col-name">Nombre</th>
-                <th class="col-email">Email</th>
+                <th class="col-name">Nom</th>
+                <th class="col-email">Correu</th>
                 <th class="col-role">Rol</th>
-                <th class="col-joined">En la empresa desde</th>
+                <th class="col-joined">A l'empresa des de</th>
                 <th v-if="canManage" class="col-actions"></th>
               </tr>
             </thead>
@@ -95,7 +95,7 @@
               </tr>
               <tr v-if="!loading && !filteredMembers.length">
                 <td :colspan="canManage ? 6 : 5" class="empty-row">
-                  No hay empleados que coincidan con la búsqueda.
+                  No hi ha empleats que coincideixin amb la cerca.
                 </td>
               </tr>
             </tbody>
@@ -103,8 +103,8 @@
         </div>
         <div class="table-footer">
           <span class="table-footer-info">
-            Mostrando <strong>{{ filteredMembers.length }}</strong> de
-            <strong>{{ members.length }}</strong> empleados
+            Mostrant <strong>{{ filteredMembers.length }}</strong> de
+            <strong>{{ members.length }}</strong> empleats
           </span>
         </div>
       </div>
@@ -126,31 +126,31 @@
       <div v-if="showInviteModal" class="modal-overlay" @click.self="showInviteModal = false">
         <div class="modal-card">
           <div class="modal-header">
-            <h3>Invitar empleado</h3>
+            <h3>Convidar empleat</h3>
             <button class="modal-close" @click="showInviteModal = false">
               <X :size="20" />
             </button>
           </div>
           <form @submit.prevent="handleInvite" class="modal-body">
             <div class="form-group">
-              <label class="form-label">Email del usuario <span class="required">*</span></label>
+              <label class="form-label">Correu de l'usuari <span class="required">*</span></label>
               <input
                 v-model="inviteForm.email"
                 type="email"
                 class="input"
                 required
-                placeholder="usuario@email.com"
+                placeholder="usuari@correu.com"
               />
             </div>
             <div class="form-group">
               <label class="form-label">Rol</label>
               <select v-model="inviteForm.roleToken" class="select">
-                <optgroup label="Roles base">
+                <optgroup label="Rols base">
                   <option value="builtin:admin">Administrador</option>
                   <option value="builtin:editor">Editor</option>
-                  <option value="builtin:viewer">Solo lectura</option>
+                  <option value="builtin:viewer">Només lectura</option>
                 </optgroup>
-                <optgroup v-if="customRoles.length" label="Roles personalizados">
+                <optgroup v-if="customRoles.length" label="Rols personalitzats">
                   <option
                     v-for="r in customRoles"
                     :key="r.id"
@@ -161,10 +161,10 @@
             </div>
             <div class="modal-actions">
               <button type="button" class="btn btn-secondary" @click="showInviteModal = false">
-                Cancelar
+                Cancel·lar
               </button>
               <button type="submit" class="btn btn-primary" :disabled="inviting">
-                {{ inviting ? 'Invitando...' : 'Enviar invitación' }}
+                {{ inviting ? 'Convidant…' : 'Enviar invitació' }}
               </button>
             </div>
           </form>
@@ -177,7 +177,7 @@
       <div v-if="showRolesModal" class="modal-overlay" @click.self="showRolesModal = false">
         <div class="modal-card roles-card">
           <div class="modal-header">
-            <h3>Gestionar roles</h3>
+            <h3>Gestionar rols</h3>
             <button class="modal-close" @click="showRolesModal = false">
               <X :size="20" />
             </button>
@@ -185,9 +185,9 @@
           <div class="modal-body roles-body">
             <!-- Existing roles -->
             <div class="roles-list">
-              <p class="roles-section-label">Roles personalizados</p>
+              <p class="roles-section-label">Rols personalitzats</p>
               <p v-if="!customRoles.length" class="roles-empty">
-                Aún no has creado ningún rol. Crea uno para definir a qué módulos accede cada empleado.
+                Encara no has creat cap rol. Crea'n un per definir a quins mòduls accedeix cada empleat.
               </p>
               <div
                 v-for="r in customRoles"
@@ -196,7 +196,7 @@
               >
                 <div class="role-chip-info" @click="editRole(r)">
                   <span class="role-chip-name">{{ r.name }}</span>
-                  <span class="role-chip-meta">{{ r.members_count }} empleado(s)</span>
+                  <span class="role-chip-meta">{{ r.members_count }} empleat(s)</span>
                 </div>
                 <div class="role-chip-actions">
                   <button class="btn-icon" title="Editar" @click="editRole(r)">
@@ -217,28 +217,28 @@
             <!-- Role editor -->
             <div class="role-editor">
               <p class="roles-section-label">
-                {{ editingRoleId ? 'Editar rol' : 'Nuevo rol' }}
+                {{ editingRoleId ? 'Editar rol' : 'Nou rol' }}
                 <button
                   v-if="editingRoleId"
                   class="link-btn"
                   type="button"
                   @click="resetRoleForm"
                 >
-                  <Plus :size="14" /> Crear otro
+                  <Plus :size="14" /> Crear-ne un altre
                 </button>
               </p>
               <div class="form-group">
-                <label class="form-label">Nombre del rol <span class="required">*</span></label>
+                <label class="form-label">Nom del rol <span class="required">*</span></label>
                 <input
                   v-model="roleForm.name"
                   type="text"
                   class="input"
-                  placeholder="Ej. Comercial, Almacén, Contabilidad…"
+                  placeholder="Ex. Comercial, Magatzem, Comptabilitat…"
                 />
               </div>
 
               <div class="form-group">
-                <label class="form-label">Permisos por módulo</label>
+                <label class="form-label">Permisos per mòdul</label>
                 <div class="perm-grid">
                   <div v-for="mod in modules" :key="mod.key" class="perm-row">
                     <span class="perm-module">{{ mod.label }}</span>
@@ -263,10 +263,10 @@
 
               <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" @click="showRolesModal = false">
-                  Cerrar
+                  Tancar
                 </button>
                 <button type="button" class="btn btn-primary" :disabled="savingRole" @click="saveRole">
-                  {{ savingRole ? 'Guardando...' : (editingRoleId ? 'Guardar cambios' : 'Crear rol') }}
+                  {{ savingRole ? 'Desant…' : (editingRoleId ? 'Desar canvis' : 'Crear rol') }}
                 </button>
               </div>
             </div>
@@ -301,15 +301,15 @@ const customRoles = ref([])
 const modules = ref([])
 
 const BUILTIN_ROLES = [
-  { value: 'owner', label: 'Propietario' },
+  { value: 'owner', label: 'Propietari' },
   { value: 'admin', label: 'Administrador' },
   { value: 'editor', label: 'Editor' },
-  { value: 'viewer', label: 'Solo lectura' },
+  { value: 'viewer', label: 'Només lectura' },
 ]
 
 const PERMISSION_OPTIONS = [
-  { value: 'none', label: 'Sin acceso' },
-  { value: 'view', label: 'Ver' },
+  { value: 'none', label: 'Sense accés' },
+  { value: 'view', label: 'Veure' },
   { value: 'edit', label: 'Editar' },
 ]
 
@@ -326,7 +326,7 @@ async function fetchMembers() {
       is_owner: m.role === 'owner',
     }))
   } catch {
-    toast.error('Error al cargar el personal')
+    toast.error('Error en carregar el personal')
   } finally {
     loading.value = false
   }
@@ -389,31 +389,31 @@ async function handleSave(payload) {
       members.value[idx] = { ...updated, is_owner: updated.role === 'owner' }
       selectedMember.value = members.value[idx]
     }
-    toast.success('Empleado actualizado')
+    toast.success('Empleat actualitzat')
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al actualizar')
+    toast.error(err.data?.detail || err.message || 'Error en actualitzar')
   }
 }
 
 async function confirmDelete(member) {
   if (!canManage.value) return
   if (member.is_owner) {
-    toast.error('No puedes eliminar al propietario')
+    toast.error('No pots eliminar el propietari')
     return
   }
   if (member.user?.id === currentUser.value?.id) {
-    toast.error('No puedes eliminarte a ti mismo')
+    toast.error('No et pots eliminar a tu mateix')
     return
   }
   const name = member.user?.full_name || member.user?.email
-  if (!confirm(`¿Eliminar a ${name} de la empresa?`)) return
+  if (!confirm(`Vols eliminar ${name} de l'empresa?`)) return
   try {
     await authApi.removeMember(activeCompany.value.id, member.id)
     members.value = members.value.filter(m => m.id !== member.id)
     if (selectedMember.value?.id === member.id) closeDetail()
-    toast.success('Empleado eliminado')
+    toast.success('Empleat eliminat')
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al eliminar')
+    toast.error(err.data?.detail || err.message || 'Error en eliminar')
   }
 }
 
@@ -436,12 +436,12 @@ async function handleInvite() {
     // Sends an invitation to the user's inbox; they choose to accept or reject.
     // The invitation is scoped to the active company via the X-Company header.
     await inboxApi.createInvitation(payload)
-    toast.success('Invitación enviada. El usuario la verá en su buzón.')
+    toast.success('Invitació enviada. L\'usuari la veurà a la seva bústia.')
     showInviteModal.value = false
     inviteForm.email = ''
     inviteForm.roleToken = 'builtin:editor'
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al invitar')
+    toast.error(err.data?.detail || err.message || 'Error en convidar')
   } finally {
     inviting.value = false
   }
@@ -478,7 +478,7 @@ function editRole(role) {
 
 async function saveRole() {
   if (!roleForm.name.trim()) {
-    toast.error('El rol necesita un nombre')
+    toast.error('El rol necessita un nom')
     return
   }
   savingRole.value = true
@@ -486,31 +486,31 @@ async function saveRole() {
   try {
     if (editingRoleId.value) {
       await authApi.updateRole(activeCompany.value.id, editingRoleId.value, payload)
-      toast.success('Rol actualizado')
+      toast.success('Rol actualitzat')
     } else {
       await authApi.createRole(activeCompany.value.id, payload)
-      toast.success('Rol creado')
+      toast.success('Rol creat')
     }
     await fetchRoles()
     await fetchMembers()
     resetRoleForm()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al guardar el rol')
+    toast.error(err.data?.detail || err.message || 'Error en desar el rol')
   } finally {
     savingRole.value = false
   }
 }
 
 async function deleteRole(role) {
-  if (!confirm(`¿Eliminar el rol "${role.name}"? Los empleados con este rol pasarán a su rol base.`)) return
+  if (!confirm(`Vols eliminar el rol "${role.name}"? Els empleats amb aquest rol passaran al seu rol base.`)) return
   try {
     await authApi.deleteRole(activeCompany.value.id, role.id)
-    toast.success('Rol eliminado')
+    toast.success('Rol eliminat')
     if (editingRoleId.value === role.id) resetRoleForm()
     await fetchRoles()
     await fetchMembers()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al eliminar el rol')
+    toast.error(err.data?.detail || err.message || 'Error en eliminar el rol')
   }
 }
 
@@ -533,7 +533,7 @@ function memberMatchesFilter(m, filter) {
 function roleLabel(member) {
   // Prefer the label computed by the backend (handles custom roles).
   if (member?.role_label) return member.role_label
-  const map = { owner: 'Propietario', admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' }
+  const map = { owner: 'Propietari', admin: 'Administrador', editor: 'Editor', viewer: 'Només lectura' }
   return map[member?.role] || member?.role
 }
 
@@ -553,7 +553,7 @@ function avatarColor(member) {
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-ES', {
+  return new Date(dateStr).toLocaleDateString('ca-ES', {
     day: '2-digit', month: 'short', year: 'numeric',
   })
 }

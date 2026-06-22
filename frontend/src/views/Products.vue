@@ -3,17 +3,17 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Products</h1>
+          <h1 class="view-title">Productes</h1>
           <span class="count-badge">{{ products.length }}</span>
         </div>
         <div class="header-actions">
           <button class="btn btn-secondary" :disabled="exporting" @click="handleExport">
             <Download :size="18" />
-            <span>{{ exporting ? 'Exportando…' : 'Export' }}</span>
+            <span>{{ exporting ? 'Exportant…' : 'Exportar' }}</span>
           </button>
           <button class="btn btn-primary" @click="openProductForm()">
             <Plus :size="18" />
-            <span>Create product</span>
+            <span>Crear producte</span>
           </button>
         </div>
       </div>
@@ -26,33 +26,33 @@
           <input
             type="text"
             class="input search-input"
-            placeholder="Search by name, SKU, category..."
+            placeholder="Cerca per nom, SKU, categoria…"
             v-model="searchQuery"
           />
         </div>
         <div class="filter-actions">
           <select class="select filter-select" v-model="statusFilter">
-            <option value="all">All statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="archived">Archived</option>
+            <option value="all">Tots els estats</option>
+            <option value="active">Actiu</option>
+            <option value="inactive">Inactiu</option>
+            <option value="archived">Arxivat</option>
           </select>
           <select class="select filter-select" v-model="typeFilter">
-            <option value="all">All types</option>
-            <option value="product">Product</option>
-            <option value="service">Service</option>
+            <option value="all">Tots els tipus</option>
+            <option value="product">Producte</option>
+            <option value="service">Servei</option>
           </select>
           <select class="select filter-select" v-model="categoryFilter">
-            <option value="all">All categories</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            <option value="all">Totes les categories</option>
+            <option v-for="cat in categories" :key="cat" :value="cat">{{ categoryLabel(cat) }}</option>
           </select>
           <button class="btn btn-secondary" @click="togglePublishedFilter">
             <Globe :size="18" />
-            <span>{{ publishedFilter === 'all' ? 'Published' : publishedFilter === 'yes' ? 'Published' : 'Unpublished' }}</span>
+            <span>{{ publishedFilter === 'all' ? 'Publicats' : publishedFilter === 'yes' ? 'Publicats' : 'No publicats' }}</span>
           </button>
           <button class="btn btn-secondary" @click="sortProducts">
             <ArrowUpDown :size="18" />
-            <span>Sort</span>
+            <span>Ordenar</span>
           </button>
         </div>
       </div>
@@ -67,18 +67,18 @@
                 </th>
                 <th class="col-image"></th>
                 <th class="col-sku">SKU</th>
-                <th class="col-name">Product</th>
-                <th class="col-status">Status</th>
-                <th class="col-type">Type</th>
-                <th class="col-category">Category</th>
-                <th class="col-stock">Stock</th>
+                <th class="col-name">Producte</th>
+                <th class="col-status">Estat</th>
+                <th class="col-type">Tipus</th>
+                <th class="col-category">Categoria</th>
+                <th class="col-stock">Estoc</th>
                 <th class="col-price">PVP</th>
                 <th class="col-cost">Cost</th>
-                <th class="col-margin">Margin</th>
-                <th class="col-tax">Tax</th>
-                <th class="col-supplier">Supplier</th>
-                <th class="col-channel">Published</th>
-                <th class="col-updated">Updated</th>
+                <th class="col-margin">Marge</th>
+                <th class="col-tax">IVA</th>
+                <th class="col-supplier">Proveïdor</th>
+                <th class="col-channel">Publicat</th>
+                <th class="col-updated">Actualitzat</th>
                 <th class="col-actions"></th>
               </tr>
             </thead>
@@ -102,26 +102,26 @@
                 </td>
                 <td class="col-status">
                   <span :class="['badge', statusBadgeClass(product.status)]">
-                    {{ product.status }}
+                    {{ statusLabel(product.status) }}
                   </span>
                 </td>
                 <td class="col-type">
                   <div class="type-cell">
                     <component :is="product.type === 'Product' ? Package : Wrench" :size="14" class="type-icon" />
-                    <span>{{ product.type }}</span>
+                    <span>{{ typeLabel(product.type) }}</span>
                   </div>
                 </td>
-                <td class="col-category">{{ product.category }}</td>
+                <td class="col-category">{{ categoryLabel(product.category) }}</td>
                 <td class="col-stock">
                   <div class="stock-cell">
                     <span :class="['stock-value', stockClass(product)]">{{ product.stock }}</span>
-                    <span v-if="product.reserved" class="stock-reserved">{{ product.reserved }} rsv</span>
+                    <span v-if="product.reserved" class="stock-reserved">{{ product.reserved }} res.</span>
                   </div>
                 </td>
                 <td class="col-price">
                   <div class="price-cell">
                     <span class="price-main">{{ formatCurrency(product.price) }}</span>
-                    <span v-if="product.hasVariants && product.priceFrom" class="price-from">from {{ formatCurrency(product.priceFrom) }}</span>
+                    <span v-if="product.hasVariants && product.priceFrom" class="price-from">des de {{ formatCurrency(product.priceFrom) }}</span>
                   </div>
                 </td>
                 <td class="col-cost">
@@ -169,7 +169,7 @@
         </div>
         <div class="table-footer">
           <span class="table-footer-info">
-            Showing <strong>{{ filteredProducts.length }}</strong> of <strong>{{ products.length }}</strong> products
+            Mostrant <strong>{{ filteredProducts.length }}</strong> de <strong>{{ products.length }}</strong> productes
           </span>
         </div>
       </div>
@@ -210,6 +210,7 @@ import productsApi from '@/services/products'
 import { saveBlob } from '@/services/api'
 import { mapProductFromApi, mapProductDetailFromApi, mapProductToApi, parseDrfErrors } from '../services/mappers'
 import { useToast } from '@/composables/useToast'
+import { categoryLabel } from '@/config/productCategories'
 
 const router = useRouter()
 const toast = useToast()
@@ -222,11 +223,11 @@ async function handleExport() {
   try {
     const blob = await productsApi.export()
     const stamp = new Date().toISOString().slice(0, 10)
-    saveBlob(blob, `productos-${stamp}.xlsx`)
-    toast.success('Exportación generada')
+    saveBlob(blob, `productes-${stamp}.xlsx`)
+    toast.success('Exportació generada')
   } catch (err) {
     console.error('Export failed:', err)
-    toast.error(err.message || 'Error al exportar productos')
+    toast.error(err.message || 'Error en exportar els productes')
   } finally {
     exporting.value = false
   }
@@ -241,7 +242,7 @@ async function fetchProducts() {
     products.value = items.map(mapProductFromApi)
   } catch (err) {
     console.error('Failed to load products:', err)
-    toast.error('Error al cargar productos')
+    toast.error('Error en carregar els productes')
   } finally {
     loading.value = false
   }
@@ -300,8 +301,17 @@ function handleNewPurchaseInvoice(product) {
 const formModalOpen = ref(false)
 const formProduct = ref(null)
 
-function openProductForm(product = null) {
-  formProduct.value = product
+async function openProductForm(product = null) {
+  if (product) {
+    try {
+      const data = await productsApi.getById(product.id)
+      formProduct.value = mapProductDetailFromApi(data)
+    } catch {
+      formProduct.value = product
+    }
+  } else {
+    formProduct.value = null
+  }
   formModalOpen.value = true
 }
 
@@ -325,24 +335,25 @@ async function handleProductSave(data) {
   try {
     if (formProduct.value) {
       await productsApi.update(formProduct.value.id, payload)
-      toast.success('Producto actualizado')
+      toast.success('Producte actualitzat')
     } else {
       await productsApi.create(payload)
-      toast.success('Producto creado')
+      toast.success('Producte creat')
     }
     await fetchProducts()
   } catch (err) {
-    toast.error(parseDrfErrors(err.data) || err.message || 'Error al guardar producto')
+    toast.error(parseDrfErrors(err.data) || err.message || 'Error en desar el producte')
   }
 }
 
 async function deleteProduct(product) {
+  if (!confirm(`Segur que vols eliminar "${product.name}"? Quedarà arxivat i desapareixerà del llistat.`)) return
   try {
     await productsApi.delete(product.id)
-    products.value = products.value.filter(p => p.id !== product.id)
-    toast.success('Producto eliminado')
+    await fetchProducts()
+    toast.success('Producte eliminat')
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al eliminar producto')
+    toast.error(err.data?.detail || err.message || 'Error en eliminar el producte')
   }
 }
 
@@ -432,6 +443,17 @@ function statusBadgeClass(status) {
   return map[status] || 'badge-gray'
 }
 
+/* ── Display labels (internal values stay unchanged) ── */
+function statusLabel(status) {
+  const map = { Active: 'Actiu', Inactive: 'Inactiu', Archived: 'Arxivat' }
+  return map[status] || status
+}
+
+function typeLabel(type) {
+  const map = { Product: 'Producte', Service: 'Servei' }
+  return map[type] || type
+}
+
 function stockClass(product) {
   if (product.stock === null) return 'stock-service'
   if (product.stock === 0) return 'stock-out'
@@ -454,7 +476,7 @@ function marginClass(product) {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
 }
 
 function formatDate(iso) {
@@ -463,10 +485,10 @@ function formatDate(iso) {
   const now = new Date()
   const diffMs = now - d
   const diffDays = Math.floor(diffMs / 86400000)
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays}d ago`
-  return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })
+  if (diffDays === 0) return 'Avui'
+  if (diffDays === 1) return 'Ahir'
+  if (diffDays < 7) return `fa ${diffDays}d`
+  return d.toLocaleDateString('ca-ES', { day: '2-digit', month: 'short', year: '2-digit' })
 }
 </script>
 

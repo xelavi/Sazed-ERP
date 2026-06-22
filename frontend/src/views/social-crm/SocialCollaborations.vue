@@ -3,12 +3,12 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Colaboraciones</h1>
+          <h1 class="view-title">Col·laboracions</h1>
           <span class="count-badge">{{ filtered.length }}</span>
         </div>
         <div class="header-actions">
-          <button class="btn btn-secondary" @click="openMetrics"><Upload :size="18" /><span>Cargar métricas</span></button>
-          <button class="btn btn-primary" @click="openForm"><Plus :size="18" /><span>Nueva colaboración</span></button>
+          <button class="btn btn-secondary" @click="openMetrics"><Upload :size="18" /><span>Carregar mètriques</span></button>
+          <button class="btn btn-primary" @click="openForm"><Plus :size="18" /><span>Nova col·laboració</span></button>
         </div>
       </div>
     </div>
@@ -16,15 +16,15 @@
     <div class="content-wrapper">
       <div class="filters-bar">
         <select class="select" v-model="statusFilter">
-          <option value="all">Todos los estados</option>
+          <option value="all">Tots els estats</option>
           <option v-for="(s, k) in COLLAB_STATUSES" :key="k" :value="k">{{ s.label }}</option>
         </select>
         <select class="select" v-model="campaignFilter">
-          <option value="all">Todas las campañas</option>
+          <option value="all">Totes les campanyes</option>
           <option v-for="c in socialCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
         <select class="select" v-model="influencerFilter">
-          <option value="all">Todos los influencers</option>
+          <option value="all">Tots els influencers</option>
           <option v-for="i in socialInfluencers" :key="i.id" :value="i.id">{{ i.alias }}</option>
         </select>
       </div>
@@ -35,16 +35,16 @@
             <thead>
               <tr>
                 <th>Influencer</th>
-                <th>Campaña</th>
-                <th>Formato</th>
-                <th>Publicación</th>
-                <th class="text-right">Coste</th>
-                <th>Código</th>
-                <th>Estado</th>
+                <th>Campanya</th>
+                <th>Format</th>
+                <th>Publicació</th>
+                <th class="text-right">Cost</th>
+                <th>Codi</th>
+                <th>Estat</th>
                 <th class="text-right">Clics</th>
-                <th class="text-right">Conversiones</th>
-                <th class="text-right">Ventas</th>
-                <th>Acciones</th>
+                <th class="text-right">Conversions</th>
+                <th class="text-right">Vendes</th>
+                <th>Accions</th>
               </tr>
             </thead>
             <tbody>
@@ -72,9 +72,9 @@
                 <td class="text-right font-medium">{{ formatCurrency(c.sales) }}</td>
                 <td @click.stop>
                   <div class="row-actions">
-                    <button class="icon-btn" @click="$router.push('/social-crm/collaborations/' + c.id)" title="Ver detalle"><Eye :size="15" /></button>
-                    <button class="icon-btn" title="Adjuntar evidencia"><Paperclip :size="15" /></button>
-                    <button class="icon-btn" v-if="c.status === 'active'" title="Cerrar colaboración" @click.stop="closeCollab(c)"><CheckCircle :size="15" /></button>
+                    <button class="icon-btn" @click="$router.push('/social-crm/collaborations/' + c.id)" title="Veure detall"><Eye :size="15" /></button>
+                    <button class="icon-btn" title="Adjuntar evidència"><Paperclip :size="15" /></button>
+                    <button class="icon-btn" v-if="c.status === 'active'" title="Tancar col·laboració" @click.stop="closeCollab(c)"><CheckCircle :size="15" /></button>
                   </div>
                 </td>
               </tr>
@@ -88,7 +88,7 @@
     <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
       <div class="modal">
         <div class="modal-header">
-          <h2 class="modal-title">Nueva colaboración</h2>
+          <h2 class="modal-title">Nova col·laboració</h2>
           <button class="icon-btn" @click="showForm = false"><X :size="20" /></button>
         </div>
         <div class="modal-body">
@@ -101,37 +101,37 @@
               </select>
             </div>
             <div class="field">
-              <label class="field-label">Campaña *</label>
+              <label class="field-label">Campanya *</label>
               <select class="select full" v-model.number="form.campaignId">
                 <option :value="null">Seleccionar...</option>
                 <option v-for="c in socialCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
             </div>
             <div class="field">
-              <label class="field-label">Formato pactado</label>
-              <input class="input full" v-model="form.format" placeholder="Ej: Reel + 3 Stories" />
+              <label class="field-label">Format pactat</label>
+              <input class="input full" v-model="form.format" placeholder="Ex: Reel + 3 Stories" />
             </div>
             <div class="field">
-              <label class="field-label">Coste (€)</label>
+              <label class="field-label">Cost (€)</label>
               <input class="input full" type="number" v-model.number="form.cost" />
             </div>
             <div class="field">
-              <label class="field-label">Fecha publicación</label>
+              <label class="field-label">Data de publicació</label>
               <input class="input full" type="date" v-model="form.publishDate" />
             </div>
             <div class="field">
-              <label class="field-label">Código descuento</label>
-              <input class="input full" v-model="form.code" placeholder="CODIGO20" />
+              <label class="field-label">Codi de descompte</label>
+              <input class="input full" v-model="form.code" placeholder="CODI20" />
             </div>
             <div class="field full-width">
               <label class="field-label">Entregables</label>
-              <textarea class="input full textarea" v-model="form.deliverables" rows="3" placeholder="Describa los entregables acordados..."></textarea>
+              <textarea class="input full textarea" v-model="form.deliverables" rows="3" placeholder="Descriviu els entregables acordats..."></textarea>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
-          <button class="btn btn-primary" @click="saveCollab">Crear colaboración</button>
+          <button class="btn btn-secondary" @click="showForm = false">Cancel·lar</button>
+          <button class="btn btn-primary" @click="saveCollab">Crear col·laboració</button>
         </div>
       </div>
     </div>
@@ -181,7 +181,7 @@ function saveCollab() {
 }
 
 function closeCollab(c) {
-  if (confirm(`¿Cerrar la colaboración con ${c.influencerName}?`)) {
+  if (confirm(`Tancar la col·laboració amb ${c.influencerName}?`)) {
     const idx = collabs.value.findIndex(x => x.id === c.id)
     if (idx >= 0) collabs.value[idx].status = 'completed'
   }

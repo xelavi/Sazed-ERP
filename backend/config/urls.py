@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/purchases/', include('purchases.urls')),
     path('api/integrations/', include('accounting_sync.urls')),
     path('api/integrations/', include('ecommerce_sync.urls')),
+    path('api/social-crm/', include('social_crm.urls')),
     path('api/dashboard/summary/', dashboard_summary, name='dashboard-summary'),
     path('api/dashboard/wallet/', dashboard_wallet, name='dashboard-wallet'),
     path('api/dashboard/analytics/', dashboard_analytics, name='dashboard-analytics'),

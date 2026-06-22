@@ -12,8 +12,8 @@
         <span class="logo-text">Seshat ERP</span>
       </div>
 
-      <h2 class="auth-title">Crear cuenta</h2>
-      <p class="auth-subtitle">Crea tu cuenta personal. Luego podrás configurar tus empresas</p>
+      <h2 class="auth-title">Crear un compte</h2>
+      <p class="auth-subtitle">Crea el teu compte personal. Després podràs configurar les teves empreses</p>
 
       <form @submit.prevent="handleRegister" class="auth-form">
         <div v-if="generalError" class="alert alert-error" role="alert">
@@ -23,18 +23,18 @@
 
         <!-- Personal info -->
         <fieldset class="form-fieldset">
-          <legend class="form-legend">Datos personales</legend>
+          <legend class="form-legend">Dades personals</legend>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="first_name" class="form-label">Nombre <span class="required">*</span></label>
+              <label for="first_name" class="form-label">Nom <span class="required">*</span></label>
               <input
                 id="first_name"
                 v-model="form.first_name"
                 type="text"
                 class="input"
                 :class="{ 'input-error': errors.first_name }"
-                placeholder="Juan"
+                placeholder="Joan"
                 required
                 autocomplete="given-name"
                 @input="clearError('first_name')"
@@ -42,7 +42,7 @@
               <span v-if="errors.first_name" class="field-error">{{ errors.first_name }}</span>
             </div>
             <div class="form-group">
-              <label for="last_name" class="form-label">Apellidos</label>
+              <label for="last_name" class="form-label">Cognoms</label>
               <input
                 id="last_name"
                 v-model="form.last_name"
@@ -55,7 +55,7 @@
           </div>
 
           <div class="form-group">
-            <label for="reg_email" class="form-label">Email <span class="required">*</span></label>
+            <label for="reg_email" class="form-label">Correu electrònic <span class="required">*</span></label>
             <input
               id="reg_email"
               v-model="form.email"
@@ -71,7 +71,7 @@
           </div>
 
           <div class="form-group">
-            <label for="reg_password" class="form-label">Contraseña <span class="required">*</span></label>
+            <label for="reg_password" class="form-label">Contrasenya <span class="required">*</span></label>
             <div class="password-wrapper">
               <input
                 id="reg_password"
@@ -79,7 +79,7 @@
                 :type="showPassword ? 'text' : 'password'"
                 class="input"
                 :class="{ 'input-error': errors.password }"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínim 8 caràcters"
                 required
                 autocomplete="new-password"
                 @input="clearError('password')"
@@ -88,7 +88,7 @@
                 type="button"
                 class="password-toggle"
                 @click="showPassword = !showPassword"
-                :aria-label="showPassword ? 'Ocultar' : 'Mostrar'"
+                :aria-label="showPassword ? 'Amaga' : 'Mostra'"
               >
                 <EyeOff v-if="showPassword" :size="18" />
                 <Eye v-else :size="18" />
@@ -98,21 +98,21 @@
               <span :class="['hint', { valid: form.password.length >= 8 }]">
                 <CheckCircle2 v-if="form.password.length >= 8" :size="12" />
                 <Circle v-else :size="12" />
-                Mínimo 8 caracteres
+                Mínim 8 caràcters
               </span>
             </div>
             <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
           </div>
 
           <div class="form-group">
-            <label for="confirm_password" class="form-label">Confirmar contraseña <span class="required">*</span></label>
+            <label for="confirm_password" class="form-label">Confirma la contrasenya <span class="required">*</span></label>
             <input
               id="confirm_password"
               v-model="form.confirmPassword"
               type="password"
               class="input"
               :class="{ 'input-error': errors.confirmPassword }"
-              placeholder="Repite la contraseña"
+              placeholder="Repeteix la contrasenya"
               required
               autocomplete="new-password"
               @input="clearError('confirmPassword')"
@@ -123,13 +123,13 @@
 
         <button type="submit" class="btn btn-primary btn-block" :disabled="isSubmitting">
           <span v-if="isSubmitting" class="loading-spinner loading-spinner-sm"></span>
-          <span>{{ isSubmitting ? 'Creando cuenta...' : 'Crear cuenta' }}</span>
+          <span>{{ isSubmitting ? 'Creant el compte…' : 'Crear un compte' }}</span>
         </button>
       </form>
 
       <p class="auth-switch">
-        ¿Ya tienes cuenta?
-        <router-link to="/login" class="auth-link">Inicia sesión</router-link>
+        Ja tens un compte?
+        <router-link to="/login" class="auth-link">Inicia sessió</router-link>
       </p>
 
       <p class="auth-footer-text">
@@ -170,12 +170,12 @@ function clearError(field) {
 
 function validate() {
   let valid = true
-  if (!form.first_name.trim()) { errors.first_name = 'El nombre es obligatorio'; valid = false }
-  if (!form.email.trim()) { errors.email = 'El email es obligatorio'; valid = false }
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { errors.email = 'Formato de email inválido'; valid = false }
-  if (!form.password) { errors.password = 'La contraseña es obligatoria'; valid = false }
-  else if (form.password.length < 8) { errors.password = 'Mínimo 8 caracteres'; valid = false }
-  if (form.password !== form.confirmPassword) { errors.confirmPassword = 'Las contraseñas no coinciden'; valid = false }
+  if (!form.first_name.trim()) { errors.first_name = 'El nom és obligatori'; valid = false }
+  if (!form.email.trim()) { errors.email = 'El correu electrònic és obligatori'; valid = false }
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { errors.email = 'Format de correu no vàlid'; valid = false }
+  if (!form.password) { errors.password = 'La contrasenya és obligatòria'; valid = false }
+  else if (form.password.length < 8) { errors.password = 'Mínim 8 caràcters'; valid = false }
+  if (form.password !== form.confirmPassword) { errors.confirmPassword = 'Les contrasenyes no coincideixen'; valid = false }
   return valid
 }
 
@@ -193,7 +193,7 @@ async function handleRegister() {
       email: form.email.trim(),
       password: form.password,
     })
-    toast.success('¡Cuenta creada!')
+    toast.success('Compte creat!')
     router.push('/')
   } catch (err) {
     if (err.data?.email) {
@@ -201,7 +201,7 @@ async function handleRegister() {
     } else if (err.data?.non_field_errors) {
       generalError.value = err.data.non_field_errors[0]
     } else {
-      generalError.value = err.message || 'Error al crear la cuenta. Reintenta.'
+      generalError.value = err.message || 'Error en crear el compte. Torna-ho a provar.'
     }
   } finally {
     isSubmitting.value = false

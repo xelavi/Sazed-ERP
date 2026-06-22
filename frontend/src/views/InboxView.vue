@@ -2,20 +2,20 @@
   <div class="inbox-view">
     <div class="inbox-header">
       <div>
-        <h1>Buzón</h1>
+        <h1>Bústia</h1>
         <p class="view-subtitle">
-          Notificaciones, mensajes e invitaciones
-          <span v-if="unreadTotal > 0" class="unread-pill">{{ unreadTotal }} sin leer</span>
+          Notificacions, missatges i invitacions
+          <span v-if="unreadTotal > 0" class="unread-pill">{{ unreadTotal }} sense llegir</span>
         </p>
       </div>
       <div class="header-actions">
         <button class="btn btn-secondary btn-sm" @click="markAllRead" :disabled="!unreadTotal">
           <CheckCheck :size="14" />
-          Marcar todo leído
+          Marcar-ho tot com a llegit
         </button>
         <button class="btn btn-primary" @click="openCompose()">
           <PenSquare :size="16" />
-          Nuevo mensaje
+          Nou missatge
         </button>
       </div>
     </div>
@@ -27,7 +27,7 @@
           v-model="query"
           class="search-input"
           type="text"
-          placeholder="Buscar por asunto, remitente o contenido…"
+          placeholder="Cerca per assumpte, remitent o contingut…"
         />
       </div>
       <div class="filter-chips">
@@ -48,10 +48,10 @@
     <div class="inbox-body">
       <!-- List pane -->
       <aside class="inbox-list">
-        <div v-if="loading && !filteredItems.length" class="empty-state">Cargando…</div>
+        <div v-if="loading && !filteredItems.length" class="empty-state">Carregant…</div>
         <div v-else-if="!filteredItems.length" class="empty-state">
           <Inbox :size="32" />
-          <p>No hay nada por aquí.</p>
+          <p>Aquí no hi ha res.</p>
         </div>
         <button
           v-for="item in filteredItems"
@@ -71,7 +71,7 @@
             <p class="item-subject">{{ item.subject }}</p>
             <p class="item-preview">{{ item.preview }}</p>
           </div>
-          <span v-if="item.unread" class="unread-dot" aria-label="No leído"></span>
+          <span v-if="item.unread" class="unread-dot" aria-label="No llegit"></span>
         </button>
       </aside>
 
@@ -79,7 +79,7 @@
       <section class="inbox-detail">
         <div v-if="!selected" class="detail-empty">
           <Mail :size="36" />
-          <p>Selecciona un elemento para verlo aquí.</p>
+          <p>Selecciona un element per veure'l aquí.</p>
         </div>
 
         <article v-else class="detail-card">
@@ -102,11 +102,11 @@
           <div v-if="selected.type === 'invitation' && selected.raw.status === 'pending'" class="detail-actions">
             <button class="btn btn-secondary" @click="rejectInvitation(selected)" :disabled="responding">
               <X :size="16" />
-              Rechazar
+              Rebutjar
             </button>
             <button class="btn btn-primary" @click="acceptInvitation(selected)" :disabled="responding">
               <Check :size="16" />
-              Aceptar y unirme
+              Acceptar i unir-me
             </button>
           </div>
           <div v-else-if="selected.type === 'invitation'" class="invitation-resolved">
@@ -119,7 +119,7 @@
           <div v-if="selected.type === 'message'" class="detail-actions">
             <button class="btn btn-primary" @click="openCompose(selected)">
               <Reply :size="16" />
-              Responder
+              Respondre
             </button>
           </div>
         </article>
@@ -180,7 +180,7 @@ const items = computed(() => {
       body: n.body,
       preview: previewOf(n.body),
       from: 'Sistema',
-      fromFull: 'Notificación del sistema',
+      fromFull: 'Notificació del sistema',
       unread: !n.read,
       created_at: n.created_at,
       raw: n,
@@ -196,7 +196,7 @@ const items = computed(() => {
       subject: m.subject,
       body: m.body,
       preview: previewOf(m.body),
-      from: sender.full_name || sender.email || 'Desconocido',
+      from: sender.full_name || sender.email || 'Desconegut',
       fromFull: `${sender.full_name || ''} <${sender.email || ''}>`,
       unread: !m.read,
       created_at: m.created_at,
@@ -209,9 +209,9 @@ const items = computed(() => {
       key: `i-${inv.id}`,
       id: inv.id,
       type: 'invitation',
-      subject: `Invitación a unirse a ${inv.company_name}`,
-      body: `${inv.inviter?.full_name || inv.inviter?.email || 'Un administrador'} te ha invitado a unirte a ${inv.company_name} como ${inv.role_label || roleLabel(inv.role)}.`,
-      preview: `Rol propuesto: ${inv.role_label || roleLabel(inv.role)}`,
+      subject: `Invitació per unir-te a ${inv.company_name}`,
+      body: `${inv.inviter?.full_name || inv.inviter?.email || 'Un administrador'} t'ha convidat a unir-te a ${inv.company_name} com a ${inv.role_label || roleLabel(inv.role)}.`,
+      preview: `Rol proposat: ${inv.role_label || roleLabel(inv.role)}`,
       from: inv.company_name,
       fromFull: `De ${inv.inviter?.full_name || inv.inviter?.email || 'administrador'}`,
       unread: inv.status === 'pending',
@@ -225,11 +225,11 @@ const items = computed(() => {
 })
 
 const filters = computed(() => [
-  { id: 'all',          label: 'Todo',          icon: Inbox,         count: items.value.filter(i => i.unread).length },
-  { id: 'unread',       label: 'Sin leer',      icon: Mail,          count: items.value.filter(i => i.unread).length },
-  { id: 'message',      label: 'Mensajes',      icon: MessageSquare, count: messages.value.filter(m => !m.read).length },
+  { id: 'all',          label: 'Tot',           icon: Inbox,         count: items.value.filter(i => i.unread).length },
+  { id: 'unread',       label: 'Sense llegir',  icon: Mail,          count: items.value.filter(i => i.unread).length },
+  { id: 'message',      label: 'Missatges',     icon: MessageSquare, count: messages.value.filter(m => !m.read).length },
   { id: 'notification', label: 'Sistema',       icon: Bell,          count: notifications.value.filter(n => !n.read).length },
-  { id: 'invitation',   label: 'Invitaciones',  icon: Building2,     count: invitations.value.filter(i => i.status === 'pending').length },
+  { id: 'invitation',   label: 'Invitacions',   icon: Building2,     count: invitations.value.filter(i => i.status === 'pending').length },
 ])
 
 const filteredItems = computed(() => {
@@ -264,24 +264,24 @@ function iconFor(item) {
 
 function typeLabel(t) {
   return t === 'notification' ? 'Sistema'
-    : t === 'invitation' ? 'Invitación'
-    : 'Mensaje'
+    : t === 'invitation' ? 'Invitació'
+    : 'Missatge'
 }
 
 function roleLabel(role) {
-  const map = { owner: 'Propietario', admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' }
+  const map = { owner: 'Propietari', admin: 'Administrador', editor: 'Editor', viewer: 'Només lectura' }
   return map[role] || role
 }
 
 function statusLabel(status) {
-  return status === 'accepted' ? 'Aceptada'
-    : status === 'rejected' ? 'Rechazada'
-    : 'Pendiente'
+  return status === 'accepted' ? 'Acceptada'
+    : status === 'rejected' ? 'Rebutjada'
+    : 'Pendent'
 }
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
-  return new Date(dateStr).toLocaleString('es-ES', {
+  return new Date(dateStr).toLocaleString('ca-ES', {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
@@ -291,11 +291,11 @@ function relativeTime(dateStr) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
   const diff = (Date.now() - date.getTime()) / 1000
-  if (diff < 60) return 'ahora'
+  if (diff < 60) return 'ara'
   if (diff < 3600) return `${Math.floor(diff / 60)} min`
   if (diff < 86400) return `${Math.floor(diff / 3600)} h`
   if (diff < 604800) return `${Math.floor(diff / 86400)} d`
-  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+  return date.toLocaleDateString('ca-ES', { day: '2-digit', month: 'short' })
 }
 
 async function openItem(item) {
@@ -349,10 +349,10 @@ async function acceptInvitation(item) {
     if (selected.value?.key === item.key) {
       selected.value = { ...selected.value, unread: false, raw: updated }
     }
-    toast.success('Invitación aceptada')
+    toast.success('Invitació acceptada')
     refreshSummary()
   } catch (err) {
-    toast.error(err.message || 'Error al aceptar la invitación')
+    toast.error(err.message || 'Error en acceptar la invitació')
   } finally {
     responding.value = false
   }
@@ -367,10 +367,10 @@ async function rejectInvitation(item) {
     if (selected.value?.key === item.key) {
       selected.value = { ...selected.value, unread: false, raw: updated }
     }
-    toast.success('Invitación rechazada')
+    toast.success('Invitació rebutjada')
     refreshSummary()
   } catch (err) {
-    toast.error(err.message || 'Error al rechazar la invitación')
+    toast.error(err.message || 'Error en rebutjar la invitació')
   } finally {
     responding.value = false
   }
@@ -385,9 +385,9 @@ async function markAllRead() {
     notifications.value = notifications.value.map(n => ({ ...n, read: true }))
     messages.value = messages.value.map(m => ({ ...m, read: true }))
     refreshSummary()
-    toast.success('Todo marcado como leído')
+    toast.success('Tot marcat com a llegit')
   } catch {
-    toast.error('Error al actualizar')
+    toast.error('Error en actualitzar')
   }
 }
 
@@ -409,7 +409,7 @@ async function loadAll() {
     )
     refreshSummary()
   } catch {
-    toast.error('No se pudo cargar el buzón')
+    toast.error('No s\'ha pogut carregar la bústia')
   } finally {
     loading.value = false
   }

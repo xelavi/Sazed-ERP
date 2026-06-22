@@ -16,7 +16,7 @@
       v-if="linkedProductId"
       type="button"
       class="product-ac-badge"
-      title="Producto del catálogo vinculado. Pulsa para desvincular."
+      title="Producte del catàleg vinculat. Prem per desvincular."
       @click="clearLink"
     >
       <Package :size="12" />
@@ -54,7 +54,7 @@ import { Package } from 'lucide-vue-next'
 const props = defineProps({
   modelValue: { type: String, default: '' },
   products: { type: Array, default: () => [] },
-  placeholder: { type: String, default: 'Producto o servicio...' },
+  placeholder: { type: String, default: 'Producte o servei…' },
   // 'sale' -> usa precio base (price_excl_tax/price); 'purchase' -> usa coste
   priceMode: { type: String, default: 'sale' },
   linkedProductId: { type: [Number, String], default: null },
@@ -87,7 +87,7 @@ function priceOf(p) {
 }
 
 function formatCurrency(v) {
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(v || 0)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(v || 0)
 }
 
 async function positionMenu() {

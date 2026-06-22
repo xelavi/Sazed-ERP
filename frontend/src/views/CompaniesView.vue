@@ -2,8 +2,8 @@
   <div class="companies-view">
     <div class="view-header">
       <div>
-        <h1>Gestión de empresas</h1>
-        <p class="view-subtitle">Cambia entre empresas, crea nuevas o gestiona las que administras</p>
+        <h1>Gestió d'empreses</h1>
+        <p class="view-subtitle">Canvia entre empreses, crea'n de noves o gestiona les que administres</p>
       </div>
       <button class="btn btn-primary" @click="showCreateModal = true">
         <Plus :size="16" />
@@ -37,7 +37,7 @@
             @click="showInviteModal = true"
           >
             <UserPlus :size="14" />
-            Invitar
+            Convidar
           </button>
           <router-link
             v-if="canManage(activeRole)"
@@ -52,10 +52,10 @@
             class="btn btn-secondary btn-sm"
             @click="handleOpenOdoo(activeCompany.id)"
             :disabled="openingOdoo"
-            title="Abrir el módulo de contabilidad en Odoo"
+            title="Obre el mòdul de comptabilitat a Odoo"
           >
             <BookOpen :size="14" />
-            Contabilidad
+            Comptabilitat
           </button>
           <button
             v-if="isOwner(activeRole) && companies.length > 1"
@@ -72,8 +72,8 @@
     <!-- Other companies -->
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Otras empresas</h3>
-        <p class="card-subtitle">{{ otherCompanies.length }} empresa{{ otherCompanies.length === 1 ? '' : 's' }} adicional{{ otherCompanies.length === 1 ? '' : 'es' }}</p>
+        <h3 class="card-title">Altres empreses</h3>
+        <p class="card-subtitle">{{ otherCompanies.length }} {{ otherCompanies.length === 1 ? 'empresa addicional' : 'empreses addicionals' }}</p>
       </div>
 
       <div v-if="otherCompanies.length" class="companies-list">
@@ -94,7 +94,7 @@
               @click="handleSwitch(company.id)"
               :disabled="switching"
             >
-              Cambiar
+              Canviar
             </button>
             <button
               v-if="isOwner(company.role)"
@@ -108,7 +108,7 @@
         </div>
       </div>
 
-      <p v-else class="empty-text">No perteneces a ninguna otra empresa todavía.</p>
+      <p v-else class="empty-text">Encara no pertanys a cap altra empresa.</p>
     </div>
 
     <!-- Create company modal -->
@@ -116,15 +116,15 @@
       <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
         <div class="modal-card">
           <div class="modal-header">
-            <h3>Crear nueva empresa</h3>
+            <h3>Crear una empresa nova</h3>
             <button class="modal-close" @click="showCreateModal = false">
               <X :size="20" />
             </button>
           </div>
           <form @submit.prevent="handleCreate" class="modal-body">
             <div class="form-group">
-              <label class="form-label">Nombre de la empresa <span class="required">*</span></label>
-              <input v-model="createForm.name" class="input" required placeholder="Mi Empresa SL" />
+              <label class="form-label">Nom de l'empresa <span class="required">*</span></label>
+              <input v-model="createForm.name" class="input" required placeholder="La meva empresa SL" />
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -135,19 +135,19 @@
                 <label class="form-label">Moneda</label>
                 <select v-model="createForm.currency" class="select">
                   <option value="EUR">EUR - Euro</option>
-                  <option value="USD">USD - Dólar</option>
-                  <option value="GBP">GBP - Libra</option>
+                  <option value="USD">USD - Dòlar</option>
+                  <option value="GBP">GBP - Lliura</option>
                 </select>
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Email de contacto</label>
+              <label class="form-label">Correu de contacte</label>
               <input v-model="createForm.email" type="email" class="input" placeholder="info@empresa.com" />
             </div>
             <div class="modal-actions">
-              <button type="button" class="btn btn-ghost" @click="showCreateModal = false">Cancelar</button>
+              <button type="button" class="btn btn-ghost" @click="showCreateModal = false">Cancel·lar</button>
               <button type="submit" class="btn btn-primary" :disabled="creating">
-                {{ creating ? 'Creando...' : 'Crear empresa' }}
+                {{ creating ? 'Creant…' : 'Crear empresa' }}
               </button>
             </div>
           </form>
@@ -160,18 +160,18 @@
       <div v-if="showInviteModal" class="modal-overlay" @click.self="closeInviteModal">
         <div class="modal-card">
           <div class="modal-header">
-            <h3>Invitar a {{ activeCompany?.name }}</h3>
+            <h3>Convidar a {{ activeCompany?.name }}</h3>
             <button class="modal-close" @click="closeInviteModal">
               <X :size="20" />
             </button>
           </div>
           <form @submit.prevent="handleInvite" class="modal-body">
             <p class="modal-hint">
-              El usuario recibirá la invitación en su buzón y podrá aceptarla o rechazarla.
-              Debe tener cuenta registrada con ese correo.
+              L'usuari rebrà la invitació a la seva bústia i la podrà acceptar o rebutjar.
+              Ha de tenir un compte registrat amb aquest correu.
             </p>
             <div class="form-group">
-              <label class="form-label">Email del invitado <span class="required">*</span></label>
+              <label class="form-label">Correu de la persona convidada <span class="required">*</span></label>
               <input
                 v-model="inviteForm.email"
                 type="email"
@@ -185,13 +185,13 @@
               <select v-model="inviteForm.role" class="select">
                 <option value="admin">Administrador</option>
                 <option value="editor">Editor</option>
-                <option value="viewer">Solo lectura</option>
+                <option value="viewer">Només lectura</option>
               </select>
             </div>
             <div class="modal-actions">
-              <button type="button" class="btn btn-ghost" @click="closeInviteModal">Cancelar</button>
+              <button type="button" class="btn btn-ghost" @click="closeInviteModal">Cancel·lar</button>
               <button type="submit" class="btn btn-primary" :disabled="inviting">
-                {{ inviting ? 'Enviando…' : 'Enviar invitación' }}
+                {{ inviting ? 'Enviant…' : 'Enviar invitació' }}
               </button>
             </div>
           </form>
@@ -204,39 +204,39 @@
       <div v-if="provisioningJob" class="modal-overlay">
         <div class="modal-card provisioning-card">
           <div class="modal-header">
-            <h3>Configurando contabilidad en Odoo</h3>
+            <h3>Configurant la comptabilitat a Odoo</h3>
           </div>
           <div class="modal-body">
             <div v-if="provisioningJob.status === 'pending' || provisioningJob.status === 'running'" class="prov-state prov-running">
               <Loader2 :size="32" class="prov-spin" />
               <p class="prov-title">
-                {{ provisioningJob.status === 'pending' ? 'En cola…' : 'Creando base de datos y módulos contables…' }}
+                {{ provisioningJob.status === 'pending' ? 'A la cua…' : 'Creant la base de dades i els mòduls comptables…' }}
               </p>
               <p class="prov-subtitle">
-                Esto puede tardar 1–3 minutos. Puedes cerrar esta ventana y volver más tarde;
-                el proceso continúa en segundo plano.
+                Això pot trigar 1–3 minuts. Pots tancar aquesta finestra i tornar més tard;
+                el procés continua en segon pla.
               </p>
             </div>
             <div v-else-if="provisioningJob.status === 'done'" class="prov-state prov-done">
               <CheckCircle2 :size="32" />
-              <p class="prov-title">¡Contabilidad lista!</p>
+              <p class="prov-title">Comptabilitat a punt!</p>
               <p class="prov-subtitle">
-                Base de datos Odoo <code>{{ provisioningJob.database_name }}</code> creada
-                y conectada con la empresa.
+                Base de dades Odoo <code>{{ provisioningJob.database_name }}</code> creada
+                i connectada amb l'empresa.
               </p>
             </div>
             <div v-else class="prov-state prov-failed">
               <AlertTriangle :size="32" />
-              <p class="prov-title">No se pudo configurar Odoo</p>
+              <p class="prov-title">No s'ha pogut configurar Odoo</p>
               <p class="prov-error">{{ provisioningJob.error_message }}</p>
               <p class="prov-subtitle">
-                Puedes reintentar más tarde desde Configuración → Integraciones.
-                Mientras tanto, la empresa funciona sin contabilidad.
+                Pots tornar-ho a provar més tard des de Configuració → Integracions.
+                Mentrestant, l'empresa funciona sense comptabilitat.
               </p>
             </div>
 
             <details v-if="provisioningJob.logs" class="prov-logs">
-              <summary>Ver detalles técnicos</summary>
+              <summary>Veure detalls tècnics</summary>
               <pre>{{ provisioningJob.logs }}</pre>
             </details>
 
@@ -246,10 +246,10 @@
                 class="btn btn-primary"
                 @click="handleOpenOdoo(provisioningJob.company); provisioningJob = null"
               >
-                <BookOpen :size="14" /> Abrir contabilidad
+                <BookOpen :size="14" /> Obrir la comptabilitat
               </button>
               <button class="btn btn-ghost" @click="provisioningJob = null">
-                Cerrar
+                Tancar
               </button>
             </div>
           </div>
@@ -271,16 +271,16 @@
             <div class="danger-banner">
               <AlertTriangle :size="20" />
               <div>
-                <p class="banner-title">Esta acción es irreversible</p>
+                <p class="banner-title">Aquesta acció és irreversible</p>
                 <p class="banner-detail">
-                  Se eliminarán todos los datos de <strong>{{ deleteTarget.name }}</strong>:
-                  productos, clientes, facturas, etc.
+                  S'eliminaran totes les dades de <strong>{{ deleteTarget.name }}</strong>:
+                  productes, clients, factures, etc.
                 </p>
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">
-                Escribe <strong>{{ deleteTarget.name }}</strong> para confirmar
+                Escriu <strong>{{ deleteTarget.name }}</strong> per confirmar
               </label>
               <input
                 v-model="deleteConfirm"
@@ -290,14 +290,14 @@
               />
             </div>
             <div class="modal-actions">
-              <button type="button" class="btn btn-ghost" @click="closeDeleteModal">Cancelar</button>
+              <button type="button" class="btn btn-ghost" @click="closeDeleteModal">Cancel·lar</button>
               <button
                 type="button"
                 class="btn btn-danger"
                 :disabled="!canConfirmDelete || deleting"
                 @click="handleDelete"
               >
-                {{ deleting ? 'Eliminando...' : 'Eliminar definitivamente' }}
+                {{ deleting ? 'Eliminant…' : 'Eliminar definitivament' }}
               </button>
             </div>
           </div>
@@ -326,7 +326,7 @@ const otherCompanies = computed(() =>
 )
 
 function roleLabel(role) {
-  const map = { owner: 'Propietario', admin: 'Administrador', editor: 'Editor', viewer: 'Solo lectura' }
+  const map = { owner: 'Propietari', admin: 'Administrador', editor: 'Editor', viewer: 'Només lectura' }
   return map[role] || role
 }
 
@@ -354,9 +354,9 @@ async function handleSwitch(companyId) {
   switching.value = true
   try {
     await switchCompany(companyId)
-    toast.success('Empresa cambiada')
+    toast.success('Empresa canviada')
   } catch {
-    toast.error('Error al cambiar de empresa')
+    toast.error('Error en canviar d\'empresa')
   } finally {
     switching.value = false
   }
@@ -387,7 +387,7 @@ async function handleCreate() {
     // Arrancar el seguimiento del provisioning Odoo (no bloquea la UI).
     if (newCompany?.id) trackProvisioning(newCompany.id)
   } catch (err) {
-    toast.error(err.message || 'Error al crear la empresa')
+    toast.error(err.message || 'Error en crear l\'empresa')
   } finally {
     creating.value = false
   }
@@ -407,12 +407,12 @@ async function trackProvisioning(companyId) {
     })
     provisioningJob.value = finalJob
     if (finalJob.status === 'done') {
-      toast.success('Contabilidad Odoo configurada')
+      toast.success('Comptabilitat d\'Odoo configurada')
     } else {
-      toast.error('Falló la configuración de Odoo. Revisa los detalles.')
+      toast.error('La configuració d\'Odoo ha fallat. Revisa els detalls.')
     }
   } catch (err) {
-    toast.error(err.message || 'No se pudo seguir el progreso de Odoo')
+    toast.error(err.message || 'No s\'ha pogut seguir el progrés d\'Odoo')
   }
 }
 
@@ -423,7 +423,7 @@ async function handleOpenOdoo(companyId) {
   try {
     await odooApi.openOdooForCompany(companyId)
   } catch (err) {
-    toast.error(err.message || 'No se pudo abrir Odoo')
+    toast.error(err.message || 'No s\'ha pogut obrir Odoo')
   } finally {
     openingOdoo.value = false
   }
@@ -448,10 +448,10 @@ async function handleInvite() {
       email: inviteForm.email.trim(),
       role: inviteForm.role,
     })
-    toast.success('Invitación enviada')
+    toast.success('Invitació enviada')
     closeInviteModal()
   } catch (err) {
-    toast.error(err.message || err.data?.detail || 'Error al enviar la invitación')
+    toast.error(err.message || err.data?.detail || 'Error en enviar la invitació')
   } finally {
     inviting.value = false
   }
@@ -489,7 +489,7 @@ async function handleDelete() {
       router.push('/onboarding')
     }
   } catch (err) {
-    toast.error(err.message || 'Error al eliminar la empresa')
+    toast.error(err.message || 'Error en eliminar l\'empresa')
   } finally {
     deleting.value = false
   }

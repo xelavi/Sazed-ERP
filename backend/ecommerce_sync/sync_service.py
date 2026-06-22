@@ -418,3 +418,83 @@ def pull_all(company, *, user=None) -> dict:
         'products': pull_products(company, user=user),
         'orders': pull_orders(company, user=user),
     }
+
+
+# ── Full sync (ERP → tienda, reemplazo completo) ─────────
+
+
+def full_sync_to_store(company, *, user=None) -> dict:
+    """Sincronización completa ERP → PrestaShop.
+
+    1. **Purge**: elimina de PrestaShop los productos que no están enlazados a
+       ningún `Product` del ERP (productos demo u huérfanos). Los productos del
+       ERP que aún no tienen `prestashop_id` se enlazan en el paso siguiente,
+       así que en el purge solo se borran IDs que no aparecen en ningún lado.
+
+    2. **Push products**: sube (crea o actualiza) todos los `Product` de la
+       empresa, incluyendo imagen y stock.
+
+    3. **Push customers**: sube (crea o actualiza) todos los `Customer` de la
+       empresa.
+
+    Devuelve un resumen con el conteo de cada operación y los errores.
+    Cualquier fallo individual se registra sin abortar el resto.
+    """
+    from customers.models import Customer
+    from products.models import Product
+
+    connection = _connection_for(company)
+    client = get_client_for(connection)
+
+    # ── 1. Purge: IDs en PrestaShop sin correspondencia en el ERP ──────────
+    erp_ps_ids: set[int] = set(
+        Product.objects.filter(company=company)
+        .exclude(prestashop_id__isnull=True)
+        .values_list('prestashop_id', flat=True)
+    )
+
+    purged = 0
+    try:
+        for ps_product in client.list_products_full():
+            store_id = int(ps_product.get('id', 0))
+            if store_id and store_id not in erp_ps_ids:
+                try:
+                    client.delete_product(store_id)
+                    purged += 1
+                    logger.info('Purged orphan PS product #%s', store_id)
+                except Exception:  # noqa: BLE001
+                    logger.warning('Could not purge PS product #%s', store_id)
+    except Exception:  # noqa: BLE001
+        logger.warning('Purge step failed — continuing with push')
+
+    # ── 2. Push products ────────────────────────────────────────────────────
+    products_ok = products_err = 0
+    for product in Product.objects.filter(company=company):
+        try:
+            push_product(product, company, user=user)
+            products_ok += 1
+        except Exception:  # noqa: BLE001
+            products_err += 1
+            logger.exception('full_sync: push_product failed for product pk=%s', product.pk)
+
+    # ── 3. Push customers ───────────────────────────────────────────────────
+    customers_ok = customers_err = 0
+    for customer in Customer.objects.filter(company=company):
+        try:
+            push_customer(customer, company, user=user)
+            customers_ok += 1
+        except Exception:  # noqa: BLE001
+            customers_err += 1
+            logger.exception('full_sync: push_customer failed for customer pk=%s', customer.pk)
+
+    # ── Touch connection ────────────────────────────────────────────────────
+    total_errors = products_err + customers_err
+    _touch_connection(connection, success=total_errors == 0)
+
+    return {
+        'purged': purged,
+        'products_ok': products_ok,
+        'products_err': products_err,
+        'customers_ok': customers_ok,
+        'customers_err': customers_err,
+    }

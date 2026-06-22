@@ -3,10 +3,10 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Configuración — Social CRM</h1>
+          <h1 class="view-title">Configuració — Social CRM</h1>
         </div>
         <div class="header-actions">
-          <button class="btn btn-primary" @click="saveSettings">Guardar cambios</button>
+          <button class="btn btn-primary" @click="saveSettings">Desar canvis</button>
         </div>
       </div>
     </div>
@@ -24,9 +24,9 @@
         <!-- Content -->
         <div class="settings-content">
 
-          <!-- Section: Redes y APIs -->
+          <!-- Section: Xarxes i APIs -->
           <div v-if="activeSection === 'networks'" class="section-panel">
-            <h2 class="section-title">Redes sociales y APIs</h2>
+            <h2 class="section-title">Xarxes socials i APIs</h2>
             <div class="network-list">
               <div v-for="net in networkConnections" :key="net.key" class="network-card card">
                 <div class="net-icon-wrap" :style="{ background: net.bg }">
@@ -36,35 +36,35 @@
                   <div class="net-name">{{ net.name }}</div>
                   <div class="net-status">
                     <span :class="['status-dot', net.connected ? 'connected' : 'disconnected']"></span>
-                    <span class="status-text">{{ net.connected ? 'Conectado' : 'Desconectado' }}</span>
+                    <span class="status-text">{{ net.connected ? 'Connectat' : 'Desconnectat' }}</span>
                   </div>
                 </div>
                 <div class="net-actions">
                   <div v-if="net.connected">
                     <div class="field-inline">
-                      <label class="field-label-sm">Sincronización</label>
+                      <label class="field-label-sm">Sincronització</label>
                       <select class="select-sm" v-model="net.syncFreq">
                         <option value="manual">Manual</option>
-                        <option value="daily">Diaria</option>
-                        <option value="realtime">Tiempo real</option>
+                        <option value="daily">Diària</option>
+                        <option value="realtime">Temps real</option>
                       </select>
                     </div>
-                    <button class="btn btn-secondary btn-sm" @click="disconnect(net)">Desconectar</button>
+                    <button class="btn btn-secondary btn-sm" @click="disconnect(net)">Desconnectar</button>
                   </div>
-                  <button v-else class="btn btn-primary btn-sm" @click="connect(net)">Conectar</button>
+                  <button v-else class="btn btn-primary btn-sm" @click="connect(net)">Connectar</button>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Section: Catálogos -->
+          <!-- Section: Catàlegs -->
           <div v-if="activeSection === 'catalogs'" class="section-panel">
-            <h2 class="section-title">Catálogos y taxonomía</h2>
+            <h2 class="section-title">Catàlegs i taxonomia</h2>
             <div class="catalog-grid">
               <div class="card catalog-card" v-for="cat in catalogs" :key="cat.id">
                 <div class="card-header">
                   <h3 class="card-title">{{ cat.name }}</h3>
-                  <button class="btn btn-secondary btn-sm" @click="addCatalogItem(cat)"><Plus :size="14" /><span>Añadir</span></button>
+                  <button class="btn btn-secondary btn-sm" @click="addCatalogItem(cat)"><Plus :size="14" /><span>Afegir</span></button>
                 </div>
                 <div class="cat-items">
                   <div v-for="(item, i) in cat.items" :key="i" class="cat-item">
@@ -78,10 +78,10 @@
 
           <!-- Section: Permisos -->
           <div v-if="activeSection === 'permissions'" class="section-panel">
-            <h2 class="section-title">Roles y permisos</h2>
+            <h2 class="section-title">Rols i permisos</h2>
             <div class="roles-table card">
               <div class="roles-header">
-                <div class="role-col role-label">Módulo</div>
+                <div class="role-col role-label">Mòdul</div>
                 <div class="role-col" v-for="r in roles" :key="r">{{ r }}</div>
               </div>
               <div v-for="perm in permissions" :key="perm.module" class="roles-row">
@@ -93,9 +93,9 @@
             </div>
           </div>
 
-          <!-- Section: Notificaciones -->
+          <!-- Section: Notificacions -->
           <div v-if="activeSection === 'notifications'" class="section-panel">
-            <h2 class="section-title">Notificaciones y alertas automáticas</h2>
+            <h2 class="section-title">Notificacions i alertes automàtiques</h2>
             <div class="card notif-card">
               <div class="notif-row" v-for="n in notifications" :key="n.key">
                 <div class="notif-info">
@@ -110,7 +110,7 @@
                   <select v-if="n.enabled" class="select-sm" v-model="n.channel">
                     <option value="inapp">In-app</option>
                     <option value="email">Email</option>
-                    <option value="both">Ambos</option>
+                    <option value="both">Ambdós</option>
                   </select>
                 </div>
               </div>
@@ -130,10 +130,10 @@ import { Globe, BookOpen, Shield, Bell, Plus, X, Instagram, Youtube, Linkedin, T
 const activeSection = ref('networks')
 
 const sections = [
-  { id: 'networks',      label: 'Redes y APIs',           icon: Globe },
-  { id: 'catalogs',      label: 'Catálogos',              icon: BookOpen },
+  { id: 'networks',      label: 'Xarxes i APIs',          icon: Globe },
+  { id: 'catalogs',      label: 'Catàlegs',               icon: BookOpen },
   { id: 'permissions',   label: 'Permisos',               icon: Shield },
-  { id: 'notifications', label: 'Notificaciones',         icon: Bell },
+  { id: 'notifications', label: 'Notificacions',          icon: Bell },
 ]
 
 const networkConnections = reactive([
@@ -145,41 +145,41 @@ const networkConnections = reactive([
   { key: 'linkedin',  name: 'LinkedIn',  icon: Linkedin,  color: '#0A66C2', bg: '#eff6ff', connected: false, syncFreq: 'manual' },
 ])
 
-function connect(net) { net.connected = true; alert(`Conectando con ${net.name}... (simulado)`) }
-function disconnect(net) { if (confirm(`¿Desconectar ${net.name}?`)) net.connected = false }
+function connect(net) { net.connected = true; alert(`Connectant amb ${net.name}... (simulat)`) }
+function disconnect(net) { if (confirm(`Desconnectar ${net.name}?`)) net.connected = false }
 
 const catalogs = reactive([
-  { id: 'types',       name: 'Tipos de contenido',          items: ['Imagen', 'Vídeo', 'Reel', 'Story', 'Carrusel', 'Tweet', 'Hilo'] },
-  { id: 'statuses',    name: 'Estados de colaboración',     items: ['Borrador', 'Pendiente', 'Activa', 'Completada', 'Cancelada'] },
-  { id: 'categories',  name: 'Categorías de influencer',    items: ['Lifestyle', 'Moda', 'Tecnología', 'Fitness', 'Gastronomía', 'Gaming'] },
-  { id: 'objectives',  name: 'Objetivos de campaña',        items: ['Awareness', 'Tráfico', 'Conversiones', 'Engagement', 'Captación'] },
+  { id: 'types',       name: 'Tipus de contingut',          items: ['Imatge', 'Vídeo', 'Reel', 'Story', 'Carrusel', 'Tweet', 'Fil'] },
+  { id: 'statuses',    name: 'Estats de col·laboració',     items: ['Esborrany', 'Pendent', 'Activa', 'Completada', 'Cancel·lada'] },
+  { id: 'categories',  name: 'Categories d\'influencer',    items: ['Lifestyle', 'Moda', 'Tecnologia', 'Fitness', 'Gastronomia', 'Gaming'] },
+  { id: 'objectives',  name: 'Objectius de campanya',       items: ['Awareness', 'Trànsit', 'Conversions', 'Engagement', 'Captació'] },
 ])
-function addCatalogItem(cat) { const v = prompt('Nombre del nuevo item:'); if (v?.trim()) cat.items.push(v.trim()) }
+function addCatalogItem(cat) { const v = prompt('Nom del nou element:'); if (v?.trim()) cat.items.push(v.trim()) }
 
 const roles = ['Admin', 'Marketing', 'Analista', 'Comercial']
 const permissions = reactive([
-  { module: 'Cuentas',        Admin: true,  Marketing: true,  Analista: false, Comercial: false },
-  { module: 'Publicaciones',  Admin: true,  Marketing: true,  Analista: true,  Comercial: false },
-  { module: 'Campañas',       Admin: true,  Marketing: true,  Analista: true,  Comercial: true  },
-  { module: 'Influencers',    Admin: true,  Marketing: true,  Analista: true,  Comercial: true  },
-  { module: 'Colaboraciones', Admin: true,  Marketing: true,  Analista: false, Comercial: true  },
-  { module: 'Métricas',       Admin: true,  Marketing: true,  Analista: true,  Comercial: false },
-  { module: 'Analítica',      Admin: true,  Marketing: true,  Analista: true,  Comercial: true  },
-  { module: 'Informes',       Admin: true,  Marketing: true,  Analista: true,  Comercial: false },
-  { module: 'Alertas',        Admin: true,  Marketing: true,  Analista: false, Comercial: false },
-  { module: 'Configuración',  Admin: true,  Marketing: false, Analista: false, Comercial: false },
+  { module: 'Comptes',         Admin: true,  Marketing: true,  Analista: false, Comercial: false },
+  { module: 'Publicacions',    Admin: true,  Marketing: true,  Analista: true,  Comercial: false },
+  { module: 'Campanyes',       Admin: true,  Marketing: true,  Analista: true,  Comercial: true  },
+  { module: 'Influencers',     Admin: true,  Marketing: true,  Analista: true,  Comercial: true  },
+  { module: 'Col·laboracions', Admin: true,  Marketing: true,  Analista: false, Comercial: true  },
+  { module: 'Mètriques',       Admin: true,  Marketing: true,  Analista: true,  Comercial: false },
+  { module: 'Analítica',       Admin: true,  Marketing: true,  Analista: true,  Comercial: true  },
+  { module: 'Informes',        Admin: true,  Marketing: true,  Analista: true,  Comercial: false },
+  { module: 'Alertes',         Admin: true,  Marketing: true,  Analista: false, Comercial: false },
+  { module: 'Configuració',    Admin: true,  Marketing: false, Analista: false, Comercial: false },
 ])
 
 const notifications = reactive([
-  { key: 'reach_drop',   name: 'Caída de alcance',         desc: 'Alerta cuando el alcance baja más del 20%',       enabled: true,  channel: 'inapp' },
-  { key: 'broken_link',  name: 'Enlace roto',              desc: 'Alerta si un enlace trackeable falla',            enabled: true,  channel: 'both'  },
-  { key: 'low_budget',   name: 'Presupuesto bajo',         desc: 'Alerta cuando queda menos del 10% del budget',    enabled: false, channel: 'email' },
-  { key: 'neg_comments', name: 'Comentarios negativos',   desc: 'Alerta si el sentimiento negativo supera el 30%', enabled: false, channel: 'inapp' },
-  { key: 'new_collab',   name: 'Nueva colaboración',       desc: 'Notificar al responsable al crear colaboración',  enabled: true,  channel: 'email' },
-  { key: 'report_ready', name: 'Informe generado',         desc: 'Notificar cuando un informe automático está listo', enabled: true, channel: 'inapp' },
+  { key: 'reach_drop',   name: 'Caiguda d\'abast',         desc: 'Alerta quan l\'abast baixa més del 20%',       enabled: true,  channel: 'inapp' },
+  { key: 'broken_link',  name: 'Enllaç trencat',           desc: 'Alerta si un enllaç traçable falla',           enabled: true,  channel: 'both'  },
+  { key: 'low_budget',   name: 'Pressupost baix',          desc: 'Alerta quan queda menys del 10% del budget',   enabled: false, channel: 'email' },
+  { key: 'neg_comments', name: 'Comentaris negatius',      desc: 'Alerta si el sentiment negatiu supera el 30%', enabled: false, channel: 'inapp' },
+  { key: 'new_collab',   name: 'Nova col·laboració',       desc: 'Notificar al responsable en crear col·laboració', enabled: true, channel: 'email' },
+  { key: 'report_ready', name: 'Informe generat',          desc: 'Notificar quan un informe automàtic està llest', enabled: true, channel: 'inapp' },
 ])
 
-function saveSettings() { alert('Configuración guardada (simulado)') }
+function saveSettings() { alert('Configuració desada (simulat)') }
 </script>
 
 <style scoped>

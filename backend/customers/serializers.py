@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from core.models import Tag
 from core.serializers import TagSerializer
-from .models import Customer, CustomerNote, CustomerActivity, Quote
+from .models import Customer, CustomerNote, CustomerActivity
 
 
 class CustomerNoteSerializer(serializers.ModelSerializer):
@@ -19,16 +19,6 @@ class CustomerActivitySerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 
-class QuoteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Quote
-        fields = [
-            'id', 'number', 'concept', 'amount', 'date',
-            'valid_days', 'notes', 'status', 'created_at', 'updated_at',
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
-
 class CustomerListSerializer(serializers.ModelSerializer):
     """Serializer para la tabla/listado de clientes."""
 
@@ -43,7 +33,7 @@ class CustomerListSerializer(serializers.ModelSerializer):
         ]
 
     def get_linked(self, obj):
-        return list(obj.linked_contacts.values_list('name', flat=True))
+        return list(obj.linked_contacts.values('id', 'name'))
 
 
 class CustomerDetailSerializer(serializers.ModelSerializer):
@@ -62,7 +52,6 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
     )
     notes = CustomerNoteSerializer(many=True, read_only=True)
     activities = CustomerActivitySerializer(many=True, read_only=True)
-    quotes = QuoteSerializer(many=True, read_only=True)
 
     # Campos calculados desde la tabla de facturas
     total_invoiced = serializers.DecimalField(
@@ -83,14 +72,14 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
             'payment_method', 'bank_account', 'is_customer', 'is_supplier',
             'avatar_color', 'initials', 'internal_notes',
             'tags', 'tag_ids', 'linked', 'linked_contact_ids',
-            'notes', 'activities', 'quotes', 'invoices',
+            'notes', 'activities', 'invoices',
             'total_invoiced', 'pending_balance', 'total_documents',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def get_linked(self, obj):
-        return list(obj.linked_contacts.values_list('name', flat=True))
+        return list(obj.linked_contacts.values('id', 'name'))
 
     def get_invoices(self, obj):
         qs = obj.invoices.select_related('series').order_by('-issue_date', '-id')

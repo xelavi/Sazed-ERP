@@ -15,9 +15,9 @@
                   <span :class="['type-badge', customer.type === 'Company' ? 'type-company' : 'type-person']">
                     <Building2 v-if="customer.type === 'Company'" :size="12" />
                     <User v-else :size="12" />
-                    {{ customer.type }}
+                    {{ typeLabel(customer.type) }}
                   </span>
-                  <span :class="['badge', statusBadgeClass(customer.status)]">{{ customer.status }}</span>
+                  <span :class="['badge', statusBadgeClass(customer.status)]">{{ statusLabel(customer.status) }}</span>
                 </div>
               </div>
             </div>
@@ -48,22 +48,22 @@
           <!-- Tab Content -->
           <div class="drawer-body">
 
-            <!-- ========== A) INFORMACIÓN ========== -->
+            <!-- ========== A) INFORMACIÓ ========== -->
             <div v-if="activeTab === 'info'" class="tab-content">
               <!-- Summary Cards -->
               <div class="detail-summary">
                 <div class="summary-card">
-                  <span class="summary-label">Total facturado</span>
+                  <span class="summary-label">Total facturat</span>
                   <span class="summary-amount">{{ formatCurrency(customer.detail.totalInvoiced) }}</span>
                 </div>
                 <div class="summary-card">
-                  <span class="summary-label">Pendiente</span>
+                  <span class="summary-label">Pendent</span>
                   <span :class="['summary-amount', customer.detail.pendingBalance > 0 ? 'has-balance' : 'zero-balance']">
                     {{ formatCurrency(customer.detail.pendingBalance) }}
                   </span>
                 </div>
                 <div class="summary-card">
-                  <span class="summary-label">Documentos</span>
+                  <span class="summary-label">Documents</span>
                   <span class="summary-amount">{{ customer.detail.totalDocuments }}</span>
                 </div>
               </div>
@@ -72,18 +72,18 @@
               <section class="detail-section">
                 <h4 class="section-title">
                   <User :size="16" />
-                  Información de contacto
+                  Informació de contacte
                 </h4>
                 <div class="detail-row">
-                  <span class="detail-label">Nombre</span>
+                  <span class="detail-label">Nom</span>
                   <span class="detail-value">{{ customer.name }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Email</span>
+                  <span class="detail-label">Correu electrònic</span>
                   <span class="detail-value">{{ customer.email }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Teléfono</span>
+                  <span class="detail-label">Telèfon</span>
                   <span class="detail-value">{{ customer.detail.phone || '—' }}</span>
                 </div>
                 <div v-if="customer.type === 'Company'" class="detail-row">
@@ -100,18 +100,18 @@
               <section class="detail-section">
                 <h4 class="section-title">
                   <MapPin :size="16" />
-                  Dirección
+                  Adreça
                 </h4>
                 <div class="detail-row">
-                  <span class="detail-label">Dirección</span>
+                  <span class="detail-label">Adreça</span>
                   <span class="detail-value">{{ customer.detail.address || '—' }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Ciudad</span>
+                  <span class="detail-label">Ciutat</span>
                   <span class="detail-value">{{ customer.city }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Provincia</span>
+                  <span class="detail-label">Província</span>
                   <span class="detail-value">{{ customer.detail.province || '—' }}</span>
                 </div>
                 <div class="detail-row">
@@ -120,7 +120,7 @@
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">País</span>
-                  <span class="detail-value">{{ customer.detail.country || 'España' }}</span>
+                  <span class="detail-value">{{ customer.detail.country || 'Espanya' }}</span>
                 </div>
               </section>
 
@@ -128,10 +128,10 @@
               <section v-if="customer.type === 'Company'" class="detail-section">
                 <h4 class="section-title">
                   <FileText :size="16" />
-                  Información fiscal
+                  Informació fiscal
                 </h4>
                 <div class="detail-row">
-                  <span class="detail-label">Razón social</span>
+                  <span class="detail-label">Raó social</span>
                   <span class="detail-value">{{ customer.detail.legalName || customer.name }}</span>
                 </div>
                 <div class="detail-row">
@@ -139,11 +139,11 @@
                   <span class="detail-value font-mono">{{ customer.vatId || '—' }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Forma de pago</span>
-                  <span class="detail-value">{{ customer.detail.paymentMethod || 'Transferencia 30 días' }}</span>
+                  <span class="detail-label">Forma de pagament</span>
+                  <span class="detail-value">{{ customer.detail.paymentMethod || 'Transferència 30 dies' }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Cuenta bancaria</span>
+                  <span class="detail-label">Compte bancari</span>
                   <span class="detail-value font-mono">{{ customer.detail.bankAccount || '—' }}</span>
                 </div>
               </section>
@@ -152,38 +152,38 @@
               <section class="detail-section">
                 <h4 class="section-title">
                   <Users :size="16" />
-                  Contactos vinculados
+                  Contactes vinculats
                 </h4>
                 <div v-if="customer.linked.length" class="linked-chips">
                   <span v-for="link in customer.linked" :key="link" class="linked-chip">{{ link }}</span>
                 </div>
-                <p v-else class="empty-hint">Sin contactos vinculados.</p>
+                <p v-else class="empty-hint">Sense contactes vinculats.</p>
               </section>
 
               <!-- Tags -->
               <section class="detail-section">
                 <h4 class="section-title">
                   <Tag :size="16" />
-                  Etiquetas
+                  Etiquetes
                 </h4>
                 <div v-if="customer.detail.tags && customer.detail.tags.length" class="tags-list">
                   <span v-for="tag in customer.detail.tags" :key="tag" class="tag-chip">{{ tag }}</span>
                 </div>
-                <p v-else class="empty-hint">Sin etiquetas.</p>
+                <p v-else class="empty-hint">Sense etiquetes.</p>
               </section>
             </div>
 
-            <!-- ========== B) NOTAS ========== -->
+            <!-- ========== B) NOTES ========== -->
             <div v-if="activeTab === 'notes'" class="tab-content">
               <section class="detail-section">
                 <div class="section-title-row">
                   <h4 class="section-title">
                     <StickyNote :size="16" />
-                    Notas
+                    Notes
                   </h4>
                   <button class="btn btn-sm btn-secondary" @click="showNewNote = !showNewNote">
                     <Plus :size="14" />
-                    Nueva nota
+                    Nova nota
                   </button>
                 </div>
 
@@ -192,14 +192,14 @@
                   <textarea
                     class="input textarea"
                     rows="3"
-                    placeholder="Escribe una nota..."
+                    placeholder="Escriu una nota…"
                     v-model="newNote.content"
                   ></textarea>
                   <div class="new-item-actions">
-                    <button class="btn btn-secondary btn-sm" @click="showNewNote = false; newNote.content = ''">Cancelar</button>
+                    <button class="btn btn-secondary btn-sm" @click="showNewNote = false; newNote.content = ''">Cancel·lar</button>
                     <button class="btn btn-primary btn-sm" @click="addNote" :disabled="!newNote.content.trim()">
                       <Check :size="14" />
-                      Guardar
+                      Desar
                     </button>
                   </div>
                 </div>
@@ -214,21 +214,21 @@
                     <p class="item-text">{{ note.content }}</p>
                   </div>
                 </div>
-                <p v-else-if="!showNewNote" class="empty-hint">No hay notas para este contacto.</p>
+                <p v-else-if="!showNewNote" class="empty-hint">No hi ha notes per a aquest contacte.</p>
               </section>
             </div>
 
-            <!-- ========== C) PRESUPUESTOS ========== -->
+            <!-- ========== C) PRESSUPOSTOS ========== -->
             <div v-if="activeTab === 'quotes'" class="tab-content">
               <section class="detail-section">
                 <div class="section-title-row">
                   <h4 class="section-title">
                     <FileText :size="16" />
-                    Presupuestos
+                    Pressupostos
                   </h4>
                   <button class="btn btn-sm btn-primary" @click="$emit('new-quote', customer)">
                     <Plus :size="14" />
-                    Nuevo presupuesto
+                    Nou pressupost
                   </button>
                 </div>
 
@@ -242,25 +242,25 @@
                     </div>
                     <div class="item-card-end">
                       <span class="item-amount">{{ formatCurrency(quote.amount) }}</span>
-                      <span :class="['badge', quoteBadgeClass(quote.status)]">{{ quote.status }}</span>
+                      <span :class="['badge', quoteBadgeClass(quote.status)]">{{ quoteStatusLabel(quote.status) }}</span>
                     </div>
                   </div>
                 </div>
-                <p v-else class="empty-hint">No hay presupuestos para este contacto.</p>
+                <p v-else class="empty-hint">No hi ha pressupostos per a aquest contacte.</p>
               </section>
             </div>
 
-            <!-- ========== D) FACTURAS ========== -->
+            <!-- ========== D) FACTURES ========== -->
             <div v-if="activeTab === 'invoices'" class="tab-content">
               <section class="detail-section">
                 <div class="section-title-row">
                   <h4 class="section-title">
                     <Receipt :size="16" />
-                    Facturas
+                    Factures
                   </h4>
                   <button class="btn btn-sm btn-primary" @click="$emit('new-invoice', customer)">
                     <Plus :size="14" />
-                    Nueva factura
+                    Nova factura
                   </button>
                 </div>
 
@@ -273,25 +273,25 @@
                     </div>
                     <div class="item-card-end">
                       <span class="item-amount">{{ formatCurrency(inv.amount) }}</span>
-                      <span :class="['badge', invoiceBadgeClass(inv.status)]">{{ inv.status }}</span>
+                      <span :class="['badge', invoiceBadgeClass(inv.status)]">{{ invoiceStatusLabel(inv.status) }}</span>
                     </div>
                   </div>
                 </div>
-                <p v-else class="empty-hint">No hay facturas para este contacto.</p>
+                <p v-else class="empty-hint">No hi ha factures per a aquest contacte.</p>
               </section>
             </div>
 
-            <!-- ========== E) ACTIVIDAD ========== -->
+            <!-- ========== E) ACTIVITAT ========== -->
             <div v-if="activeTab === 'activity'" class="tab-content">
               <section class="detail-section">
                 <div class="section-title-row">
                   <h4 class="section-title">
                     <CalendarDays :size="16" />
-                    Actividad
+                    Activitat
                   </h4>
                   <button class="btn btn-sm btn-secondary" @click="showNewActivity = !showNewActivity">
                     <Plus :size="14" />
-                    Nueva actividad
+                    Nova activitat
                   </button>
                 </div>
 
@@ -299,33 +299,33 @@
                 <div v-if="showNewActivity" class="new-item-form">
                   <div class="field-row">
                     <div class="field">
-                      <label class="field-label">Tipo</label>
+                      <label class="field-label">Tipus</label>
                       <select class="select" v-model="newActivity.type">
-                        <option value="Llamada">Llamada</option>
-                        <option value="Reunión">Reunión</option>
+                        <option value="Llamada">Trucada</option>
+                        <option value="Reunión">Reunió</option>
                         <option value="Email">Email</option>
-                        <option value="Tarea">Tarea</option>
+                        <option value="Tarea">Tasca</option>
                         <option value="Visita">Visita</option>
                       </select>
                     </div>
                     <div class="field">
-                      <label class="field-label">Fecha</label>
+                      <label class="field-label">Data</label>
                       <input class="input" type="date" v-model="newActivity.date" />
                     </div>
                   </div>
                   <div class="field">
-                    <label class="field-label">Asunto</label>
-                    <input class="input" type="text" placeholder="Descripción de la actividad" v-model="newActivity.subject" />
+                    <label class="field-label">Assumpte</label>
+                    <input class="input" type="text" placeholder="Descripció de l'activitat" v-model="newActivity.subject" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Notas</label>
-                    <textarea class="input textarea" rows="2" placeholder="Notas adicionales..." v-model="newActivity.notes"></textarea>
+                    <label class="field-label">Notes</label>
+                    <textarea class="input textarea" rows="2" placeholder="Notes addicionals…" v-model="newActivity.notes"></textarea>
                   </div>
                   <div class="new-item-actions">
-                    <button class="btn btn-secondary btn-sm" @click="showNewActivity = false; resetNewActivity()">Cancelar</button>
+                    <button class="btn btn-secondary btn-sm" @click="showNewActivity = false; resetNewActivity()">Cancel·lar</button>
                     <button class="btn btn-primary btn-sm" @click="addActivity" :disabled="!newActivity.subject.trim()">
                       <Check :size="14" />
-                      Guardar
+                      Desar
                     </button>
                   </div>
                 </div>
@@ -336,7 +336,7 @@
                     <div :class="['timeline-dot', 'dot-' + act.type.toLowerCase()]"></div>
                     <div class="timeline-content">
                       <div class="timeline-header">
-                        <span class="activity-type-tag" :style="{ background: activityColor(act.type) }">{{ act.type }}</span>
+                        <span class="activity-type-tag" :style="{ background: activityColor(act.type) }">{{ activityLabel(act.type) }}</span>
                         <span class="timeline-meta">{{ formatDateShort(act.date) }}</span>
                       </div>
                       <span class="timeline-action">{{ act.subject }}</span>
@@ -344,21 +344,21 @@
                     </div>
                   </div>
                 </div>
-                <p v-else-if="!showNewActivity" class="empty-hint">No hay actividad registrada.</p>
+                <p v-else-if="!showNewActivity" class="empty-hint">No hi ha activitat registrada.</p>
               </section>
             </div>
 
-            <!-- ========== F) COMPRAS ========== -->
+            <!-- ========== F) COMPRES ========== -->
             <div v-if="activeTab === 'purchases'" class="tab-content">
               <section class="detail-section">
                 <div class="section-title-row">
                   <h4 class="section-title">
                     <ShoppingCart :size="16" />
-                    Compras
+                    Compres
                   </h4>
                   <button class="btn btn-sm btn-secondary" @click="showNewPurchase = !showNewPurchase">
                     <Plus :size="14" />
-                    Nueva compra
+                    Nova compra
                   </button>
                 </div>
 
@@ -366,11 +366,11 @@
                 <div v-if="showNewPurchase" class="new-item-form">
                   <div class="field-row">
                     <div class="field">
-                      <label class="field-label">Producto / Servicio</label>
-                      <input class="input" type="text" placeholder="Nombre del producto" v-model="newPurchase.product" />
+                      <label class="field-label">Producte / Servei</label>
+                      <input class="input" type="text" placeholder="Nom del producte" v-model="newPurchase.product" />
                     </div>
                     <div class="field">
-                      <label class="field-label">Importe</label>
+                      <label class="field-label">Import</label>
                       <div class="input-suffix">
                         <input class="input" type="number" step="0.01" min="0" placeholder="0" v-model.number="newPurchase.amount" />
                         <span class="suffix">€</span>
@@ -379,19 +379,19 @@
                   </div>
                   <div class="field-row">
                     <div class="field">
-                      <label class="field-label">Fecha</label>
+                      <label class="field-label">Data</label>
                       <input class="input" type="date" v-model="newPurchase.date" />
                     </div>
                     <div class="field">
-                      <label class="field-label">Cantidad</label>
+                      <label class="field-label">Quantitat</label>
                       <input class="input" type="number" min="1" placeholder="1" v-model.number="newPurchase.quantity" />
                     </div>
                   </div>
                   <div class="new-item-actions">
-                    <button class="btn btn-secondary btn-sm" @click="showNewPurchase = false; resetNewPurchase()">Cancelar</button>
+                    <button class="btn btn-secondary btn-sm" @click="showNewPurchase = false; resetNewPurchase()">Cancel·lar</button>
                     <button class="btn btn-primary btn-sm" @click="addPurchase" :disabled="!newPurchase.product.trim()">
                       <Check :size="14" />
-                      Guardar
+                      Desar
                     </button>
                   </div>
                 </div>
@@ -401,15 +401,15 @@
                   <div v-for="purchase in customer.detail.purchases" :key="purchase.id" class="item-card item-card-row">
                     <div class="item-card-main">
                       <span class="item-concept">{{ purchase.product }}</span>
-                      <span class="item-date">{{ formatDateShort(purchase.date) }} · Qty: {{ purchase.quantity }}</span>
+                      <span class="item-date">{{ formatDateShort(purchase.date) }} · Unitats: {{ purchase.quantity }}</span>
                     </div>
                     <div class="item-card-end">
                       <span class="item-amount">{{ formatCurrency(purchase.amount) }}</span>
-                      <span :class="['badge', purchaseBadgeClass(purchase.status)]">{{ purchase.status }}</span>
+                      <span :class="['badge', purchaseBadgeClass(purchase.status)]">{{ purchaseStatusLabel(purchase.status) }}</span>
                     </div>
                   </div>
                 </div>
-                <p v-else-if="!showNewPurchase" class="empty-hint">No hay compras registradas.</p>
+                <p v-else-if="!showNewPurchase" class="empty-hint">No hi ha compres registrades.</p>
               </section>
             </div>
 
@@ -423,7 +423,7 @@
             </button>
             <button class="btn btn-primary" @click="$emit('new-invoice', customer)">
               <Receipt :size="18" />
-              Nueva factura
+              Nova factura
             </button>
           </div>
         </div>
@@ -449,12 +449,12 @@ defineEmits(['close', 'edit', 'new-invoice', 'new-quote'])
 
 /* ── Tabs ── */
 const tabs = [
-  { key: 'info', label: 'Información', icon: User },
-  { key: 'notes', label: 'Notas', icon: StickyNote },
-  { key: 'quotes', label: 'Presupuestos', icon: FileText },
-  { key: 'invoices', label: 'Facturas', icon: Receipt },
-  { key: 'activity', label: 'Actividad', icon: CalendarDays },
-  { key: 'purchases', label: 'Compras', icon: ShoppingCart }
+  { key: 'info', label: 'Informació', icon: User },
+  { key: 'notes', label: 'Notes', icon: StickyNote },
+  { key: 'quotes', label: 'Pressupostos', icon: FileText },
+  { key: 'invoices', label: 'Factures', icon: Receipt },
+  { key: 'activity', label: 'Activitat', icon: CalendarDays },
+  { key: 'purchases', label: 'Compres', icon: ShoppingCart }
 ]
 
 const activeTab = ref('info')
@@ -537,6 +537,40 @@ function statusBadgeClass(status) {
   return map[status] || 'badge-gray'
 }
 
+/* ── Display labels (the internal values stay unchanged) ── */
+function statusLabel(status) {
+  const map = { Active: 'Actiu', Inactive: 'Inactiu' }
+  return map[status] || status
+}
+
+function typeLabel(type) {
+  const map = { Company: 'Empresa', Person: 'Persona' }
+  return map[type] || type
+}
+
+function activityLabel(type) {
+  const map = { Llamada: 'Trucada', 'Reunión': 'Reunió', Email: 'Email', Tarea: 'Tasca', Visita: 'Visita' }
+  return map[type] || type
+}
+
+function quoteStatusLabel(status) {
+  const map = { Borrador: 'Esborrany', Enviado: 'Enviat', Aceptado: 'Acceptat', Rechazado: 'Rebutjat', Expirado: 'Caducat' }
+  return map[status] || status
+}
+
+function invoiceStatusLabel(status) {
+  const map = {
+    Draft: 'Esborrany', Approved: 'Aprovada', PartiallyPaid: 'Parcial',
+    Paid: 'Pagada', Voided: 'Anul·lada', Rectified: 'Rectificada',
+  }
+  return map[status] || status
+}
+
+function purchaseStatusLabel(status) {
+  const map = { Completada: 'Completada', Pendiente: 'Pendent', Cancelada: 'Cancel·lada' }
+  return map[status] || status
+}
+
 function quoteBadgeClass(status) {
   const map = { Borrador: 'badge-gray', Enviado: 'badge-primary', Aceptado: 'badge-success', Rechazado: 'badge-error', Expirado: 'badge-warning' }
   return map[status] || 'badge-gray'
@@ -572,13 +606,13 @@ function activityColor(type) {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
 }
 
 function formatDateShort(dateStr) {
   if (!dateStr) return '—'
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 </script>
 
@@ -589,6 +623,7 @@ function formatDateShort(dateStr) {
 .drawer-overlay {
   position: fixed;
   inset: 0;
+  top: 56px; /* just below the top bar */
   z-index: 100;
   background: rgba(0, 0, 0, 0.3);
   display: flex;
@@ -596,8 +631,8 @@ function formatDateShort(dateStr) {
 }
 
 .drawer-panel {
-  width: 600px;
-  max-width: 92vw;
+  width: 680px;
+  max-width: 94vw;
   background: white;
   height: 100%;
   display: flex;
@@ -670,6 +705,11 @@ function formatDateShort(dateStr) {
   padding: 0 1.5rem;
   overflow-x: auto;
   flex-shrink: 0;
+  scrollbar-width: none;
+}
+
+.drawer-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .drawer-tab {

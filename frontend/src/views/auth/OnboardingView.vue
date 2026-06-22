@@ -13,16 +13,16 @@
       </div>
 
       <div class="onboarding-header">
-        <h2>Configura tus empresas</h2>
+        <h2>Configura les teves empreses</h2>
         <p class="onboarding-subtitle">
-          Crea al menos una empresa para empezar a usar Seshat ERP.
-          Si alguien te ha invitado a una empresa existente, aparecerá automáticamente.
+          Crea com a mínim una empresa per començar a utilitzar Seshat ERP.
+          Si algú t'ha convidat a una empresa existent, hi apareixerà automàticament.
         </p>
       </div>
 
       <!-- Existing companies (from invitations) -->
       <div v-if="companies.length" class="section">
-        <h3 class="section-title">Tus empresas</h3>
+        <h3 class="section-title">Les teves empreses</h3>
         <div class="company-list">
           <div v-for="company in companies" :key="company.id" class="company-item">
             <div class="company-item-icon">
@@ -39,7 +39,7 @@
 
       <!-- Created companies (during this session, not yet saved to backend list) -->
       <div v-if="newCompanies.length" class="section">
-        <h3 class="section-title">Empresas creadas</h3>
+        <h3 class="section-title">Empreses creades</h3>
         <div class="company-list">
           <div v-for="(c, i) in newCompanies" :key="i" class="company-item company-item-new">
             <div class="company-item-icon">
@@ -47,7 +47,7 @@
             </div>
             <div class="company-item-info">
               <span class="company-item-name">{{ c.name }}</span>
-              <span class="company-item-detail">{{ c.tax_id || 'Sin CIF' }} · {{ c.currency }}</span>
+              <span class="company-item-detail">{{ c.tax_id || 'Sense CIF' }} · {{ c.currency }}</span>
             </div>
             <button class="btn-icon" @click="removeNewCompany(i)" aria-label="Eliminar">
               <Trash2 :size="16" />
@@ -67,21 +67,21 @@
             <Plus :size="20" />
           </div>
           <div>
-            <span class="add-label">Crear nueva empresa</span>
-            <span class="add-hint">Añade los datos de tu empresa o negocio</span>
+            <span class="add-label">Crear una empresa nova</span>
+            <span class="add-hint">Afegeix les dades de la teva empresa o negoci</span>
           </div>
         </button>
 
         <div v-if="showForm" class="company-form-card">
-          <h3 class="form-card-title">Nueva empresa</h3>
+          <h3 class="form-card-title">Empresa nova</h3>
           <form @submit.prevent="addCompany" class="company-form">
             <div class="form-group">
-              <label class="form-label">Nombre comercial <span class="required">*</span></label>
+              <label class="form-label">Nom comercial <span class="required">*</span></label>
               <input
                 v-model="form.name"
                 class="input"
                 :class="{ 'input-error': formErrors.name }"
-                placeholder="Mi Empresa SL"
+                placeholder="La meva empresa SL"
                 required
                 ref="nameInput"
                 @input="delete formErrors.name"
@@ -95,31 +95,31 @@
                 <input v-model="form.tax_id" class="input" placeholder="B12345678" />
               </div>
               <div class="form-group">
-                <label class="form-label">Razón social</label>
+                <label class="form-label">Raó social</label>
                 <input v-model="form.legal_name" class="input" placeholder="Empresa SL" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Email de contacto</label>
+                <label class="form-label">Correu de contacte</label>
                 <input v-model="form.email" type="email" class="input" placeholder="info@empresa.com" />
               </div>
               <div class="form-group">
                 <label class="form-label">Moneda</label>
                 <select v-model="form.currency" class="select">
                   <option value="EUR">EUR - Euro</option>
-                  <option value="USD">USD - Dólar</option>
-                  <option value="GBP">GBP - Libra</option>
+                  <option value="USD">USD - Dòlar</option>
+                  <option value="GBP">GBP - Lliura</option>
                 </select>
               </div>
             </div>
 
             <div class="form-actions">
-              <button type="button" class="btn btn-ghost" @click="cancelForm">Cancelar</button>
+              <button type="button" class="btn btn-ghost" @click="cancelForm">Cancel·lar</button>
               <button type="submit" class="btn btn-primary" :disabled="saving">
                 <span v-if="saving" class="loading-spinner loading-spinner-sm"></span>
-                {{ saving ? 'Creando...' : 'Crear empresa' }}
+                {{ saving ? 'Creant…' : 'Crear empresa' }}
               </button>
             </div>
           </form>
@@ -133,11 +133,11 @@
           :disabled="!canContinue"
           @click="handleContinue"
         >
-          Continuar al panel
+          Continuar al tauler
           <ArrowRight :size="18" />
         </button>
         <p v-if="!canContinue" class="footer-hint">
-          Crea al menos una empresa para continuar
+          Crea com a mínim una empresa per continuar
         </p>
       </div>
     </div>
@@ -184,7 +184,7 @@ function cancelForm() {
 async function addCompany() {
   Object.keys(formErrors).forEach(k => delete formErrors[k])
   if (!form.name.trim()) {
-    formErrors.name = 'El nombre es obligatorio'
+    formErrors.name = 'El nom és obligatori'
     return
   }
 
@@ -209,7 +209,7 @@ async function addCompany() {
     if (err.data?.name) {
       formErrors.name = Array.isArray(err.data.name) ? err.data.name[0] : err.data.name
     } else {
-      toast.error(err.message || 'Error al crear la empresa')
+      toast.error(err.message || 'Error en crear l\'empresa')
     }
   } finally {
     saving.value = false
@@ -229,7 +229,7 @@ async function handleContinue() {
 }
 
 function roleLabel(role) {
-  const map = { owner: 'Propietario', admin: 'Admin', editor: 'Editor', viewer: 'Lector' }
+  const map = { owner: 'Propietari', admin: 'Admin', editor: 'Editor', viewer: 'Lector' }
   return map[role] || role
 }
 

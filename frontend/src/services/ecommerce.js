@@ -1,8 +1,9 @@
 /**
  * E-commerce integration API service (PrestaShop).
  *
- * Gestiona la conexión de una empresa con su tienda online:
- * probar credenciales, crear/actualizar y borrar la StoreConnection.
+ * Gestiona la connexió d'una empresa amb la seva botiga online:
+ * probar credencials, crear/actualitzar i esborrar la StoreConnection,
+ * i llançar una sincronització completa ERP → PrestaShop.
  */
 import { get, post, put, del } from './api'
 
@@ -37,4 +38,20 @@ export default {
   async deleteConnection(id) {
     return del(`/integrations/store/connections/${id}/`)
   },
+
+  /**
+   * Sincronització completa ERP → PrestaShop:
+   * 1. Esborra productes orfes de la botiga.
+   * 2. Puja tots els productes de la Company (amb imatge i estoc).
+   * 3. Puja tots els clients de la Company.
+   *
+   * Retorna { purged, products_ok, products_err, customers_ok, customers_err }.
+   * Si `companyId` no s'especifica el backend utilitza la primera empresa
+   * de la qual l'usuari és administrador.
+   */
+  async fullSync(companyId = null) {
+    const body = companyId ? { company_id: companyId } : {}
+    return post('/integrations/store/full-sync/', body)
+  },
 }
+

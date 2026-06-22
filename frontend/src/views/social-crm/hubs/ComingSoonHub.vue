@@ -5,10 +5,10 @@
         <div class="cs-icon-wrap">
           <component :is="hub.icon" :size="32" />
         </div>
-        <h2 class="cs-title">Este hub está en migración</h2>
+        <h2 class="cs-title">Aquest hub està en migració</h2>
         <p class="cs-text">
-          Mientras tanto, las pantallas que se consolidarán aquí siguen disponibles
-          como rutas directas. Pronto verás todo unificado bajo
+          Mentrestant, les pantalles que es consolidaran aquí segueixen disponibles
+          com a rutes directes. Aviat ho veuràs tot unificat sota
           <strong>{{ hub.title }}</strong>.
         </p>
 
@@ -43,31 +43,31 @@ const props = defineProps({
 
 const HUBS = {
   content: {
-    title: 'Contenido',
-    subtitle: 'Publicaciones, cuentas conectadas y analítica de contenido en un solo lugar.',
+    title: 'Contingut',
+    subtitle: 'Publicacions, comptes connectats i analítica de contingut en un sol lloc.',
     icon: Image,
     legacy: [
-      { label: 'Publicaciones', path: '/social-crm/posts',     icon: Image },
-      { label: 'Cuentas',       path: '/social-crm/accounts',  icon: AtSign },
-      { label: 'Analítica',     path: '/social-crm/analytics', icon: BarChart2 },
+      { label: 'Publicacions', path: '/social-crm/posts',     icon: Image },
+      { label: 'Comptes',      path: '/social-crm/accounts',  icon: AtSign },
+      { label: 'Analítica',    path: '/social-crm/analytics', icon: BarChart2 },
     ],
   },
   attribution: {
-    title: 'Atribución',
-    subtitle: 'Trazabilidad por enlaces UTM, conversiones y reporting de ROI.',
+    title: 'Atribució',
+    subtitle: 'Traçabilitat per enllaços UTM, conversions i reporting de ROI.',
     icon: TrendingUp,
     legacy: [
-      { label: 'Enlaces',  path: '/social-crm/links',   icon: LinkIcon },
+      { label: 'Enllaços', path: '/social-crm/links',   icon: LinkIcon },
       { label: 'Informes', path: '/social-crm/reports', icon: FileText },
     ],
   },
   settings: {
-    title: 'Ajustes',
-    subtitle: 'Configuración del módulo, alertas activas y catálogos editables.',
+    title: 'Configuració',
+    subtitle: 'Configuració del mòdul, alertes actives i catàlegs editables.',
     icon: Settings,
     legacy: [
-      { label: 'Configuración', path: '/social-crm/settings', icon: Settings },
-      { label: 'Alertas',       path: '/social-crm/alerts',   icon: AlertTriangle },
+      { label: 'Configuració', path: '/social-crm/settings', icon: Settings },
+      { label: 'Alertes',      path: '/social-crm/alerts',   icon: AlertTriangle },
     ],
   },
 }

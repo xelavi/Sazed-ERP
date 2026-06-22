@@ -146,33 +146,3 @@ class CustomerActivity(models.Model):
         return f'{self.activity_type}: {self.subject}'
 
 
-class Quote(models.Model):
-    """Presupuestos asociados a un cliente."""
-
-    class Status(models.TextChoices):
-        DRAFT = 'Borrador', 'Borrador'
-        SENT = 'Enviado', 'Enviado'
-        ACCEPTED = 'Aceptado', 'Aceptado'
-        REJECTED = 'Rechazado', 'Rechazado'
-        EXPIRED = 'Expirado', 'Expirado'
-
-    customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name='quotes',
-    )
-    number = models.CharField(max_length=30, unique=True)
-    concept = models.CharField(max_length=300)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    date = models.DateField()
-    valid_days = models.IntegerField(default=30)
-    notes = models.TextField(blank=True)
-    status = models.CharField(
-        max_length=20, choices=Status.choices, default='Borrador',
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-date']
-
-    def __str__(self):
-        return f'{self.number} — {self.concept}'

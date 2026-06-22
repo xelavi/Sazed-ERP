@@ -4,7 +4,7 @@
       class="user-menu-trigger"
       @click="isOpen = !isOpen"
       :aria-expanded="isOpen"
-      aria-label="Menú de usuario"
+      aria-label="Menú d'usuari"
     >
       <div class="user-avatar-sm">
         <img v-if="user?.avatar" :src="user.avatar" :alt="user.full_name" />
@@ -22,7 +22,7 @@
             <span v-else>{{ user?.initials || '?' }}</span>
           </div>
           <div class="header-info">
-            <p class="header-name">{{ user?.full_name || 'Mi cuenta' }}</p>
+            <p class="header-name">{{ user?.full_name || 'El meu compte' }}</p>
             <p class="header-email">{{ user?.email }}</p>
             <span
               v-if="activeRole"
@@ -41,18 +41,18 @@
         <!-- Actions -->
         <router-link to="/account" class="dropdown-item" @click="isOpen = false">
           <UserIcon :size="16" />
-          <span>Gestión de cuenta</span>
+          <span>Gestió del compte</span>
         </router-link>
         <router-link to="/companies" class="dropdown-item" @click="isOpen = false">
           <Building2 :size="16" />
-          <span>Gestión de empresas</span>
+          <span>Gestió d'empreses</span>
         </router-link>
 
         <div class="dropdown-divider"></div>
 
         <button class="dropdown-item dropdown-item-danger" @click="handleLogout">
           <LogOut :size="16" />
-          <span>Cerrar sesión</span>
+          <span>Tancar sessió</span>
         </button>
       </div>
     </Transition>
@@ -80,7 +80,7 @@ async function handleLogout() {
 }
 
 function roleLabel(role) {
-  const map = { owner: 'Propietario', admin: 'Admin', editor: 'Editor', viewer: 'Lector' }
+  const map = { owner: 'Propietari', admin: 'Admin', editor: 'Editor', viewer: 'Lector' }
   return map[role] || role
 }
 

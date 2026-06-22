@@ -3,7 +3,7 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Carga manual de métricas</h1>
+          <h1 class="view-title">Càrrega manual de mètriques</h1>
         </div>
       </div>
     </div>
@@ -12,7 +12,7 @@
       <div class="two-col">
         <!-- Upload form -->
         <div class="card form-card">
-          <div class="card-header"><h3 class="card-title">Introducir métricas</h3></div>
+          <div class="card-header"><h3 class="card-title">Introduir mètriques</h3></div>
           <div class="form-body">
             <div class="field">
               <label class="field-label">Influencer *</label>
@@ -22,22 +22,22 @@
               </select>
             </div>
             <div class="field">
-              <label class="field-label">Colaboración *</label>
+              <label class="field-label">Col·laboració *</label>
               <select class="select full" v-model.number="form.collaborationId">
-                <option :value="null">Seleccionar colaboración...</option>
+                <option :value="null">Seleccionar col·laboració...</option>
                 <option v-for="c in filteredCollabs" :key="c.id" :value="c.id">{{ c.campaignName }} — {{ formatDate(c.publishDate) }}</option>
               </select>
             </div>
             <div class="field">
-              <label class="field-label">Descripción de la publicación</label>
-              <input class="input full" v-model="form.publicationDesc" placeholder="Ej: TikTok #1 - Primavera" />
+              <label class="field-label">Descripció de la publicació</label>
+              <input class="input full" v-model="form.publicationDesc" placeholder="Ex: TikTok #1 - Primavera" />
             </div>
             <div class="field">
-              <label class="field-label">Fecha de publicación</label>
+              <label class="field-label">Data de publicació</label>
               <input class="input full" type="date" v-model="form.date" />
             </div>
 
-            <div class="section-title">Métricas de alcance</div>
+            <div class="section-title">Mètriques d'abast</div>
             <div class="metrics-grid-form">
               <div class="field" v-for="m in reachMetrics" :key="m.key">
                 <label class="field-label">{{ m.label }}</label>
@@ -45,7 +45,7 @@
               </div>
             </div>
 
-            <div class="section-title">Métricas de interacción</div>
+            <div class="section-title">Mètriques d'interacció</div>
             <div class="metrics-grid-form">
               <div class="field" v-for="m in interactionMetrics" :key="m.key">
                 <label class="field-label">{{ m.label }}</label>
@@ -53,40 +53,40 @@
               </div>
             </div>
 
-            <div class="section-title">Trazabilidad</div>
+            <div class="section-title">Traçabilitat</div>
             <div class="traceability-grid">
               <div class="field">
-                <label class="field-label">Fuente del dato</label>
+                <label class="field-label">Font de la dada</label>
                 <select class="select full" v-model="form.source">
                   <option value="screenshot">Captura de pantalla</option>
                   <option value="api">API / Plataforma</option>
-                  <option value="email">Email del influencer</option>
+                  <option value="email">Email de l'influencer</option>
                   <option value="report">Informe PDF</option>
-                  <option value="other">Otro</option>
+                  <option value="other">Altre</option>
                 </select>
               </div>
               <div class="field">
-                <label class="field-label">Estado validación</label>
+                <label class="field-label">Estat de validació</label>
                 <select class="select full" v-model="form.status">
-                  <option value="pending">Pendiente de validar</option>
-                  <option value="validated">Validado</option>
+                  <option value="pending">Pendent de validar</option>
+                  <option value="validated">Validat</option>
                 </select>
               </div>
             </div>
 
-            <div class="section-title">Adjuntos</div>
+            <div class="section-title">Adjunts</div>
             <div class="upload-zone">
               <Upload :size="24" />
-              <span>Arrastra aquí capturas, PDFs o evidencias</span>
-              <span class="upload-hint">PNG, JPG, PDF — máx. 10MB</span>
-              <button class="btn btn-secondary btn-sm">Seleccionar archivos</button>
+              <span>Arrossega aquí captures, PDFs o evidències</span>
+              <span class="upload-hint">PNG, JPG, PDF — màx. 10MB</span>
+              <button class="btn btn-secondary btn-sm">Seleccionar fitxers</button>
             </div>
           </div>
           <div class="card-footer">
-            <button class="btn btn-secondary" @click="resetForm">Limpiar</button>
+            <button class="btn btn-secondary" @click="resetForm">Netejar</button>
             <button class="btn btn-primary" @click="submitMetrics">
               <Save :size="18" />
-              Guardar métricas
+              Desar mètriques
             </button>
           </div>
         </div>
@@ -94,18 +94,18 @@
         <!-- History -->
         <div class="card history-card">
           <div class="card-header">
-            <h3 class="card-title">Historial de cargas</h3>
+            <h3 class="card-title">Historial de càrregues</h3>
             <span class="count-badge">{{ history.length }}</span>
           </div>
           <div class="table-wrapper">
             <table class="table">
               <thead>
                 <tr>
-                  <th>Fecha</th>
+                  <th>Data</th>
                   <th>Influencer</th>
-                  <th>Publicación</th>
-                  <th>Cargado por</th>
-                  <th>Estado</th>
+                  <th>Publicació</th>
+                  <th>Carregat per</th>
+                  <th>Estat</th>
                 </tr>
               </thead>
               <tbody>
@@ -116,11 +116,11 @@
                   <td class="text-sm text-secondary">{{ h.uploadedBy }}</td>
                   <td>
                     <span class="badge" :class="h.status === 'validated' ? 'badge-active' : 'badge-warning'">
-                      {{ h.status === 'validated' ? 'Validado' : 'Pendiente' }}
+                      {{ h.status === 'validated' ? 'Validat' : 'Pendent' }}
                     </span>
                   </td>
                 </tr>
-                <tr v-if="!history.length"><td colspan="5" class="empty-cell">Sin cargas previas</td></tr>
+                <tr v-if="!history.length"><td colspan="5" class="empty-cell">Sense càrregues prèvies</td></tr>
               </tbody>
             </table>
           </div>
@@ -144,11 +144,11 @@ const form = reactive({
 })
 
 const reachMetrics = [
-  { key: 'reach', label: 'Alcance' }, { key: 'impressions', label: 'Impresiones' }, { key: 'views', label: 'Visualizaciones' }
+  { key: 'reach', label: 'Abast' }, { key: 'impressions', label: 'Impressions' }, { key: 'views', label: 'Visualitzacions' }
 ]
 const interactionMetrics = [
-  { key: 'likes', label: 'Likes' }, { key: 'comments', label: 'Comentarios' }, { key: 'shares', label: 'Compartidos' },
-  { key: 'clicks', label: 'Clics' }, { key: 'conversions', label: 'Conversiones' }, { key: 'sales', label: 'Ventas (€)' }
+  { key: 'likes', label: 'Likes' }, { key: 'comments', label: 'Comentaris' }, { key: 'shares', label: 'Compartits' },
+  { key: 'clicks', label: 'Clics' }, { key: 'conversions', label: 'Conversions' }, { key: 'sales', label: 'Vendes (€)' }
 ]
 
 const filteredCollabs = computed(() =>
@@ -164,18 +164,18 @@ function resetForm() {
 }
 
 function submitMetrics() {
-  if (!form.influencerId || !form.collaborationId) { alert('Seleccione influencer y colaboración'); return }
+  if (!form.influencerId || !form.collaborationId) { alert('Seleccioneu influencer i col·laboració'); return }
   const inf = socialInfluencers.find(i => i.id === form.influencerId)
   history.value.unshift({
     id: Date.now(), date: form.date || new Date().toISOString().split('T')[0],
     influencerName: inf?.name, collaborationId: form.collaborationId,
-    publicationDesc: form.publicationDesc || 'Sin descripción',
-    uploadedBy: 'Usuario actual', status: form.status,
+    publicationDesc: form.publicationDesc || 'Sense descripció',
+    uploadedBy: 'Usuari actual', status: form.status,
     reach: form.reach, impressions: form.impressions, views: form.views,
     likes: form.likes, comments: form.comments, shares: form.shares
   })
   resetForm()
-  alert('Métricas guardadas correctamente')
+  alert('Mètriques desades correctament')
 }
 </script>
 

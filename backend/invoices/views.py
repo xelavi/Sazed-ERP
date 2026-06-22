@@ -10,7 +10,7 @@ from django.utils import timezone
 from accounts.mixins import CompanyMixin
 from .models import (
     Invoice, InvoiceSeries, Payment, EventLog,
-    Quote, InvoiceLine, InvoiceTimeline, RecurringInvoice,
+    Quote, InvoiceLine, InvoiceLineTax, InvoiceTimeline, RecurringInvoice,
 )
 from core.excel import build_xlsx_response
 from .serializers import (
@@ -401,22 +401,15 @@ class QuoteViewSet(CompanyMixin, viewsets.ModelViewSet):
                 quantity=ln.quantity,
                 unit_price=ln.unit_price,
             )
-            # Aplicar IVA si la línea tenía tax_percent
-            if ln.tax_percent and ln.tax_percent > 0:
-                from core.models import TaxRate
-                rate = TaxRate.objects.filter(
-                    percent=ln.tax_percent, active=True,
-                ).exclude(tax_type='RETENTION').first()
-                if rate:
-                    from .models import InvoiceLineTax
-                    InvoiceLineTax.objects.create(
-                        invoice_line=new_line,
-                        tax_rate=rate,
-                        tax_name=rate.name,
-                        tax_percent=rate.percent,
-                        is_retention=False,
-                        tax_amount=ln.tax_amount,
-                    )
+            for lt in ln.taxes.all():
+                InvoiceLineTax.objects.create(
+                    invoice_line=new_line,
+                    tax_rate=lt.tax_rate,
+                    tax_name=lt.tax_name,
+                    tax_percent=lt.tax_percent,
+                    is_retention=lt.is_retention,
+                    tax_amount=lt.tax_amount,
+                )
 
         invoice.recalculate_totals()
 

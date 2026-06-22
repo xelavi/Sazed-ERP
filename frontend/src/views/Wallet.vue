@@ -2,10 +2,10 @@
   <div class="wallet-view">
     <div class="view-header">
       <div class="header-content">
-        <h1 class="view-title">Wallet</h1>
+        <h1 class="view-title">Cartera</h1>
         <button class="btn btn-primary">
           <DollarSign :size="18" />
-          <span>Get paid</span>
+          <span>Cobrar</span>
         </button>
       </div>
     </div>
@@ -16,56 +16,56 @@
           <Lightbulb :size="28" />
         </div>
         <div class="banner-content">
-          <h3 class="banner-title">Kickstart your earnings!</h3>
+          <h3 class="banner-title">Comença a generar ingressos!</h3>
           <p class="banner-text">
-            Begin your journey by adding products or creating a payment link. It's your first step to collecting funds and growing your business.
+            Comença afegint productes o creant un enllaç de pagament. És el teu primer pas per cobrar i fer créixer el teu negoci.
           </p>
-          <a href="#" class="banner-link">Sell via Link →</a>
+          <a href="#" class="banner-link">Vendre amb un enllaç →</a>
         </div>
       </div>
 
       <div class="balance-cards">
         <div class="card balance-card">
           <div class="balance-header">
-            <span class="balance-label">AVAILABLE</span>
+            <span class="balance-label">DISPONIBLE</span>
             <div class="balance-icon">
               <Banknote :size="24" />
             </div>
           </div>
-          <h2 class="balance-amount">$0.00</h2>
+          <h2 class="balance-amount">0,00 €</h2>
           <div class="balance-action">
             <a href="#" class="link-secondary">
               <CreditCard :size="16" />
-              Create your <span class="link-highlight">Card</span>
+              Crea la teva <span class="link-highlight">Targeta</span>
             </a>
           </div>
         </div>
 
         <div class="card balance-card">
           <div class="balance-header">
-            <span class="balance-label">UPCOMING</span>
+            <span class="balance-label">PRÒXIM</span>
             <div class="balance-icon">
               <TrendingUp :size="24" />
             </div>
           </div>
-          <h2 class="balance-amount">$0.00</h2>
+          <h2 class="balance-amount">0,00 €</h2>
           <div class="balance-info">
             <Clock :size="16" class="info-icon" />
-            <span class="info-text">$0.00 collected from 0 order(s)</span>
+            <span class="info-text">0,00 € cobrats de 0 comandes</span>
           </div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">Recent Payments</h3>
+          <h3 class="card-title">Pagaments recents</h3>
         </div>
         <div class="empty-state">
           <div class="empty-icon">
             <DollarSign :size="48" />
           </div>
-          <h4 class="empty-title">No recent payments</h4>
-          <p class="empty-text">Currently, there are no recent payments recorded.</p>
+          <h4 class="empty-title">Cap pagament recent</h4>
+          <p class="empty-text">Ara mateix no hi ha cap pagament recent registrat.</p>
         </div>
       </div>
     </div>

@@ -13,9 +13,9 @@ import ChartRenderer from '@/components/charts/ChartRenderer.vue'
 const STORAGE_KEY = 'dashboards.widgets.v2'
 
 const SIZES = [
-  { id: 'sm', label: 'Pequeño' },
-  { id: 'md', label: 'Mediano' },
-  { id: 'lg', label: 'Ancho' },
+  { id: 'sm', label: 'Petit' },
+  { id: 'md', label: 'Mitjà' },
+  { id: 'lg', label: 'Ample' },
 ]
 
 const { analytics, loading, error, load } = useDashboardData()
@@ -62,8 +62,8 @@ function groupByLabel(kpi, id) {
 function widgetTitle(w) { return getKpiDef(w.kpi).label }
 function widgetSubtitle(w) {
   const f = CHART_FORMATS.find((c) => c.id === w.chart)
-  if (isDistribution(w.chart)) return `${f?.label} · por ${groupByLabel(w.kpi, w.groupBy).toLowerCase()}`
-  return `${f?.label} · últimos 12 meses`
+  if (isDistribution(w.chart)) return `${f?.label} · per ${groupByLabel(w.kpi, w.groupBy).toLowerCase()}`
+  return `${f?.label} · últims 12 mesos`
 }
 function widgetIcon(w) { return getKpiDef(w.kpi).icon }
 
@@ -133,29 +133,29 @@ const tsKpis = computed(() => KPIS)
           <span class="title-icon"><LayoutDashboard :size="22" /></span>
           Dashboards
         </h1>
-        <p class="view-subtitle">Tus indicadores clave, con datos reales de tu empresa</p>
+        <p class="view-subtitle">Els teus indicadors clau, amb dades reals de la teva empresa</p>
       </div>
       <div class="header-actions">
         <button v-if="editMode" class="btn btn-ghost" @click="resetLayout">
-          <RotateCcw :size="16" /> <span class="btn-label">Restablecer</span>
+          <RotateCcw :size="16" /> <span class="btn-label">Restablir</span>
         </button>
         <button class="btn btn-secondary" @click="editMode = !editMode">
           <component :is="editMode ? Check : Pencil" :size="16" />
-          <span class="btn-label">{{ editMode ? 'Hecho' : 'Organizar' }}</span>
+          <span class="btn-label">{{ editMode ? 'Fet' : 'Organitzar' }}</span>
         </button>
         <button class="btn btn-primary" @click="openAdd">
-          <Plus :size="16" /> <span class="btn-label">Nuevo gráfico</span>
+          <Plus :size="16" /> <span class="btn-label">Nou gràfic</span>
         </button>
       </div>
     </header>
 
     <div v-if="error" class="load-error">
-      <AlertTriangle :size="16" /> No se pudieron cargar los datos.
+      <AlertTriangle :size="16" /> No s'han pogut carregar les dades.
       <button class="link-btn" @click="load(true)">Reintentar</button>
     </div>
 
     <div v-if="editMode" class="edit-hint">
-      <GripVertical :size="14" /> Arrastra las tarjetas para reordenarlas · usa el menú ⋮ para cambiar tamaño, agrupación o eliminar
+      <GripVertical :size="14" /> Arrossega les targetes per reordenar-les · fes servir el menú ⋮ per canviar la mida, l'agrupació o eliminar
     </div>
 
     <!-- Grid -->
@@ -182,7 +182,7 @@ const tsKpis = computed(() => KPIS)
             </button>
             <transition name="menu">
               <div v-if="menuFor === w.id" class="widget-menu">
-                <div class="menu-section">Tamaño</div>
+                <div class="menu-section">Mida</div>
                 <button
                   v-for="s in SIZES" :key="s.id"
                   class="menu-item" :class="{ active: w.size === s.id }"
@@ -192,7 +192,7 @@ const tsKpis = computed(() => KPIS)
                 </button>
                 <template v-if="isDistribution(w.chart) && getKpiDef(w.kpi).groupBys.length">
                   <div class="menu-divider" />
-                  <div class="menu-section">Agrupar por</div>
+                  <div class="menu-section">Agrupar per</div>
                   <button
                     v-for="g in getKpiDef(w.kpi).groupBys" :key="g.id"
                     class="menu-item" :class="{ active: w.groupBy === g.id }"
@@ -218,9 +218,9 @@ const tsKpis = computed(() => KPIS)
     <!-- Empty -->
     <div v-else class="dash-empty">
       <div class="empty-icon"><LayoutDashboard :size="40" /></div>
-      <h3>Tu dashboard está vacío</h3>
-      <p>Añade tu primer gráfico para empezar a visualizar tus datos.</p>
-      <button class="btn btn-primary" @click="openAdd"><Plus :size="16" /> Nuevo gráfico</button>
+      <h3>El teu dashboard està buit</h3>
+      <p>Afegeix el teu primer gràfic per començar a visualitzar les teves dades.</p>
+      <button class="btn btn-primary" @click="openAdd"><Plus :size="16" /> Nou gràfic</button>
     </div>
 
     <!-- Add modal -->
@@ -229,7 +229,7 @@ const tsKpis = computed(() => KPIS)
         <div v-if="showAdd" class="modal-overlay" @click.self="showAdd = false">
           <div class="modal">
             <div class="modal-head">
-              <h2>Nuevo gráfico</h2>
+              <h2>Nou gràfic</h2>
               <button class="icon-btn" @click="showAdd = false"><X :size="18" /></button>
             </div>
 
@@ -237,7 +237,7 @@ const tsKpis = computed(() => KPIS)
               <div class="builder">
                 <!-- KPI picker -->
                 <div class="builder-col">
-                  <label class="builder-label">1 · Elige un KPI</label>
+                  <label class="builder-label">1 · Tria un KPI</label>
                   <div class="kpi-list">
                     <button
                       v-for="k in tsKpis" :key="k.id"
@@ -254,9 +254,9 @@ const tsKpis = computed(() => KPIS)
 
                 <!-- Format + group-by + preview -->
                 <div class="builder-col">
-                  <label class="builder-label">2 · Elige el formato</label>
+                  <label class="builder-label">2 · Tria el format</label>
 
-                  <div class="fmt-group-label">Evolución temporal</div>
+                  <div class="fmt-group-label">Evolució temporal</div>
                   <div class="fmt-list">
                     <button
                       v-for="f in temporalFormats" :key="f.id"
@@ -270,8 +270,8 @@ const tsKpis = computed(() => KPIS)
                   </div>
 
                   <div class="fmt-group-label">
-                    Distribución
-                    <span v-if="!draftHasGroups" class="fmt-note">— no disponible para este KPI</span>
+                    Distribució
+                    <span v-if="!draftHasGroups" class="fmt-note">— no disponible per a aquest KPI</span>
                   </div>
                   <div class="fmt-list">
                     <button
@@ -287,7 +287,7 @@ const tsKpis = computed(() => KPIS)
                   </div>
 
                   <template v-if="isDistribution(draft.chart) && draftHasGroups">
-                    <label class="builder-label">Agrupar por</label>
+                    <label class="builder-label">Agrupar per</label>
                     <div class="size-row">
                       <button
                         v-for="g in draftDef.groupBys" :key="g.id"
@@ -297,7 +297,7 @@ const tsKpis = computed(() => KPIS)
                     </div>
                   </template>
 
-                  <label class="builder-label">Tamaño</label>
+                  <label class="builder-label">Mida</label>
                   <div class="size-row">
                     <button
                       v-for="s in SIZES" :key="s.id"
@@ -306,7 +306,7 @@ const tsKpis = computed(() => KPIS)
                     >{{ s.label }}</button>
                   </div>
 
-                  <label class="builder-label">Vista previa</label>
+                  <label class="builder-label">Vista prèvia</label>
                   <div class="preview" :class="{ short: draft.chart === 'stat' }">
                     <ChartRenderer
                       :key="draft.kpi + draft.chart + draft.groupBy"
@@ -318,8 +318,8 @@ const tsKpis = computed(() => KPIS)
             </div>
 
             <div class="modal-foot">
-              <button class="btn btn-secondary" @click="showAdd = false">Cancelar</button>
-              <button class="btn btn-primary" @click="confirmAdd"><Plus :size="16" /> Añadir al dashboard</button>
+              <button class="btn btn-secondary" @click="showAdd = false">Cancel·lar</button>
+              <button class="btn btn-primary" @click="confirmAdd"><Plus :size="16" /> Afegir al dashboard</button>
             </div>
           </div>
         </div>

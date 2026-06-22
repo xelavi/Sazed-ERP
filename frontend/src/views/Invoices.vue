@@ -3,22 +3,22 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Invoices</h1>
+          <h1 class="view-title">Factures</h1>
           <span class="count-badge">{{ invoices.length }}</span>
         </div>
         <div class="header-actions">
           <button class="btn btn-secondary" @click="openPlansModal">
             <Repeat :size="18" />
-            <span>Recurrentes</span>
+            <span>Recurrents</span>
             <span v-if="activePlanCount" class="header-pill">{{ activePlanCount }}</span>
           </button>
           <button class="btn btn-secondary" :disabled="exporting" @click="handleExport">
             <Download :size="18" />
-            <span>{{ exporting ? 'Exportando…' : 'Export' }}</span>
+            <span>{{ exporting ? 'Exportant…' : 'Exportar' }}</span>
           </button>
           <button class="btn btn-primary" @click="openInvoiceForm()">
             <Plus :size="18" />
-            <span>New invoice</span>
+            <span>Nova factura</span>
           </button>
         </div>
       </div>
@@ -32,28 +32,28 @@
           <input
             type="text"
             class="input search-input"
-            placeholder="Search by number, customer..."
+            placeholder="Cerca per número o client…"
             v-model="searchQuery"
           />
         </div>
         <div class="filter-actions">
           <select class="select filter-select" v-model="statusFilter">
-            <option value="all">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="approved">Approved</option>
-            <option value="partially_paid">Partially paid</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
-            <option value="voided">Voided</option>
-            <option value="rectified">Rectified</option>
+            <option value="all">Tots els estats</option>
+            <option value="draft">Esborrany</option>
+            <option value="approved">Aprovada</option>
+            <option value="partially_paid">Pagada parcialment</option>
+            <option value="paid">Pagada</option>
+            <option value="overdue">Vençuda</option>
+            <option value="voided">Anul·lada</option>
+            <option value="rectified">Rectificada</option>
           </select>
           <select class="select filter-select" v-model="customerFilter">
-            <option value="all">All customers</option>
+            <option value="all">Tots els clients</option>
             <option v-for="cust in customers" :key="cust" :value="cust">{{ cust }}</option>
           </select>
           <button class="btn btn-secondary" @click="sortInvoices">
             <ArrowUpDown :size="18" />
-            <span>Sort</span>
+            <span>Ordenar</span>
           </button>
         </div>
       </div>
@@ -61,23 +61,23 @@
       <!-- ===================== BULK ACTIONS BAR ===================== -->
       <Transition name="slide-down">
         <div v-if="selectedInvoices.length > 0" class="bulk-actions-bar">
-          <span class="bulk-count">{{ selectedInvoices.length }} selected</span>
+          <span class="bulk-count">{{ selectedInvoices.length }} seleccionades</span>
           <div class="bulk-buttons">
-            <button class="btn btn-sm btn-secondary" @click="bulkApprove" title="Approve selected drafts">
+            <button class="btn btn-sm btn-secondary" @click="bulkApprove" title="Aprovar els esborranys seleccionats">
               <CheckCircle2 :size="16" />
-              <span>Approve</span>
+              <span>Aprovar</span>
             </button>
-            <button class="btn btn-sm btn-secondary" @click="bulkSend" title="Send by email">
+            <button class="btn btn-sm btn-secondary" @click="bulkSend" title="Enviar per correu">
               <Send :size="16" />
-              <span>Send</span>
+              <span>Enviar</span>
             </button>
-            <button class="btn btn-sm btn-secondary" @click="bulkExport" title="Export selected">
+            <button class="btn btn-sm btn-secondary" @click="bulkExport" title="Exportar la selecció">
               <Download :size="16" />
-              <span>Export</span>
+              <span>Exportar</span>
             </button>
-            <button class="btn btn-sm btn-secondary" @click="bulkDelete" title="Delete selected drafts" style="color: var(--error-color);">
+            <button class="btn btn-sm btn-secondary" @click="bulkDelete" title="Eliminar els esborranys seleccionats" style="color: var(--error-color);">
               <Trash2 :size="16" />
-              <span>Delete</span>
+              <span>Eliminar</span>
             </button>
           </div>
         </div>
@@ -92,13 +92,13 @@
                 <th class="col-checkbox">
                   <input type="checkbox" class="checkbox" @change="toggleSelectAll" :checked="allSelected" />
                 </th>
-                <th class="col-number">Nº</th>
-                <th class="col-customer">Customer</th>
-                <th class="col-date">Date</th>
-                <th class="col-due">Due date</th>
-                <th class="col-status">Status</th>
+                <th class="col-number">Núm.</th>
+                <th class="col-customer">Client</th>
+                <th class="col-date">Data</th>
+                <th class="col-due">Venciment</th>
+                <th class="col-status">Estat</th>
                 <th class="col-total">Total</th>
-                <th class="col-balance">Balance</th>
+                <th class="col-balance">Saldo</th>
                 <th class="col-actions"></th>
               </tr>
             </thead>
@@ -114,7 +114,7 @@
                 </td>
                 <td class="col-number">
                   <span class="invoice-number">{{ invoice.number || '—' }}</span>
-                  <span v-if="invoice.type === 'CreditNote'" class="creditnote-hint">Credit note</span>
+                  <span v-if="invoice.type === 'CreditNote'" class="creditnote-hint">Nota de crèdit</span>
                 </td>
                 <td class="col-customer">
                   <div class="customer-cell" v-if="invoice.customer">
@@ -151,7 +151,7 @@
                     <button
                       v-if="invoice.status === 'Draft'"
                       class="btn-icon"
-                      title="Edit"
+                      title="Editar"
                       @click="openInvoiceForm(invoice)"
                     >
                       <Pencil :size="16" />
@@ -164,7 +164,7 @@
                         <div v-if="openDropdownId === invoice.id" class="dropdown-menu" @click.stop>
                           <button class="dropdown-item" @click="openDetail(invoice); closeDropdown()">
                             <Eye :size="16" />
-                            <span>View</span>
+                            <span>Veure</span>
                           </button>
                           <button
                             v-if="invoice.status === 'Draft'"
@@ -172,11 +172,11 @@
                             @click="openInvoiceForm(invoice); closeDropdown()"
                           >
                             <Pencil :size="16" />
-                            <span>Edit</span>
+                            <span>Editar</span>
                           </button>
                           <button class="dropdown-item" @click="duplicateInvoice(invoice); closeDropdown()">
                             <Copy :size="16" />
-                            <span>Duplicate</span>
+                            <span>Duplicar</span>
                           </button>
                           <button
                             v-if="invoice.type !== 'CreditNote'"
@@ -184,7 +184,7 @@
                             @click="openRecurrenceForm(invoice); closeDropdown()"
                           >
                             <Repeat :size="16" />
-                            <span>Hacer recurrente</span>
+                            <span>Fer recurrent</span>
                           </button>
                           <div class="dropdown-divider"></div>
                           <button
@@ -193,7 +193,7 @@
                             @click="approveInvoice(invoice); closeDropdown()"
                           >
                             <CheckCircle2 :size="16" />
-                            <span>Approve</span>
+                            <span>Aprovar</span>
                           </button>
                           <button
                             v-if="invoice.status === 'Approved' || invoice.status === 'PartiallyPaid'"
@@ -201,7 +201,7 @@
                             @click="openPaymentModal(invoice); closeDropdown()"
                           >
                             <Banknote :size="16" />
-                            <span>Record payment</span>
+                            <span>Registrar pagament</span>
                           </button>
                           <button
                             v-if="invoice.status !== 'Draft' && invoice.status !== 'Voided'"
@@ -209,11 +209,11 @@
                             @click="sendInvoice(invoice); closeDropdown()"
                           >
                             <Send :size="16" />
-                            <span>Send by email</span>
+                            <span>Enviar per correu</span>
                           </button>
                           <button class="dropdown-item" @click="downloadPdf(invoice); closeDropdown()">
                             <FileDown :size="16" />
-                            <span>Download PDF</span>
+                            <span>Descarregar PDF</span>
                           </button>
                           <div class="dropdown-divider"></div>
                           <button
@@ -222,7 +222,7 @@
                             @click="createRectifying(invoice); closeDropdown()"
                           >
                             <FileX :size="16" />
-                            <span>Create credit note</span>
+                            <span>Crear nota de crèdit</span>
                           </button>
                           <button
                             v-if="invoice.status === 'Approved' && invoice.paidAmount === 0"
@@ -230,7 +230,7 @@
                             @click="voidInvoice(invoice); closeDropdown()"
                           >
                             <Ban :size="16" />
-                            <span>Void</span>
+                            <span>Anul·lar</span>
                           </button>
                           <button
                             v-if="invoice.status === 'Draft'"
@@ -238,7 +238,7 @@
                             @click="deleteInvoice(invoice); closeDropdown()"
                           >
                             <Trash2 :size="16" />
-                            <span>Delete</span>
+                            <span>Eliminar</span>
                           </button>
                         </div>
                       </Transition>
@@ -251,14 +251,14 @@
         </div>
         <div class="table-footer">
           <span class="table-footer-info">
-            Showing <strong>{{ filteredInvoices.length }}</strong> of <strong>{{ invoices.length }}</strong> invoices
+            Mostrant <strong>{{ filteredInvoices.length }}</strong> de <strong>{{ invoices.length }}</strong> factures
           </span>
           <div class="table-footer-summary">
             <span class="summary-item">
               Total: <strong>{{ formatCurrency(totalFiltered) }}</strong>
             </span>
             <span class="summary-item">
-              Balance: <strong :class="totalBalanceFiltered > 0 ? 'has-balance' : ''">{{ formatCurrency(totalBalanceFiltered) }}</strong>
+              Saldo: <strong :class="totalBalanceFiltered > 0 ? 'has-balance' : ''">{{ formatCurrency(totalBalanceFiltered) }}</strong>
             </span>
           </div>
         </div>
@@ -298,45 +298,45 @@
       <div v-if="paymentModalOpen" class="modal-overlay" @click.self="closePaymentModal">
         <div class="modal-panel">
           <div class="modal-header">
-            <h3>Record payment</h3>
+            <h3>Registrar pagament</h3>
             <button class="btn-icon" @click="closePaymentModal">
               <X :size="20" />
             </button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label class="form-label">Date</label>
+              <label class="form-label">Data</label>
               <input type="date" class="input" v-model="paymentForm.date" />
             </div>
             <div class="form-group">
-              <label class="form-label">Amount (EUR)</label>
+              <label class="form-label">Import (EUR)</label>
               <input type="number" class="input" v-model.number="paymentForm.amount" min="0.01" :max="paymentInvoice?.balanceDue" step="0.01" />
-              <span class="form-hint">Balance due: {{ formatCurrency(paymentInvoice?.balanceDue) }}</span>
+              <span class="form-hint">Saldo pendent: {{ formatCurrency(paymentInvoice?.balanceDue) }}</span>
             </div>
             <div class="form-group">
-              <label class="form-label">Method</label>
+              <label class="form-label">Mètode</label>
               <select class="select" v-model="paymentForm.method">
-                <option value="Transfer">Transfer</option>
-                <option value="DirectDebit">Direct debit</option>
-                <option value="Card">Card</option>
-                <option value="Cash">Cash</option>
-                <option value="Other">Other</option>
+                <option value="Transfer">Transferència</option>
+                <option value="DirectDebit">Domiciliació</option>
+                <option value="Card">Targeta</option>
+                <option value="Cash">Efectiu</option>
+                <option value="Other">Altres</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Reference</label>
-              <input type="text" class="input" v-model="paymentForm.reference" placeholder="Bank operation nº" />
+              <label class="form-label">Referència</label>
+              <input type="text" class="input" v-model="paymentForm.reference" placeholder="Núm. d'operació bancària" />
             </div>
             <div class="form-group">
               <label class="form-label">Notes</label>
-              <textarea class="input" rows="2" v-model="paymentForm.notes" placeholder="Optional notes..."></textarea>
+              <textarea class="input" rows="2" v-model="paymentForm.notes" placeholder="Notes opcionals…"></textarea>
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" @click="closePaymentModal">Cancel</button>
+            <button class="btn btn-secondary" @click="closePaymentModal">Cancel·lar</button>
             <button class="btn btn-primary" @click="savePayment" :disabled="!paymentForm.amount || paymentForm.amount <= 0">
               <CheckCircle2 :size="18" />
-              Save payment
+              Desar pagament
             </button>
           </div>
         </div>
@@ -392,11 +392,11 @@ async function handleExport() {
   try {
     const blob = await invoicesApi.export()
     const stamp = new Date().toISOString().slice(0, 10)
-    saveBlob(blob, `facturas-${stamp}.xlsx`)
-    toast.success('Exportación generada')
+    saveBlob(blob, `factures-${stamp}.xlsx`)
+    toast.success('Exportació generada')
   } catch (err) {
     console.error('Export failed:', err)
-    toast.error(err.message || 'Error al exportar facturas')
+    toast.error(err.message || 'Error en exportar les factures')
   } finally {
     exporting.value = false
   }
@@ -413,7 +413,7 @@ async function fetchSeries() {
     invoiceSeriesList.value = Array.isArray(data) ? data : (data.results || [])
   } catch (err) {
     console.error('Failed to load series:', err)
-    toast.error('Error al cargar las series de facturación')
+    toast.error('Error en carregar les sèries de facturació')
   }
 }
 
@@ -429,7 +429,7 @@ async function fetchCustomers() {
     customersList.value = items.map(mapCustomerFromApi)
   } catch (err) {
     console.error('Failed to load customers:', err)
-    toast.error('Error al cargar clientes')
+    toast.error('Error en carregar els clients')
   }
 }
 
@@ -444,7 +444,7 @@ async function fetchInvoices() {
     invoices.value = items.map(mapInvoiceFromApi)
   } catch (err) {
     console.error('Failed to load invoices:', err)
-    toast.error('Error al cargar facturas')
+    toast.error('Error en carregar les factures')
   } finally {
     loading.value = false
   }
@@ -524,23 +524,28 @@ async function handleInvoiceSave(data) {
   try {
     if (formInvoice.value) {
       await invoicesApi.update(formInvoice.value.id, apiData)
-      toast.success('Factura actualizada')
+      toast.success('Factura actualitzada')
     } else {
       const created = await invoicesApi.create(apiData)
-      toast.success('Factura creada')
+      if (data.status === 'Approved' && created?.id) {
+        await invoicesApi.approve(created.id)
+        toast.success('Factura creada i aprovada')
+      } else {
+        toast.success('Factura creada')
+      }
       if (data.recurrence && created?.id) {
         try {
           await invoicesApi.createRecurring({ source_invoice: created.id, ...data.recurrence })
-          toast.success('Recurrencia programada')
+          toast.success('Recurrència programada')
           await fetchPlans()
         } catch (err) {
-          toast.error(err.data?.detail || err.message || 'Factura creada, pero falló la recurrencia')
+          toast.error(err.data?.detail || err.message || 'Factura creada, però ha fallat la recurrència')
         }
       }
     }
     await fetchInvoices()
   } catch (err) {
-    toast.error(parseDrfErrors(err.data) || err.message || 'Error al guardar factura')
+    toast.error(parseDrfErrors(err.data) || err.message || 'Error en desar la factura')
   }
   formInvoice.value = null
 }
@@ -585,11 +590,11 @@ async function savePayment() {
       reference: paymentForm.value.reference || '',
       notes: paymentForm.value.notes || ''
     })
-    toast.success('Pago registrado')
+    toast.success('Pagament registrat')
     closePaymentModal()
     await fetchInvoices()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al registrar pago')
+    toast.error(err.data?.detail || err.message || 'Error en registrar el pagament')
   }
 }
 
@@ -632,11 +637,11 @@ async function createRecurrence(payload) {
   recurrenceSubmitting.value = true
   try {
     await invoicesApi.createRecurring(payload)
-    toast.success('Recurrencia creada')
+    toast.success('Recurrència creada')
     closeRecurrenceForm()
     await fetchPlans()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al crear la recurrencia')
+    toast.error(err.data?.detail || err.message || 'Error en crear la recurrència')
   } finally {
     recurrenceSubmitting.value = false
   }
@@ -648,7 +653,7 @@ async function runPlan(plan) {
     toast.success('Factura generada')
     await Promise.all([fetchPlans(), fetchInvoices()])
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al generar la factura')
+    toast.error(err.data?.detail || err.message || 'Error en generar la factura')
   }
 }
 
@@ -657,17 +662,17 @@ async function togglePlan(plan) {
     await invoicesApi.updateRecurring(plan.id, { active: !plan.active })
     await fetchPlans()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al actualizar el plan')
+    toast.error(err.data?.detail || err.message || 'Error en actualitzar el pla')
   }
 }
 
 async function removePlan(plan) {
   try {
     await invoicesApi.deleteRecurring(plan.id)
-    toast.success('Recurrencia eliminada')
+    toast.success('Recurrència eliminada')
     await fetchPlans()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al eliminar el plan')
+    toast.error(err.data?.detail || err.message || 'Error en eliminar el pla')
   }
 }
 
@@ -700,10 +705,10 @@ async function approveInvoice(invoice) {
   if (invoice.status !== 'Draft') return
   try {
     await invoicesApi.approve(invoice.id)
-    toast.success('Factura aprobada')
+    toast.success('Factura aprovada')
     await fetchInvoices()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al aprobar factura')
+    toast.error(err.data?.detail || err.message || 'Error en aprovar la factura')
   }
 }
 
@@ -713,7 +718,7 @@ async function duplicateInvoice(invoice) {
     toast.success('Factura duplicada')
     await fetchInvoices()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al duplicar factura')
+    toast.error(err.data?.detail || err.message || 'Error en duplicar la factura')
   }
 }
 
@@ -725,7 +730,7 @@ async function deleteInvoice(invoice) {
     selectedInvoices.value = selectedInvoices.value.filter(id => id !== invoice.id)
     toast.success('Factura eliminada')
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al eliminar factura')
+    toast.error(err.data?.detail || err.message || 'Error en eliminar la factura')
   }
 }
 
@@ -733,29 +738,29 @@ async function voidInvoice(invoice) {
   if (invoice.status !== 'Approved' || invoice.paidAmount > 0) return
   try {
     await invoicesApi.void(invoice.id)
-    toast.success('Factura anulada')
+    toast.success('Factura anul·lada')
     await fetchInvoices()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al anular factura')
+    toast.error(err.data?.detail || err.message || 'Error en anul·lar la factura')
   }
 }
 
 async function createRectifying(invoice) {
   try {
     await invoicesApi.rectify(invoice.id)
-    toast.success('Nota de crédito creada')
+    toast.success('Nota de crèdit creada')
     await fetchInvoices()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al crear nota de crédito')
+    toast.error(err.data?.detail || err.message || 'Error en crear la nota de crèdit')
   }
 }
 
 async function sendInvoice(invoice) {
   try {
     await invoicesApi.send(invoice.id)
-    toast.success('Factura enviada por email')
+    toast.success('Factura enviada per correu')
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al enviar factura')
+    toast.error(err.data?.detail || err.message || 'Error en enviar la factura')
   }
 }
 
@@ -769,20 +774,20 @@ async function downloadPdf(invoice) {
     a.click()
     window.URL.revokeObjectURL(url)
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al descargar PDF')
+    toast.error(err.data?.detail || err.message || 'Error en descarregar el PDF')
   }
 }
 
 async function verifactuSubmit(invoice) {
   try {
     const res = await invoicesApi.verifactuSubmit(invoice.id)
-    toast.success(`VERI*FACTU enviado — CSV: ${res.csv || 'OK'}`)
+    toast.success(`VERI*FACTU enviat — CSV: ${res.csv || 'OK'}`)
     await fetchInvoices()
     if (selectedInvoice.value?.id === invoice.id) {
       selectedInvoice.value = { ...selectedInvoice.value, estadoAeat: res.estado || 'Aceptado', verifactuCsv: res.csv || '' }
     }
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al enviar a AEAT')
+    toast.error(err.data?.detail || err.message || 'Error en enviar a l\'AEAT')
   }
 }
 
@@ -794,11 +799,11 @@ async function bulkApprove() {
   if (!draftIds.length) return
   try {
     await invoicesApi.bulkApprove(draftIds)
-    toast.success(`${draftIds.length} facturas aprobadas`)
+    toast.success(`${draftIds.length} factures aprovades`)
     selectedInvoices.value = []
     await fetchInvoices()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error en aprobación masiva')
+    toast.error(err.data?.detail || err.message || 'Error en l\'aprovació massiva')
   }
 }
 
@@ -809,7 +814,7 @@ async function bulkSend() {
   for (const id of ids) {
     try { await invoicesApi.send(id) } catch { /* skip */ }
   }
-  toast.success('Facturas enviadas')
+  toast.success('Factures enviades')
   selectedInvoices.value = []
 }
 
@@ -818,12 +823,12 @@ async function bulkExport() {
   try {
     const blob = await invoicesApi.export({ ids: selectedInvoices.value.join(',') })
     const stamp = new Date().toISOString().slice(0, 10)
-    saveBlob(blob, `facturas-seleccion-${stamp}.xlsx`)
-    toast.success(`${selectedInvoices.value.length} facturas exportadas`)
+    saveBlob(blob, `factures-seleccio-${stamp}.xlsx`)
+    toast.success(`${selectedInvoices.value.length} factures exportades`)
     selectedInvoices.value = []
   } catch (err) {
     console.error('Bulk export failed:', err)
-    toast.error(err.message || 'Error al exportar facturas')
+    toast.error(err.message || 'Error en exportar les factures')
   }
 }
 
@@ -834,11 +839,11 @@ async function bulkDelete() {
   if (!draftIds.length) return
   try {
     await invoicesApi.bulkDelete(draftIds)
-    toast.success(`${draftIds.length} facturas eliminadas`)
+    toast.success(`${draftIds.length} factures eliminades`)
     selectedInvoices.value = []
     await fetchInvoices()
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error en eliminación masiva')
+    toast.error(err.data?.detail || err.message || 'Error en l\'eliminació massiva')
   }
 }
 
@@ -927,14 +932,14 @@ function isOverdue(invoice) {
 }
 
 function displayStatus(invoice) {
-  if (isOverdue(invoice)) return 'Overdue'
+  if (isOverdue(invoice)) return 'Vençuda'
   const map = {
-    Draft: 'Draft',
-    Approved: 'Approved',
-    PartiallyPaid: 'Partial',
-    Paid: 'Paid',
-    Voided: 'Voided',
-    Rectified: 'Rectified'
+    Draft: 'Esborrany',
+    Approved: 'Aprovada',
+    PartiallyPaid: 'Parcial',
+    Paid: 'Pagada',
+    Voided: 'Anul·lada',
+    Rectified: 'Rectificada'
   }
   return map[invoice.status] || invoice.status
 }
@@ -954,13 +959,13 @@ function statusBadgeClass(invoice) {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
 }
 
 function formatDateShort(dateStr) {
   if (!dateStr) return '—'
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 </script>
 

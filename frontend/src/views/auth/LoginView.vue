@@ -12,8 +12,8 @@
         <span class="logo-text">Seshat ERP</span>
       </div>
 
-      <h2 class="auth-title">Iniciar sesión</h2>
-      <p class="auth-subtitle">Accede a tu cuenta para gestionar tu empresa</p>
+      <h2 class="auth-title">Iniciar sessió</h2>
+      <p class="auth-subtitle">Accedeix al teu compte per gestionar la teva empresa</p>
 
       <form @submit.prevent="handleLogin" class="auth-form">
         <div v-if="generalError" class="alert alert-error" role="alert">
@@ -22,7 +22,7 @@
         </div>
 
         <div class="form-group">
-          <label for="email" class="form-label">Email</label>
+          <label for="email" class="form-label">Correu electrònic</label>
           <input
             id="email"
             v-model="form.email"
@@ -38,7 +38,7 @@
         </div>
 
         <div class="form-group">
-          <label for="password" class="form-label">Contraseña</label>
+          <label for="password" class="form-label">Contrasenya</label>
           <div class="password-wrapper">
             <input
               id="password"
@@ -55,7 +55,7 @@
               type="button"
               class="password-toggle"
               @click="showPassword = !showPassword"
-              :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              :aria-label="showPassword ? 'Amaga la contrasenya' : 'Mostra la contrasenya'"
             >
               <EyeOff v-if="showPassword" :size="18" />
               <Eye v-else :size="18" />
@@ -66,7 +66,7 @@
 
         <button type="submit" class="btn btn-primary btn-block" :disabled="isSubmitting">
           <span v-if="isSubmitting" class="loading-spinner loading-spinner-sm"></span>
-          <span>{{ isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión' }}</span>
+          <span>{{ isSubmitting ? 'Iniciant sessió…' : 'Iniciar sessió' }}</span>
         </button>
       </form>
 
@@ -75,7 +75,7 @@
       </div>
 
       <router-link to="/register" class="btn btn-secondary btn-block">
-        Crear cuenta
+        Crear un compte
       </router-link>
 
       <p class="auth-footer-text">
@@ -114,20 +114,20 @@ async function handleLogin() {
   Object.keys(errors).forEach(k => delete errors[k])
 
   // Validate
-  if (!form.email) { errors.email = 'El email es obligatorio'; return }
-  if (!form.password) { errors.password = 'La contraseña es obligatoria'; return }
+  if (!form.email) { errors.email = 'El correu electrònic és obligatori'; return }
+  if (!form.password) { errors.password = 'La contrasenya és obligatòria'; return }
 
   isSubmitting.value = true
   try {
     await login(form.email, form.password)
-    toast.success('Sesión iniciada')
+    toast.success('Sessió iniciada')
     const redirect = route.query.redirect || '/'
     router.push(redirect)
   } catch (err) {
     if (err.status === 400 || err.data) {
-      generalError.value = err.data?.non_field_errors?.[0] || err.message || 'Credenciales incorrectas'
+      generalError.value = err.data?.non_field_errors?.[0] || err.message || 'Credencials incorrectes'
     } else {
-      generalError.value = 'No se pudo conectar al servidor. Reintenta.'
+      generalError.value = 'No s\'ha pogut connectar amb el servidor. Torna-ho a provar.'
     }
   } finally {
     isSubmitting.value = false

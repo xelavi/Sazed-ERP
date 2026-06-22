@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'purchases',
     'accounting_sync',
     'ecommerce_sync',
+    'social_crm',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -148,6 +149,21 @@ REST_FRAMEWORK = {
 FACEBOOK_APP_ID = config('FACEBOOK_APP_ID', default='')
 FACEBOOK_APP_SECRET = config('FACEBOOK_APP_SECRET', default='')
 FACEBOOK_GRAPH_VERSION = config('FACEBOOK_GRAPH_VERSION', default='v19.0')
+
+# ── YouTube / Google OAuth 2.0 ────────────────────────
+YOUTUBE_CLIENT_ID = config('YOUTUBE_CLIENT_ID', default='')
+YOUTUBE_CLIENT_SECRET = config('YOUTUBE_CLIENT_SECRET', default='')
+
+# ── X (Twitter) OAuth 2.0 ─────────────────────────────
+TWITTER_CLIENT_ID = config('TWITTER_CLIENT_ID', default='')
+TWITTER_CLIENT_SECRET = config('TWITTER_CLIENT_SECRET', default='')
+
+# ── TikTok OAuth 2.0 ──────────────────────────────────
+TIKTOK_CLIENT_KEY = config('TIKTOK_CLIENT_KEY', default='')
+TIKTOK_CLIENT_SECRET = config('TIKTOK_CLIENT_SECRET', default='')
+
+# ── Frontend URL (used as OAuth redirect base) ────────
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 
 # ── Integración Odoo ──────────────────────────────────
 # Clave Fernet para cifrar credenciales de OdooConnection en BD.

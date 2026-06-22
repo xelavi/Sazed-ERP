@@ -3,12 +3,12 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Campañas</h1>
+          <h1 class="view-title">Campanyes</h1>
           <span class="count-badge">{{ filtered.length }}</span>
         </div>
         <div class="header-actions">
           <button class="btn btn-primary" @click="openForm">
-            <Plus :size="18" /><span>Nueva campaña</span>
+            <Plus :size="18" /><span>Nova campanya</span>
           </button>
         </div>
       </div>
@@ -17,11 +17,11 @@
     <div class="content-wrapper">
       <div class="filters-bar">
         <select class="select" v-model="statusFilter">
-          <option value="all">Todos los estados</option>
+          <option value="all">Tots els estats</option>
           <option v-for="(s, k) in CAMPAIGN_STATUSES" :key="k" :value="k">{{ s.label }}</option>
         </select>
         <select class="select" v-model="objectiveFilter">
-          <option value="all">Todos los objetivos</option>
+          <option value="all">Tots els objectius</option>
           <option v-for="o in CAMPAIGN_OBJECTIVES" :key="o" :value="o">{{ o }}</option>
         </select>
       </div>
@@ -31,18 +31,18 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Objetivo</th>
-                <th>Inicio</th>
-                <th>Fin</th>
-                <th>Estado</th>
-                <th class="text-right">Presupuesto</th>
+                <th>Nom</th>
+                <th>Objectiu</th>
+                <th>Inici</th>
+                <th>Fi</th>
+                <th>Estat</th>
+                <th class="text-right">Pressupost</th>
                 <th class="text-right">Posts</th>
                 <th class="text-right">Influencers</th>
                 <th class="text-right">Clics</th>
-                <th class="text-right">Conversiones</th>
-                <th class="text-right">Ventas</th>
-                <th>Acciones</th>
+                <th class="text-right">Conversions</th>
+                <th class="text-right">Vendes</th>
+                <th>Accions</th>
               </tr>
             </thead>
             <tbody>
@@ -63,7 +63,7 @@
                 <td class="text-right font-medium">{{ formatCurrency(c.sales) }}</td>
                 <td @click.stop>
                   <div class="row-actions">
-                    <button class="icon-btn" @click="$router.push('/social-crm/campaigns/' + c.id)" title="Ver detalle"><Eye :size="15" /></button>
+                    <button class="icon-btn" @click="$router.push('/social-crm/campaigns/' + c.id)" title="Veure detall"><Eye :size="15" /></button>
                     <button class="icon-btn" title="Editar"><Pencil :size="15" /></button>
                   </div>
                 </td>
@@ -78,46 +78,46 @@
     <div v-if="showForm" class="modal-overlay" @click.self="showForm = false">
       <div class="modal">
         <div class="modal-header">
-          <h2 class="modal-title">Nueva campaña</h2>
+          <h2 class="modal-title">Nova campanya</h2>
           <button class="icon-btn" @click="showForm = false"><X :size="20" /></button>
         </div>
         <div class="modal-body">
           <div class="form-grid">
             <div class="field full-width">
-              <label class="field-label">Nombre *</label>
-              <input class="input full" v-model="form.name" placeholder="Nombre de la campaña" />
+              <label class="field-label">Nom *</label>
+              <input class="input full" v-model="form.name" placeholder="Nom de la campanya" />
             </div>
             <div class="field">
-              <label class="field-label">Objetivo *</label>
+              <label class="field-label">Objectiu *</label>
               <select class="select full" v-model="form.objective">
                 <option v-for="o in CAMPAIGN_OBJECTIVES" :key="o" :value="o">{{ o }}</option>
               </select>
             </div>
             <div class="field">
-              <label class="field-label">Presupuesto (€)</label>
+              <label class="field-label">Pressupost (€)</label>
               <input class="input full" type="number" v-model.number="form.budget" placeholder="0.00" />
             </div>
             <div class="field">
-              <label class="field-label">Fecha inicio</label>
+              <label class="field-label">Data d'inici</label>
               <input class="input full" type="date" v-model="form.startDate" />
             </div>
             <div class="field">
-              <label class="field-label">Fecha fin</label>
+              <label class="field-label">Data de fi</label>
               <input class="input full" type="date" v-model="form.endDate" />
             </div>
             <div class="field">
               <label class="field-label">Responsable</label>
-              <input class="input full" v-model="form.responsible" placeholder="Nombre" />
+              <input class="input full" v-model="form.responsible" placeholder="Nom" />
             </div>
             <div class="field full-width">
-              <label class="field-label">Descripción</label>
+              <label class="field-label">Descripció</label>
               <textarea class="input full textarea" v-model="form.description" rows="3"></textarea>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
-          <button class="btn btn-primary" @click="saveCampaign">Crear campaña</button>
+          <button class="btn btn-secondary" @click="showForm = false">Cancel·lar</button>
+          <button class="btn btn-primary" @click="saveCampaign">Crear campanya</button>
         </div>
       </div>
     </div>
@@ -129,7 +129,7 @@ import { ref, reactive, computed } from 'vue'
 import { Plus, Eye, Pencil, X } from 'lucide-vue-next'
 import { socialCampaigns, CAMPAIGN_STATUSES, CAMPAIGN_OBJECTIVES, formatNumber, formatCurrency, formatDate } from '@/services/socialCrmData'
 
-const campaigns     = ref([...socialCampaigns])
+const campaigns     = ref(socialCampaigns)
 const statusFilter  = ref('all')
 const objectiveFilter = ref('all')
 const showForm      = ref(false)

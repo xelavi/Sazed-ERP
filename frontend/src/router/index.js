@@ -12,6 +12,12 @@ const routes = [
     meta: { layout: 'empty', guest: true },
   },
   {
+    path: '/oauth/done',
+    name: 'OAuthDone',
+    component: () => import('../views/OAuthCallbackView.vue'),
+    meta: { layout: 'empty' },
+  },
+  {
     path: '/register',
     name: 'Register',
     component: () => import('../views/auth/RegisterView.vue'),
@@ -179,13 +185,6 @@ const routes = [
     path: '/social-crm/attribution',
     name: 'SocialAttributionHub',
     component: () => import('../views/social-crm/hubs/AttributionHub.vue'),
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/social-crm/settings',
-    name: 'SocialSettingsHub',
-    component: () => import('../views/social-crm/hubs/ComingSoonHub.vue'),
-    props: { hubKey: 'settings' },
     meta: { requiresAuth: true },
   },
 

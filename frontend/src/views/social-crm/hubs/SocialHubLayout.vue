@@ -51,9 +51,9 @@
           v-if="panelOpen"
           class="hub-panel"
           role="complementary"
-          aria-label="Detail panel"
+          aria-label="Tauler de detall"
         >
-          <div class="hub-panel-handle" @click="$emit('close-panel')" title="Cerrar">
+          <div class="hub-panel-handle" @click="$emit('close-panel')" title="Tancar">
             <ChevronRight :size="16" />
           </div>
           <div class="hub-panel-content">
@@ -250,7 +250,7 @@ defineEmits(['update:modelValue', 'close-panel'])
 }
 
 .hub-layout.panel-open .hub-body {
-  grid-template-columns: 1fr 460px;
+  grid-template-columns: 1fr 540px;
 }
 
 .hub-main {
@@ -266,16 +266,16 @@ defineEmits(['update:modelValue', 'close-panel'])
   border-left: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: -8px 0 24px rgba(15, 23, 42, 0.04);
 }
 
 .hub-panel-handle {
   position: absolute;
   top: 1rem;
-  left: -14px;
-  width: 28px;
-  height: 28px;
+  left: -18px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -284,15 +284,16 @@ defineEmits(['update:modelValue', 'close-panel'])
   justify-content: center;
   cursor: pointer;
   z-index: 6;
-  color: var(--text-secondary);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
   transition: all 0.15s ease;
 }
 
 .hub-panel-handle:hover {
-  color: var(--text-primary);
+  color: white;
+  background: var(--primary-color);
   border-color: var(--primary-color);
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .hub-panel-content {

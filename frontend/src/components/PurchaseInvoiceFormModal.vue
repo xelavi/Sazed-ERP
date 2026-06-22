@@ -5,17 +5,17 @@
         <div class="modal-container">
           <!-- Header -->
           <div class="modal-header">
-            <h2 class="modal-title">{{ isEditing ? 'Edit purchase invoice' : 'New purchase invoice' }}</h2>
+            <h2 class="modal-title">{{ isEditing ? 'Editar factura de compra' : 'Nova factura de compra' }}</h2>
             <div class="modal-header-actions">
-              <button class="btn btn-secondary btn-sm" @click="$emit('close')">Cancel</button>
+              <button class="btn btn-secondary btn-sm" @click="$emit('close')">Cancel·lar</button>
               <button class="btn btn-secondary btn-sm" @click="handleSaveDraft">
                 <Save :size="16" />
-                <span>Save draft</span>
+                <span>Desar esborrany</span>
               </button>
               <div class="approve-btn-wrapper" :data-tooltip="approvalTooltip || undefined">
                 <button class="btn btn-primary btn-sm" @click="handleSaveAndApprove">
                   <CheckCircle2 :size="16" />
-                  <span>Save &amp; approve</span>
+                  <span>Desar i aprovar</span>
                 </button>
               </div>
             </div>
@@ -28,27 +28,37 @@
 
               <!-- Provider & dates -->
               <section class="form-section">
-                <h3 class="section-title">Purchase invoice details</h3>
-                <p class="section-desc">Set the provider, dates, and payment terms.</p>
+                <h3 class="section-title">Dades de la factura de compra</h3>
+                <p class="section-desc">Defineix el proveïdor, les dates i les condicions de pagament.</p>
 
                 <div class="field">
-                  <label class="field-label">Provider <span class="required">*</span></label>
+                  <label class="field-label">Proveïdor <span class="required">*</span></label>
                   <select
                     class="select"
                     :class="{ 'input-error': touched.provider && !form.providerId }"
                     v-model="form.providerId"
                     @blur="touched.provider = true"
                   >
-                    <option value="">Select provider...</option>
+                    <option value="">Selecciona un proveïdor…</option>
                     <option v-for="p in providerOptions" :key="p.id" :value="p.id">{{ p.name }}</option>
-                    <option value="__new__">+ Crear nuevo proveedor…</option>
+                    <option value="__new__">+ Crear un proveïdor nou…</option>
                   </select>
-                  <span v-if="touched.provider && !form.providerId" class="field-error">Provider is required</span>
+                  <span v-if="touched.provider && !form.providerId" class="field-error">El proveïdor és obligatori</span>
+                </div>
+
+                <div class="field">
+                  <label class="field-label">Número de factura del proveïdor</label>
+                  <input
+                    class="input"
+                    type="text"
+                    placeholder="Ex: FACT-2024-0123"
+                    v-model="form.number"
+                  />
                 </div>
 
                 <div class="field-row field-row-3">
                   <div class="field">
-                    <label class="field-label">Issue date <span class="required">*</span></label>
+                    <label class="field-label">Data d'emissió <span class="required">*</span></label>
                     <input
                       class="input"
                       :class="{ 'input-error': touched.issueDate && !form.issueDate }"
@@ -56,10 +66,10 @@
                       v-model="form.issueDate"
                       @blur="touched.issueDate = true"
                     />
-                    <span v-if="touched.issueDate && !form.issueDate" class="field-error">Issue date is required</span>
+                    <span v-if="touched.issueDate && !form.issueDate" class="field-error">La data d'emissió és obligatòria</span>
                   </div>
                   <div class="field">
-                    <label class="field-label">Due date <span class="required">*</span></label>
+                    <label class="field-label">Venciment <span class="required">*</span></label>
                     <input
                       class="input"
                       :class="{ 'input-error': touched.dueDate && !form.dueDate }"
@@ -67,16 +77,16 @@
                       v-model="form.dueDate"
                       @blur="touched.dueDate = true"
                     />
-                    <span v-if="touched.dueDate && !form.dueDate" class="field-error">Due date is required</span>
+                    <span v-if="touched.dueDate && !form.dueDate" class="field-error">El venciment és obligatori</span>
                   </div>
                   <div class="field">
-                    <label class="field-label">Payment method</label>
+                    <label class="field-label">Forma de pagament</label>
                     <select class="select" v-model="form.paymentMethod">
-                      <option value="Transfer 30 days">Transfer 30 days</option>
-                      <option value="Transfer">Transfer</option>
-                      <option value="Direct debit">Direct debit</option>
-                      <option value="Card">Card</option>
-                      <option value="Cash">Cash</option>
+                      <option value="Transferència 30 dies">Transferència 30 dies</option>
+                      <option value="Transferència">Transferència</option>
+                      <option value="Domiciliació">Domiciliació</option>
+                      <option value="Targeta">Targeta</option>
+                      <option value="Efectiu">Efectiu</option>
                     </select>
                   </div>
                 </div>
@@ -84,16 +94,16 @@
 
               <!-- Lines -->
               <section class="form-section">
-                <h3 class="section-title">Invoice lines</h3>
-                <p class="section-desc">Add products or services.</p>
+                <h3 class="section-title">Línies de la factura</h3>
+                <p class="section-desc">Afegeix productes o serveis.</p>
 
                 <div class="lines-editor">
                   <div class="le-header">
-                    <span class="le-h-desc">Description</span>
-                    <span class="le-h-qty">Qty</span>
-                    <span class="le-h-price">Price</span>
-                    <span class="le-h-discount">Disc.</span>
-                    <span class="le-h-tax">Tax</span>
+                    <span class="le-h-desc">Descripció</span>
+                    <span class="le-h-qty">Qt.</span>
+                    <span class="le-h-price">Preu</span>
+                    <span class="le-h-discount">Desc.</span>
+                    <span class="le-h-tax">IVA</span>
                     <span class="le-h-subtotal">Subtotal</span>
                     <span class="le-h-actions"></span>
                   </div>
@@ -105,7 +115,7 @@
                         :products="products"
                         :linked-product-id="line.productId"
                         price-mode="purchase"
-                        placeholder="Producto o servicio..."
+                        placeholder="Producte o servei…"
                         @select="(p) => onProductSelect(line, p)"
                         @clear="onProductClear(line)"
                       />
@@ -131,7 +141,7 @@
                       <span class="subtotal-value">{{ formatCurrency(calcLineSubtotal(line)) }}</span>
                     </div>
                     <div class="le-cell-actions">
-                      <button class="btn-icon-sm" @click="removeLine(idx)" title="Remove line">
+                      <button class="btn-icon-sm" @click="removeLine(idx)" title="Eliminar línia">
                         <Trash2 :size="14" />
                       </button>
                     </div>
@@ -140,7 +150,7 @@
 
                 <button class="btn btn-secondary btn-sm add-line-btn" @click="addLine">
                   <Plus :size="16" />
-                  <span>Add line</span>
+                  <span>Afegir línia</span>
                 </button>
               </section>
 
@@ -148,12 +158,12 @@
               <section class="form-section">
                 <h3 class="section-title">Notes</h3>
                 <div class="field">
-                  <label class="field-label">Provider notes</label>
-                  <textarea class="input textarea" rows="2" placeholder="Visible on document..." v-model="form.providerNotes"></textarea>
+                  <label class="field-label">Notes del proveïdor</label>
+                  <textarea class="input textarea" rows="2" placeholder="Visible al document…" v-model="form.providerNotes"></textarea>
                 </div>
                 <div class="field">
-                  <label class="field-label">Internal notes</label>
-                  <textarea class="input textarea" rows="2" placeholder="Internal use only..." v-model="form.internalNotes"></textarea>
+                  <label class="field-label">Notes internes</label>
+                  <textarea class="input textarea" rows="2" placeholder="Només per a ús intern…" v-model="form.internalNotes"></textarea>
                 </div>
               </section>
             </div>
@@ -161,14 +171,14 @@
             <!-- SIDEBAR COLUMN -->
             <div class="modal-sidebar">
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Summary</h4>
+                <h4 class="sidebar-card-title">Resum</h4>
                 <div class="sidebar-totals">
                   <div class="sidebar-total-row">
                     <span>Subtotal</span>
                     <span>{{ formatCurrency(calcSubtotal) }}</span>
                   </div>
                   <div v-if="form.discountValue" class="sidebar-total-row">
-                    <span>Discount</span>
+                    <span>Descompte</span>
                     <span class="discount-val">-{{ formatCurrency(calcDiscountAmount) }}</span>
                   </div>
                   <div v-for="tax in calcTaxSummary" :key="tax.name" class="sidebar-total-row">
@@ -185,8 +195,8 @@
               </div>
 
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Global discount</h4>
-                <p class="sidebar-card-desc">Apply an additional discount on the subtotal.</p>
+                <h4 class="sidebar-card-title">Descompte global</h4>
+                <p class="sidebar-card-desc">Aplica un descompte addicional sobre el subtotal.</p>
                 <div class="field-row-inline">
                   <div class="field" style="flex:1">
                     <input class="input input-sm" type="number" min="0" step="0.01" placeholder="0" v-model.number="form.discountValue" />
@@ -206,64 +216,64 @@
                   <input type="checkbox" v-model="form.recurring" />
                   <span class="rec-toggle-text">
                     <Repeat :size="14" />
-                    Factura recurrente
+                    Factura recurrent
                   </span>
                 </label>
                 <p class="sidebar-card-desc" style="margin-top:0.5rem">
-                  Se generará y aprobará una factura automáticamente cada periodo.
+                  Es generarà i aprovarà una factura automàticament cada període.
                 </p>
 
                 <template v-if="form.recurring">
                   <div class="field">
-                    <label class="field-label">Frecuencia</label>
+                    <label class="field-label">Freqüència</label>
                     <div class="field-row-inline">
                       <span class="rec-inline-prefix">Cada</span>
                       <input class="input input-sm" style="width:64px;text-align:right" type="number" min="1" v-model.number="form.recInterval" />
                       <select class="select select-sm" style="flex:1" v-model="form.recFrequency">
-                        <option value="weekly">semana(s)</option>
-                        <option value="monthly">mes(es)</option>
+                        <option value="weekly">setmana(es)</option>
+                        <option value="monthly">mes(os)</option>
                         <option value="quarterly">trimestre(s)</option>
                         <option value="semiannual">semestre(s)</option>
-                        <option value="yearly">año(s)</option>
+                        <option value="yearly">any(s)</option>
                       </select>
                     </div>
                   </div>
 
                   <div class="field">
-                    <label class="field-label">Primera emisión automática</label>
+                    <label class="field-label">Primera emissió automàtica</label>
                     <input class="input input-sm" type="date" v-model="form.recStartDate" />
                   </div>
 
                   <div class="field">
-                    <label class="field-label">Finalización</label>
+                    <label class="field-label">Finalització</label>
                     <select class="select select-sm" v-model="form.recEndMode">
-                      <option value="never">Sin fin</option>
-                      <option value="until">En una fecha</option>
-                      <option value="count">Tras N facturas</option>
+                      <option value="never">Sense fi</option>
+                      <option value="until">En una data</option>
+                      <option value="count">Després de N factures</option>
                     </select>
                   </div>
 
                   <div v-if="form.recEndMode === 'until'" class="field">
-                    <label class="field-label">Hasta el</label>
+                    <label class="field-label">Fins al</label>
                     <input class="input input-sm" type="date" v-model="form.recEndDate" />
                   </div>
 
                   <div v-if="form.recEndMode === 'count'" class="field">
-                    <label class="field-label">Nº de facturas</label>
+                    <label class="field-label">Núm. de factures</label>
                     <input class="input input-sm" style="width:90px" type="number" min="1" v-model.number="form.recMaxOccurrences" />
                   </div>
                 </template>
               </div>
 
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Currency</h4>
+                <h4 class="sidebar-card-title">Moneda</h4>
                 <select class="select select-sm" v-model="form.currency" disabled>
                   <option value="EUR">EUR — Euro</option>
                 </select>
               </div>
 
               <div v-if="selectedProvider" class="sidebar-card">
-                <h4 class="sidebar-card-title">Provider info</h4>
+                <h4 class="sidebar-card-title">Dades del proveïdor</h4>
                 <div class="provider-preview">
                   <div class="provider-avatar" :style="{ background: selectedProvider.avatarColor }">
                     {{ selectedProvider.initials }}
@@ -305,7 +315,6 @@ const props = defineProps({
   open: { type: Boolean, default: false },
   invoice: { type: Object, default: null },
   invoices: { type: Array, default: () => [] },
-  seriesList: { type: Array, default: () => [] },
   providers: { type: Array, default: () => [] },
   preselectedProviderId: { type: [Number, String], default: null },
   preselectedLine: { type: Object, default: null },
@@ -314,11 +323,6 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save', 'provider-created'])
 
 const isEditing = computed(() => !!props.invoice)
-
-function findSeriesIdByPrefix(prefix) {
-  if (!prefix || !activeSeries.value.length) return null
-  return activeSeries.value.find(s => s.prefix === prefix)?.id || null
-}
 
 const touched = reactive({
   provider: false,
@@ -329,11 +333,6 @@ const touched = reactive({
 function markAllTouched() {
   Object.keys(touched).forEach(k => { touched[k] = true })
 }
-
-const fallbackSeriesList = ref([])
-const activeSeries = computed(() =>
-  props.seriesList.length > 0 ? props.seriesList : fallbackSeriesList.value
-)
 
 const fallbackProviders = ref([])
 const extraProviders = ref([]) // providers created inline from this modal
@@ -360,7 +359,7 @@ async function handleProviderCreated(formData) {
     Swal.fire({
       icon: 'error',
       title: 'Error',
-      text: err.message || 'No se pudo crear el proveedor',
+      text: err.message || 'No s\'ha pogut crear el proveïdor',
       confirmButtonColor: '#667eea',
       customClass: { popup: 'swal-erp-popup' },
       target: document.body,
@@ -427,10 +426,10 @@ function blankLine() {
 function blankForm() {
   return {
     providerId: '',
-    seriesId: null,
+    number: '',
     issueDate: new Date().toISOString().split('T')[0],
     dueDate: getDefaultDueDate(),
-    paymentMethod: 'Transfer 30 days',
+    paymentMethod: 'Transferència 30 dies',
     currency: 'EUR',
     lines: [blankLine()],
     discountType: 'percent',
@@ -485,18 +484,6 @@ watch(() => props.open, async (isOpen) => {
 
   if (!isOpen) return
 
-  if (props.seriesList.length === 0) {
-    try {
-      const data = await purchasesApi.getSeries()
-      const loaded = Array.isArray(data) ? data : (data.results || [])
-      fallbackSeriesList.value = loaded
-    } catch (err) {
-      console.error('[PurchaseInvoiceFormModal] failed to load series:', err)
-    }
-  } else {
-    fallbackSeriesList.value = []
-  }
-
   if (props.providers.length === 0) {
     await loadProviders()
   } else {
@@ -510,10 +497,10 @@ watch(() => props.open, async (isOpen) => {
     const inv = props.invoice
     Object.assign(form, {
       providerId: inv.provider?.id || '',
-      seriesId: inv.seriesId || findSeriesIdByPrefix(inv.series) || (activeSeries.value.find(s => s.is_default) || activeSeries.value[0])?.id || null,
+      number: inv.number || '',
       issueDate: inv.issueDate,
       dueDate: inv.dueDate,
-      paymentMethod: inv.paymentMethod || 'Transfer 30 days',
+      paymentMethod: inv.paymentMethod || 'Transferència 30 dies',
       currency: inv.currency || 'EUR',
       lines: inv.lines.map(l => ({
         id: lineCounter++,
@@ -531,8 +518,6 @@ watch(() => props.open, async (isOpen) => {
     })
   } else {
     Object.assign(form, blankForm())
-    const def = activeSeries.value.find(s => s.is_default) || activeSeries.value[0]
-    if (def) form.seriesId = def.id
     if (props.preselectedProviderId) {
       form.providerId = props.preselectedProviderId
     }
@@ -620,34 +605,34 @@ const calcTotal = computed(() => calcTaxBase.value + calcTotalTax.value - calcTo
 
 const approvalMissing = computed(() => {
   const missing = []
-  if (!form.providerId) missing.push('Provider is required')
-  if (!form.issueDate) missing.push('Issue date is required')
-  if (!form.dueDate) missing.push('Due date is required')
+  if (!form.providerId) missing.push('El proveïdor és obligatori')
+  if (!form.issueDate) missing.push('La data d\'emissió és obligatòria')
+  if (!form.dueDate) missing.push('El venciment és obligatori')
   const validLines = form.lines.filter(l => l.description && l.quantity > 0 && l.unitPrice >= 0)
-  if (validLines.length === 0) missing.push('At least 1 valid line')
+  if (validLines.length === 0) missing.push('Almenys 1 línia vàlida')
   return missing
 })
 
 const approvalTooltip = computed(() => {
   if (!approvalMissing.value.length) return null
-  return 'Requirements to approve:\n• ' + approvalMissing.value.join('\n• ')
+  return 'Requisits per aprovar:\n• ' + approvalMissing.value.join('\n• ')
 })
 
 function getValidationErrors(requireAll = false) {
   const errors = []
-  if (!form.providerId) errors.push('Provider is required')
-  if (!form.issueDate) errors.push('Issue date is required')
-  if (!form.dueDate) errors.push('Due date is required')
+  if (!form.providerId) errors.push('El proveïdor és obligatori')
+  if (!form.issueDate) errors.push('La data d\'emissió és obligatòria')
+  if (!form.dueDate) errors.push('El venciment és obligatori')
   const validLines = form.lines.filter(l => l.description && l.quantity > 0 && l.unitPrice >= 0)
-  if (requireAll && validLines.length === 0) errors.push('At least one line with description, quantity, and price is required')
-  if (form.dueDate && form.issueDate && form.dueDate < form.issueDate) errors.push('Due date cannot be before issue date')
+  if (requireAll && validLines.length === 0) errors.push('Cal almenys una línia amb descripció, quantitat i preu')
+  if (form.dueDate && form.issueDate && form.dueDate < form.issueDate) errors.push('El venciment no pot ser anterior a la data d\'emissió')
   return errors
 }
 
 function showValidationAlert(errors) {
   Swal.fire({
     icon: 'warning',
-    title: 'Required fields missing',
+    title: 'Falten camps obligatoris',
     html: `<ul style="text-align:left;margin:0;padding-left:1.2em">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`,
     confirmButtonText: 'OK',
     confirmButtonColor: '#667eea',
@@ -664,9 +649,7 @@ function buildInvoiceData(status) {
     id: props.invoice?.id || Date.now(),
     type: 'Standard',
     status,
-    seriesId: form.seriesId,
-    series: activeSeries.value.find(s => s.id === form.seriesId)?.prefix || '',
-    number: status === 'Approved' ? generateNumber() : (props.invoice?.number || null),
+    number: form.number || null,
     provider: provider ? {
       id: provider.id,
       name: provider.name,
@@ -719,24 +702,16 @@ function buildRecurrence() {
   }
 }
 
-function generateNumber() {
-  const year = new Date().getFullYear()
-  const prefix = activeSeries.value.find(s => s.id === form.seriesId)?.prefix || 'COMP'
-  const existing = props.invoices.filter(i => i.series === prefix && i.number)
-  const seq = existing.length + 1
-  return `${prefix}-${year}-${String(seq).padStart(4, '0')}`
-}
-
 function buildTimeline(status) {
   const today = new Date().toISOString().split('T')[0]
   const existing = props.invoice?.timeline ? [...props.invoice.timeline] : []
   if (props.invoice) {
-    existing.unshift({ type: 'created', action: 'Purchase invoice updated', actor: 'You', date: today })
+    existing.unshift({ type: 'created', action: 'Factura de compra actualitzada', actor: 'Tu', date: today })
   } else {
-    existing.unshift({ type: 'created', action: 'Draft created', actor: 'You', date: today })
+    existing.unshift({ type: 'created', action: 'Esborrany creat', actor: 'Tu', date: today })
   }
   if (status === 'Approved') {
-    existing.unshift({ type: 'approved', action: 'Purchase invoice approved', actor: 'You', date: today })
+    existing.unshift({ type: 'approved', action: 'Factura de compra aprovada', actor: 'Tu', date: today })
   }
   return existing
 }
@@ -757,7 +732,7 @@ function handleSaveAndApprove() {
   const data = buildInvoiceData('Approved')
   if (data.totalAmount === 0) {
     data.status = 'Paid'
-    data.timeline.unshift({ type: 'paid', action: 'Auto-paid (zero amount)', actor: 'You', date: new Date().toISOString().split('T')[0] })
+    data.timeline.unshift({ type: 'paid', action: 'Pagada automàticament (import zero)', actor: 'Tu', date: new Date().toISOString().split('T')[0] })
   }
   emit('save', data)
   emit('close')
@@ -765,7 +740,7 @@ function handleSaveAndApprove() {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
 }
 </script>
 

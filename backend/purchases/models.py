@@ -7,61 +7,25 @@ from django.db.models import Sum
 from django.utils import timezone
 
 
-class PurchaseSeries(models.Model):
-    company = models.ForeignKey(
-        'accounts.Company', on_delete=models.CASCADE,
-        related_name='purchase_series', null=True, blank=True,
-    )
-    name = models.CharField(max_length=100)
-    prefix = models.CharField(max_length=10)
-    pattern = models.CharField(
-        max_length=50, default='{PREFIX}-{YEAR}-{SEQ:4}',
-    )
-    next_seq = models.IntegerField(default=1)
-    reset_yearly = models.BooleanField(default=True)
-    is_default = models.BooleanField(default=False)
-    active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name_plural = 'purchase series'
-        ordering = ['-is_default', 'name']
-
-    def __str__(self):
-        return f'{self.prefix} — {self.name}'
-
-    def generate_number(self):
-        year = date.today().year
-        seq_match = re.search(r'\{SEQ:(\d+)\}', self.pattern)
-        width = int(seq_match.group(1)) if seq_match else 4
-
-        for _ in range(200):
-            candidate = self.pattern.replace('{PREFIX}', self.prefix)
-            candidate = candidate.replace('{YEAR}', str(year))
-            if seq_match:
-                candidate = candidate.replace(
-                    seq_match.group(0), str(self.next_seq).zfill(width),
-                )
-            self.next_seq += 1
-            self.save(update_fields=['next_seq'])
-            if not PurchaseInvoice.objects.filter(number=candidate).exists():
-                return candidate
-
-        raise ValueError('No se pudo generar un número único para la serie %s' % self.prefix)
-
-
 class PurchaseInvoice(models.Model):
+
     class InvoiceType(models.TextChoices):
         STANDARD = 'Standard', 'Factura'
-        CREDIT_NOTE = 'CreditNote', 'Nota de crédito'
+        CREDIT_NOTE = 'CreditNote', 'Nota de crèdit'
 
     class Status(models.TextChoices):
-        DRAFT = 'Draft', 'Borrador'
-        APPROVED = 'Approved', 'Aprobada'
-        PARTIALLY_PAID = 'PartiallyPaid', 'Parcialmente pagada'
+        DRAFT = 'Draft', 'Esborrany'
+        APPROVED = 'Approved', 'Aprovada'
+        PARTIALLY_PAID = 'PartiallyPaid', 'Parcialment pagada'
         PAID = 'Paid', 'Pagada'
-        VOIDED = 'Voided', 'Anulada'
+        VOIDED = 'Voided', 'Anul·lada'
         RECTIFIED = 'Rectified', 'Rectificada'
+
+    # Empresa propietària (multitenença directa — no s'infereix via sèrie)
+    company = models.ForeignKey(
+        'accounts.Company', on_delete=models.CASCADE,
+        related_name='purchase_invoices', null=True, blank=True,
+    )
 
     invoice_type = models.CharField(
         max_length=12, choices=InvoiceType.choices, default='Standard',
@@ -70,14 +34,14 @@ class PurchaseInvoice(models.Model):
         max_length=15, choices=Status.choices, default='Draft',
     )
 
-    series = models.ForeignKey(
-        PurchaseSeries, on_delete=models.PROTECT, related_name='purchase_invoices',
-    )
+    # Número introduït manualment (el número del proveïdor, no generat per nosaltres)
     number = models.CharField(max_length=30, null=True, blank=True)
 
     provider = models.ForeignKey(
-        'providers.Provider', on_delete=models.PROTECT,
+        'customers.Customer',
+        on_delete=models.PROTECT,
         related_name='purchase_invoices',
+        limit_choices_to={'is_supplier': True},
     )
     provider_name_snapshot = models.CharField(max_length=200, blank=True)
     provider_vat_snapshot = models.CharField(max_length=20, blank=True)
@@ -86,36 +50,22 @@ class PurchaseInvoice(models.Model):
     issue_date = models.DateField()
     due_date = models.DateField()
 
-    payment_method = models.CharField(
-        max_length=50, default='Transfer 30 days',
-    )
+    payment_method = models.CharField(max_length=50, default='Transferència 30 dies')
     currency = models.CharField(max_length=3, default='EUR')
 
-    discount_type = models.CharField(
-        max_length=10, blank=True, null=True,
-    )
+    discount_type = models.CharField(max_length=10, blank=True, null=True)
     discount_value = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
     )
-    discount_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     tax_base = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_tax = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total_retention = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
-    total_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
-    paid_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
-    balance_due = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
+    total_retention = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    balance_due = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     provider_notes = models.TextField(blank=True)
     internal_notes = models.TextField(blank=True)
@@ -125,17 +75,15 @@ class PurchaseInvoice(models.Model):
         on_delete=models.SET_NULL, related_name='credit_notes',
     )
 
-    # Plantilla de recurrencia: si es True, no es una factura real, solo el
-    # molde que usa RecurringPurchaseInvoice para generar facturas periódicas.
     is_template = models.BooleanField(default=False, db_index=True)
 
     locked_at = models.DateTimeField(null=True, blank=True)
     locked_by = models.CharField(max_length=100, blank=True)
 
-    # Integración Odoo
+    # Integració Odoo
     odoo_id = models.PositiveIntegerField(
         null=True, blank=True, db_index=True,
-        help_text='ID del account.move (in_invoice) asociado en Odoo.',
+        help_text='ID del account.move (in_invoice) associat a Odoo.',
     )
 
     created_by = models.CharField(max_length=100, blank=True)
@@ -145,13 +93,6 @@ class PurchaseInvoice(models.Model):
 
     class Meta:
         ordering = ['-issue_date', '-id']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['series', 'number'],
-                condition=models.Q(number__isnull=False),
-                name='unique_purchase_invoice_number_per_series',
-            ),
-        ]
 
     def __str__(self):
         return self.number or f'Draft #{self.id}'
@@ -197,23 +138,16 @@ class PurchaseInvoiceLine(models.Model):
     )
     position = models.IntegerField(default=0)
     product = models.ForeignKey(
-        'products.Product', null=True, blank=True,
-        on_delete=models.SET_NULL,
+        'products.Product', null=True, blank=True, on_delete=models.SET_NULL,
     )
     description = models.TextField()
-    quantity = models.DecimalField(
-        max_digits=10, decimal_places=3, default=1,
-    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=3, default=1)
     unit_price = models.DecimalField(max_digits=12, decimal_places=4)
-    discount_type = models.CharField(
-        max_length=10, blank=True, null=True,
-    )
+    discount_type = models.CharField(max_length=10, blank=True, null=True)
     discount_value = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True,
     )
-    discount_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     class Meta:
@@ -238,36 +172,31 @@ class PurchaseInvoiceLineTax(models.Model):
     invoice_line = models.ForeignKey(
         PurchaseInvoiceLine, on_delete=models.CASCADE, related_name='taxes',
     )
-    tax_rate = models.ForeignKey(
-        'core.TaxRate', on_delete=models.PROTECT,
-    )
+    tax_rate = models.ForeignKey('core.TaxRate', on_delete=models.PROTECT)
     tax_name = models.CharField(max_length=50)
     tax_percent = models.DecimalField(max_digits=5, decimal_places=2)
     is_retention = models.BooleanField(default=False)
-    tax_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def __str__(self):
         return f'{self.tax_name} on line {self.invoice_line.position}'
 
 
 class PurchasePayment(models.Model):
+
     class Method(models.TextChoices):
-        TRANSFER = 'Transfer', 'Transferencia'
-        DIRECT_DEBIT = 'DirectDebit', 'Domiciliación'
-        CARD = 'Card', 'Tarjeta'
-        CASH = 'Cash', 'Efectivo'
-        OTHER = 'Other', 'Otro'
+        TRANSFER = 'Transfer', 'Transferència'
+        DIRECT_DEBIT = 'DirectDebit', 'Domiciliació'
+        CARD = 'Card', 'Targeta'
+        CASH = 'Cash', 'Efectiu'
+        OTHER = 'Other', 'Altre'
 
     invoice = models.ForeignKey(
         PurchaseInvoice, on_delete=models.CASCADE, related_name='payments',
     )
     date = models.DateField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    method = models.CharField(
-        max_length=15, choices=Method.choices, default='Transfer',
-    )
+    method = models.CharField(max_length=15, choices=Method.choices, default='Transfer')
     reference = models.CharField(max_length=100, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     created_by = models.CharField(max_length=100, blank=True)
@@ -294,22 +223,21 @@ class PurchasePayment(models.Model):
 
 
 class PurchaseInvoiceTimeline(models.Model):
+
     class EventType(models.TextChoices):
-        CREATED = 'created', 'Creado'
-        UPDATED = 'updated', 'Actualizado'
-        APPROVED = 'approved', 'Aprobado'
-        SENT = 'sent', 'Enviado'
-        PAYMENT = 'payment', 'Pago'
-        PAID = 'paid', 'Pagado'
-        VOIDED = 'voided', 'Anulado'
-        RECTIFIED = 'rectified', 'Rectificado'
+        CREATED = 'created', 'Creat'
+        UPDATED = 'updated', 'Actualitzat'
+        APPROVED = 'approved', 'Aprovat'
+        SENT = 'sent', 'Enviat'
+        PAYMENT = 'payment', 'Pagament'
+        PAID = 'paid', 'Pagat'
+        VOIDED = 'voided', 'Anul·lat'
+        RECTIFIED = 'rectified', 'Rectificat'
 
     invoice = models.ForeignKey(
         PurchaseInvoice, on_delete=models.CASCADE, related_name='timeline',
     )
-    event_type = models.CharField(
-        max_length=20, choices=EventType.choices,
-    )
+    event_type = models.CharField(max_length=20, choices=EventType.choices)
     action = models.CharField(max_length=300)
     actor = models.CharField(max_length=100)
     date = models.DateField()
@@ -323,11 +251,7 @@ class PurchaseInvoiceTimeline(models.Model):
 
 
 class RecurringPurchaseInvoice(models.Model):
-    """Plan de facturación recurrente de compra.
-
-    Usa una factura de compra plantilla (is_template=True) como molde y genera
-    automáticamente facturas aprobadas en cada vencimiento.
-    """
+    """Pla de facturació recurrent de compra."""
 
     from core.recurrence import RecurrenceFrequency
 
@@ -343,13 +267,8 @@ class RecurringPurchaseInvoice(models.Model):
         max_length=12, choices=RecurrenceFrequency.choices,
         default=RecurrenceFrequency.MONTHLY,
     )
-    interval = models.PositiveIntegerField(
-        default=1, help_text='Cada N periodos (p. ej. 2 = cada 2 meses).',
-    )
-    payment_term_days = models.PositiveIntegerField(
-        default=30,
-        help_text='Días entre emisión y vencimiento de cada factura generada.',
-    )
+    interval = models.PositiveIntegerField(default=1)
+    payment_term_days = models.PositiveIntegerField(default=30)
     start_date = models.DateField()
     next_run = models.DateField(db_index=True)
     end_date = models.DateField(null=True, blank=True)
@@ -366,7 +285,7 @@ class RecurringPurchaseInvoice(models.Model):
         ordering = ['-active', 'next_run']
 
     def __str__(self):
-        return f'Recurrencia compra {self.get_frequency_display()} — plantilla #{self.template_id}'
+        return f'Recurrència compra {self.get_frequency_display()} — plantilla #{self.template_id}'
 
     @property
     def is_finished(self):
@@ -379,47 +298,16 @@ class RecurringPurchaseInvoice(models.Model):
         return False
 
 
-class PurchaseQuote(models.Model):
-    class Status(models.TextChoices):
-        DRAFT = 'Borrador', 'Borrador'
-        SENT = 'Enviado', 'Enviado'
-        ACCEPTED = 'Aceptado', 'Aceptado'
-        REJECTED = 'Rechazado', 'Rechazado'
-        EXPIRED = 'Expirado', 'Expirado'
-
-    provider = models.ForeignKey(
-        'providers.Provider', on_delete=models.CASCADE,
-        related_name='purchase_quotes',
-    )
-    number = models.CharField(max_length=30, unique=True)
-    concept = models.CharField(max_length=300)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    date = models.DateField()
-    valid_days = models.IntegerField(default=30)
-    notes = models.TextField(blank=True)
-    status = models.CharField(
-        max_length=20, choices=Status.choices, default='Borrador',
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-date']
-
-    def __str__(self):
-        return f'{self.number} — {self.concept}'
-
-
 class PurchaseQuoteDoc(models.Model):
-    """Presupuesto de compra — borrador previo a una factura de compra."""
+    """Pressupost de compra complet (amb línies i conversió a factura)."""
 
     class Status(models.TextChoices):
-        DRAFT = 'Draft', 'Borrador'
-        SENT = 'Sent', 'Solicitado'
-        ACCEPTED = 'Accepted', 'Aceptado'
-        REJECTED = 'Rejected', 'Rechazado'
-        EXPIRED = 'Expired', 'Expirado'
-        CONVERTED = 'Converted', 'Convertido'
+        DRAFT = 'Draft', 'Esborrany'
+        SENT = 'Sent', 'Sol·licitat'
+        ACCEPTED = 'Accepted', 'Acceptat'
+        REJECTED = 'Rejected', 'Rebutjat'
+        EXPIRED = 'Expired', 'Expirat'
+        CONVERTED = 'Converted', 'Convertit'
 
     company = models.ForeignKey(
         'accounts.Company', on_delete=models.CASCADE,
@@ -427,21 +315,19 @@ class PurchaseQuoteDoc(models.Model):
     )
     name = models.CharField(max_length=200)
     provider = models.ForeignKey(
-        'providers.Provider', on_delete=models.PROTECT,
+        'customers.Customer',
+        on_delete=models.PROTECT,
         related_name='purchase_quote_docs',
+        limit_choices_to={'is_supplier': True},
     )
     issue_date = models.DateField()
     valid_until = models.DateField(null=True, blank=True)
     currency = models.CharField(max_length=3, default='EUR')
-    status = models.CharField(
-        max_length=15, choices=Status.choices, default='Draft',
-    )
+    status = models.CharField(max_length=15, choices=Status.choices, default='Draft')
 
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_tax = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     provider_notes = models.TextField(blank=True)
     internal_notes = models.TextField(blank=True)
@@ -467,7 +353,9 @@ class PurchaseQuoteDoc(models.Model):
         total_tax = Decimal('0.00')
         for ln in lines:
             subtotal += ln.subtotal
-            total_tax += ln.tax_amount
+            for lt in ln.taxes.all():
+                if not lt.is_retention:
+                    total_tax += lt.tax_amount
         self.subtotal = subtotal
         self.total_tax = total_tax
         self.total_amount = subtotal + total_tax
@@ -475,26 +363,19 @@ class PurchaseQuoteDoc(models.Model):
 
 
 class PurchaseQuoteDocLine(models.Model):
+    """Línia de pressupost de compra."""
+
     quote = models.ForeignKey(
         PurchaseQuoteDoc, on_delete=models.CASCADE, related_name='lines',
     )
     position = models.IntegerField(default=0)
     product = models.ForeignKey(
-        'products.Product', null=True, blank=True,
-        on_delete=models.SET_NULL,
+        'products.Product', null=True, blank=True, on_delete=models.SET_NULL,
     )
     description = models.TextField()
-    quantity = models.DecimalField(
-        max_digits=10, decimal_places=3, default=1,
-    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=3, default=1)
     unit_price = models.DecimalField(max_digits=12, decimal_places=4)
-    tax_percent = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0,
-    )
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    tax_amount = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0,
-    )
 
     class Meta:
         ordering = ['position']
@@ -502,5 +383,20 @@ class PurchaseQuoteDocLine(models.Model):
     def save(self, *args, **kwargs):
         gross = (self.quantity or Decimal('0')) * (self.unit_price or Decimal('0'))
         self.subtotal = gross.quantize(Decimal('0.01'))
-        self.tax_amount = (gross * (self.tax_percent or Decimal('0')) / Decimal('100')).quantize(Decimal('0.01'))
         super().save(*args, **kwargs)
+
+
+class PurchaseQuoteDocLineTax(models.Model):
+    """Impost d'una línia de pressupost de compra (snapshot consistent amb InvoiceLineTax)."""
+
+    quote_line = models.ForeignKey(
+        PurchaseQuoteDocLine, on_delete=models.CASCADE, related_name='taxes',
+    )
+    tax_rate = models.ForeignKey('core.TaxRate', on_delete=models.PROTECT)
+    tax_name = models.CharField(max_length=50)
+    tax_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    is_retention = models.BooleanField(default=False)
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f'{self.tax_name} on quote line {self.quote_line.position}'

@@ -1,7 +1,7 @@
 <template>
   <SocialHubLayout
     title="Influencers"
-    subtitle="Catálogo, colaboraciones activas y carga de métricas en una sola superficie."
+    subtitle="Catàleg, col·laboracions actives i càrrega de mètriques en una sola superfície."
     :tabs="tabs"
     v-model="activeTab"
     :panel-open="!!panel.kind"
@@ -9,17 +9,6 @@
   >
     <!-- ── Header actions (right side of title) ──────────────── -->
     <template #actions>
-      <div class="hub-filter-group">
-        <select v-model="periodFilter" class="hub-mini-select" aria-label="Periodo">
-          <option value="30d">Últimos 30 días</option>
-          <option value="90d">Últimos 3 meses</option>
-          <option value="ytd">Año actual</option>
-        </select>
-        <select v-model="platformFilter" class="hub-mini-select" aria-label="Plataforma">
-          <option value="all">Todas las redes</option>
-          <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
-        </select>
-      </div>
       <button class="hub-btn hub-btn-primary" @click="onPrimaryAction">
         <Plus :size="16" />
         <span>{{ primaryActionLabel }}</span>
@@ -29,28 +18,28 @@
     <!-- ── KPI strip (always visible at top of hub body) ─────── -->
     <div class="kpi-strip">
       <div class="kpi-tile">
-        <div class="kpi-key">Influencers activos</div>
+        <div class="kpi-key">Influencers actius</div>
         <div class="kpi-val">{{ kpis.activeInfluencers }}<span class="kpi-suffix">/{{ kpis.totalInfluencers }}</span></div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-key">Colaboraciones activas</div>
+        <div class="kpi-key">Col·laboracions actives</div>
         <div class="kpi-val">{{ kpis.activeCollabs }}</div>
-        <div class="kpi-sub">{{ kpis.completedCollabs }} completadas · {{ kpis.draftCollabs }} en draft</div>
+        <div class="kpi-sub">{{ kpis.completedCollabs }} completades · {{ kpis.draftCollabs }} en draft</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-key">Ventas atribuidas</div>
+        <div class="kpi-key">Vendes atribuïdes</div>
         <div class="kpi-val">{{ formatCurrency(kpis.attributedSales) }}</div>
-        <div class="kpi-sub">ROAS medio {{ kpis.avgRoas.toFixed(2) }}x</div>
+        <div class="kpi-sub">ROAS mitjà {{ kpis.avgRoas.toFixed(2) }}x</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-key">Métricas pendientes</div>
+        <div class="kpi-key">Mètriques pendents</div>
         <div class="kpi-val" :class="{ 'kpi-warn': kpis.pendingMetrics > 0 }">{{ kpis.pendingMetrics }}</div>
-        <div class="kpi-sub">colaboraciones sin reportar</div>
+        <div class="kpi-sub">col·laboracions sense reportar</div>
       </div>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════
-         TAB 1 · CATÁLOGO
+         TAB 1 · CATÀLEG
        ══════════════════════════════════════════════════════════ -->
     <section v-if="activeTab === 'catalog'" class="tab-section">
       <div class="filters-row">
@@ -59,38 +48,42 @@
           <input
             v-model="searchQ"
             class="filter-input search-input"
-            placeholder="Buscar por nombre o alias..."
+            placeholder="Cerca per nom o àlies..."
           />
         </div>
-        <select v-model="nicheFilter" class="filter-input">
-          <option value="all">Todos los nichos</option>
-          <option v-for="n in niches" :key="n" :value="n">{{ n }}</option>
+        <select v-model="platformFilter" class="filter-input">
+          <option value="all">Totes les xarxes</option>
+          <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
         </select>
         <select v-model="statusFilter" class="filter-input">
-          <option value="all">Todos los estados</option>
-          <option value="active">Activos</option>
-          <option value="prospect">Prospectos</option>
-          <option value="archived">Archivados</option>
+          <option value="all">Tots els estats</option>
+          <option value="active">Actius</option>
+          <option value="prospect">Prospectes</option>
+          <option value="archived">Arxivats</option>
         </select>
         <select v-model="sizeFilter" class="filter-input">
-          <option value="all">Cualquier tamaño</option>
+          <option value="all">Qualsevol mida</option>
           <option value="nano">Nano (&lt;10K)</option>
           <option value="micro">Micro (10K–100K)</option>
           <option value="macro">Macro (100K–1M)</option>
           <option value="mega">Mega (&gt;1M)</option>
         </select>
-        <div class="result-count">{{ filteredInfluencers.length }} resultados</div>
+        <select v-model="nicheFilter" class="filter-input">
+          <option value="all">Tots els nínxols</option>
+          <option v-for="n in niches" :key="n" :value="n">{{ n }}</option>
+        </select>
+        <div class="result-count">{{ filteredInfluencers.length }} resultats</div>
       </div>
 
       <div class="data-card">
         <div class="data-head">
           <div class="th th-name">Influencer</div>
-          <div class="th th-platform">Red</div>
-          <div class="th th-num">Seguidores</div>
-          <div class="th">Nicho</div>
+          <div class="th th-platform">Xarxa</div>
+          <div class="th th-num">Seguidors</div>
+          <div class="th">Nínxol</div>
           <div class="th th-num">Engagement</div>
-          <div class="th th-num">Colabs</div>
-          <div class="th th-num">Ventas</div>
+          <div class="th th-num">Col·labs</div>
+          <div class="th th-num">Vendes</div>
           <div class="th th-rating">Rating</div>
           <div class="th"></div>
         </div>
@@ -138,43 +131,43 @@
           </button>
           <div v-if="!filteredInfluencers.length" class="empty-row">
             <Frown :size="20" />
-            <span>No hay influencers que coincidan con los filtros.</span>
+            <span>No hi ha influencers que coincideixin amb els filtres.</span>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════════
-         TAB 2 · COLABORACIONES
+         TAB 2 · COL·LABORACIONS
        ══════════════════════════════════════════════════════════ -->
     <section v-if="activeTab === 'collaborations'" class="tab-section">
       <div class="filters-row">
         <select v-model="collabStatus" class="filter-input">
-          <option value="all">Todos los estados</option>
+          <option value="all">Tots els estats</option>
           <option v-for="(s, k) in COLLAB_STATUSES" :key="k" :value="k">{{ s.label }}</option>
         </select>
         <select v-model="collabCampaign" class="filter-input">
-          <option value="all">Todas las campañas</option>
+          <option value="all">Totes les campanyes</option>
           <option v-for="c in socialCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
         <select v-model="collabInfluencer" class="filter-input">
-          <option value="all">Todos los influencers</option>
+          <option value="all">Tots els influencers</option>
           <option v-for="i in socialInfluencers" :key="i.id" :value="i.id">{{ i.alias }}</option>
         </select>
-        <div class="result-count">{{ filteredCollabs.length }} colaboraciones</div>
+        <div class="result-count">{{ filteredCollabs.length }} col·laboracions</div>
       </div>
 
       <div class="data-card">
         <div class="data-head head-collabs">
           <div class="th">Influencer</div>
-          <div class="th">Campaña</div>
-          <div class="th">Formato</div>
-          <div class="th">Fecha</div>
-          <div class="th th-num">Coste</div>
-          <div class="th">Código</div>
+          <div class="th">Campanya</div>
+          <div class="th">Format</div>
+          <div class="th">Data</div>
+          <div class="th th-num">Cost</div>
+          <div class="th">Codi</div>
           <div class="th th-num">Conv.</div>
-          <div class="th th-num">Ventas</div>
-          <div class="th th-status">Estado</div>
+          <div class="th th-num">Vendes</div>
+          <div class="th th-status">Estat</div>
         </div>
         <div class="data-rows">
           <button
@@ -208,7 +201,7 @@
           </button>
           <div v-if="!filteredCollabs.length" class="empty-row">
             <Frown :size="20" />
-            <span>No hay colaboraciones registradas con esos filtros.</span>
+            <span>No hi ha col·laboracions registrades amb aquests filtres.</span>
           </div>
         </div>
       </div>
@@ -223,8 +216,8 @@
         <div class="form-card">
           <div class="form-card-head">
             <div>
-              <h3 class="form-card-title">Reportar métricas de una colaboración</h3>
-              <p class="form-card-sub">Carga manual de datos cuando la API no está disponible.</p>
+              <h3 class="form-card-title">Reportar mètriques d'una col·laboració</h3>
+              <p class="form-card-sub">Càrrega manual de dades quan l'API no està disponible.</p>
             </div>
           </div>
 
@@ -239,82 +232,90 @@
               </select>
             </div>
             <div class="field field-full">
-              <label class="field-label">Colaboración</label>
+              <label class="field-label">Col·laboració</label>
               <select v-model.number="form.collaborationId" class="field-input" :disabled="!form.influencerId">
-                <option :value="null">{{ form.influencerId ? '— Seleccionar —' : 'Selecciona influencer primero' }}</option>
+                <option :value="null">{{ form.influencerId ? '— Seleccionar —' : 'Selecciona un influencer primer' }}</option>
                 <option v-for="c in availableCollabs" :key="c.id" :value="c.id">
                   {{ c.campaignName }} — {{ formatDate(c.publishDate) }}
                 </option>
               </select>
             </div>
             <div class="field">
-              <label class="field-label">Descripción de la publicación</label>
-              <input v-model="form.publicationDesc" class="field-input" placeholder="Ej: TikTok #1 — Primavera" />
+              <label class="field-label">Descripció de la publicació</label>
+              <input v-model="form.publicationDesc" class="field-input" placeholder="Ex: TikTok #1 — Primavera" :disabled="!form.collaborationId" />
             </div>
             <div class="field">
-              <label class="field-label">Fecha real</label>
-              <input v-model="form.date" type="date" class="field-input" />
+              <label class="field-label">Data real</label>
+              <input v-model="form.date" type="date" class="field-input" :disabled="!form.collaborationId" />
             </div>
 
-            <div class="field-section">
-              <span class="field-section-label">Alcance</span>
-            </div>
-            <div class="field"><label class="field-label">Alcance</label>
-              <input v-model.number="form.reach" type="number" class="field-input" placeholder="0" /></div>
-            <div class="field"><label class="field-label">Impresiones</label>
-              <input v-model.number="form.impressions" type="number" class="field-input" placeholder="0" /></div>
-            <div class="field"><label class="field-label">Visualizaciones</label>
-              <input v-model.number="form.views" type="number" class="field-input" placeholder="0" /></div>
+            <template v-if="form.collaborationId">
+              <div class="field-section">
+                <span class="field-section-label">Abast</span>
+              </div>
+              <div class="field"><label class="field-label">Abast</label>
+                <input v-model.number="form.reach" type="number" class="field-input" placeholder="0" /></div>
+              <div class="field"><label class="field-label">Impressions</label>
+                <input v-model.number="form.impressions" type="number" class="field-input" placeholder="0" /></div>
+              <div class="field"><label class="field-label">Visualitzacions</label>
+                <input v-model.number="form.views" type="number" class="field-input" placeholder="0" /></div>
 
-            <div class="field-section">
-              <span class="field-section-label">Interacción</span>
-            </div>
-            <div class="field"><label class="field-label">Likes</label>
-              <input v-model.number="form.likes" type="number" class="field-input" placeholder="0" /></div>
-            <div class="field"><label class="field-label">Comentarios</label>
-              <input v-model.number="form.comments" type="number" class="field-input" placeholder="0" /></div>
-            <div class="field"><label class="field-label">Compartidos</label>
-              <input v-model.number="form.shares" type="number" class="field-input" placeholder="0" /></div>
-            <div class="field"><label class="field-label">Clics</label>
-              <input v-model.number="form.clicks" type="number" class="field-input" placeholder="0" /></div>
-            <div class="field"><label class="field-label">Conversiones</label>
-              <input v-model.number="form.conversions" type="number" class="field-input" placeholder="0" /></div>
-            <div class="field"><label class="field-label">Ventas (€)</label>
-              <input v-model.number="form.sales" type="number" class="field-input" placeholder="0" /></div>
+              <div class="field-section">
+                <span class="field-section-label">Interacció</span>
+              </div>
+              <div class="field"><label class="field-label">Likes</label>
+                <input v-model.number="form.likes" type="number" class="field-input" placeholder="0" /></div>
+              <div class="field"><label class="field-label">Comentaris</label>
+                <input v-model.number="form.comments" type="number" class="field-input" placeholder="0" /></div>
+              <div class="field"><label class="field-label">Compartits</label>
+                <input v-model.number="form.shares" type="number" class="field-input" placeholder="0" /></div>
+              <div class="field"><label class="field-label">Clics</label>
+                <input v-model.number="form.clicks" type="number" class="field-input" placeholder="0" /></div>
+              <div class="field"><label class="field-label">Conversions</label>
+                <input v-model.number="form.conversions" type="number" class="field-input" placeholder="0" /></div>
+              <div class="field"><label class="field-label">Vendes (€)</label>
+                <input v-model.number="form.sales" type="number" class="field-input" placeholder="0" /></div>
 
-            <div class="field-section">
-              <span class="field-section-label">Trazabilidad</span>
-            </div>
-            <div class="field"><label class="field-label">Fuente del dato</label>
-              <select v-model="form.source" class="field-input">
-                <option value="screenshot">Captura de pantalla</option>
-                <option value="api">API / Plataforma</option>
-                <option value="email">Email del influencer</option>
-                <option value="report">Informe PDF</option>
-                <option value="other">Otro</option>
-              </select>
-            </div>
-            <div class="field"><label class="field-label">Estado</label>
-              <select v-model="form.status" class="field-input">
-                <option value="pending">Pendiente de validar</option>
-                <option value="validated">Validado</option>
-              </select>
-            </div>
+              <div class="field-section">
+                <span class="field-section-label">Traçabilitat</span>
+              </div>
+              <div class="field"><label class="field-label">Font de la dada</label>
+                <select v-model="form.source" class="field-input">
+                  <option value="screenshot">Captura de pantalla</option>
+                  <option value="api">API / Plataforma</option>
+                  <option value="email">Email de l'influencer</option>
+                  <option value="report">Informe PDF</option>
+                  <option value="other">Altre</option>
+                </select>
+              </div>
+              <div class="field"><label class="field-label">Estat</label>
+                <select v-model="form.status" class="field-input">
+                  <option value="pending">Pendent de validar</option>
+                  <option value="validated">Validat</option>
+                </select>
+              </div>
 
-            <div class="field field-full">
-              <div class="upload-zone">
-                <Upload :size="18" />
-                <span class="upload-text">Arrastra capturas, PDFs o evidencias</span>
-                <button class="upload-btn">Seleccionar archivos</button>
+              <div class="field field-full">
+                <div class="upload-zone">
+                  <Upload :size="18" />
+                  <span class="upload-text">Arrossega captures, PDFs o evidències</span>
+                  <button class="upload-btn">Seleccionar fitxers</button>
+                </div>
+              </div>
+            </template>
+
+            <div v-else class="field field-full">
+              <div class="metrics-hint">
+                Selecciona un influencer i una col·laboració per introduir les mètriques.
               </div>
             </div>
           </div>
 
           <div class="form-actions">
-            <button class="hub-btn hub-btn-ghost" @click="resetForm">Limpiar</button>
+            <button class="hub-btn hub-btn-ghost" @click="resetForm">Netejar</button>
             <button class="hub-btn hub-btn-primary" @click="submitMetrics">
               <Save :size="15" />
-              Guardar métricas
+              Desar mètriques
             </button>
           </div>
         </div>
@@ -322,7 +323,7 @@
         <!-- History sidebar -->
         <aside class="history-card">
           <div class="history-head">
-            <h3 class="history-title">Historial reciente</h3>
+            <h3 class="history-title">Historial recent</h3>
             <span class="history-count">{{ history.length }}</span>
           </div>
           <ul class="history-list">
@@ -337,7 +338,7 @@
                 <div class="hist-foot">{{ formatDate(h.date) }} · {{ h.uploadedBy }}</div>
               </div>
             </li>
-            <li v-if="!history.length" class="hist-empty">Sin cargas todavía.</li>
+            <li v-if="!history.length" class="hist-empty">Sense càrregues encara.</li>
           </ul>
         </aside>
       </div>
@@ -381,13 +382,12 @@ import {
 const activeTab = ref('catalog')
 
 const tabs = computed(() => [
-  { key: 'catalog',        label: 'Catálogo',         count: socialInfluencers.length },
-  { key: 'collaborations', label: 'Colaboraciones',   count: socialCollaborations.length },
-  { key: 'metrics',        label: 'Carga de métricas' },
+  { key: 'catalog',        label: 'Catàleg',            count: socialInfluencers.length },
+  { key: 'collaborations', label: 'Col·laboracions',    count: socialCollaborations.length },
+  { key: 'metrics',        label: 'Càrrega de mètriques' },
 ])
 
 // ── Global header filters ─────────────────────────────────────
-const periodFilter   = ref('30d')
 const platformFilter = ref('all')
 
 // ── Catalog state ─────────────────────────────────────────────
@@ -459,7 +459,7 @@ function resetForm() {
 }
 function submitMetrics() {
   if (!form.influencerId || !form.collaborationId) {
-    alert('Selecciona influencer y colaboración'); return
+    alert('Selecciona un influencer i una col·laboració'); return
   }
   const inf = socialInfluencers.find(i => i.id === form.influencerId)
   history.value.unshift({
@@ -467,8 +467,8 @@ function submitMetrics() {
     date: form.date || new Date().toISOString().split('T')[0],
     influencerName: inf?.name,
     collaborationId: form.collaborationId,
-    publicationDesc: form.publicationDesc || 'Sin descripción',
-    uploadedBy: 'Usuario actual',
+    publicationDesc: form.publicationDesc || 'Sense descripció',
+    uploadedBy: 'Usuari actual',
     status: form.status,
     reach: form.reach, impressions: form.impressions, views: form.views,
     likes: form.likes, comments: form.comments, shares: form.shares,
@@ -500,15 +500,15 @@ function closePanel() { panel.kind = null; panel.id = null }
 
 // ── Primary action (changes per tab) ──────────────────────────
 const primaryActionLabel = computed(() => {
-  if (activeTab.value === 'catalog')        return 'Nuevo influencer'
-  if (activeTab.value === 'collaborations') return 'Nueva colaboración'
-  return 'Cargar métricas'
+  if (activeTab.value === 'catalog')        return 'Nou influencer'
+  if (activeTab.value === 'collaborations') return 'Nova col·laboració'
+  return 'Carregar mètriques'
 })
 function onPrimaryAction() {
   if (activeTab.value === 'metrics') {
     return // already on the form
   }
-  alert(`Abrir formulario para: ${primaryActionLabel.value}`)
+  alert(`Obrir formulari per a: ${primaryActionLabel.value}`)
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -549,24 +549,6 @@ function engClass(v) {
 </script>
 
 <style scoped>
-/* ── Header micro-controls ──────────────────────────── */
-.hub-filter-group {
-  display: flex;
-  gap: 0.375rem;
-}
-
-.hub-mini-select {
-  padding: 0.4rem 0.625rem;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-.hub-mini-select:hover { border-color: var(--primary-color); }
-
 .hub-btn {
   display: inline-flex;
   align-items: center;
@@ -1014,6 +996,17 @@ function engClass(v) {
 .hist-meta { font-size: 0.75rem; color: var(--text-secondary); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hist-foot { font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px; opacity: 0.75; }
 .hist-empty { padding: 2rem 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem; }
+
+.metrics-hint {
+  padding: 1.25rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+  grid-column: 1 / -1;
+}
 
 /* Badge styles (reuse global variables but ensure visible) */
 .badge { font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }

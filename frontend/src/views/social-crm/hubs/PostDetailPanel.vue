@@ -11,7 +11,7 @@
       </div>
       <h2 class="hero-title">{{ post.title }}</h2>
       <div class="hero-meta-row">
-        <span class="meta-bit">
+        <span v-if="post.accountName" class="meta-bit">
           <AtSign :size="12" />
           {{ post.accountName }}
         </span>
@@ -31,7 +31,7 @@
         </div>
         <div class="ef-aside">
           <div class="ef-tag">{{ engLabel(post.engagement) }}</div>
-          <div class="ef-sub">media periodo: {{ avgEngagement.toFixed(1) }}%</div>
+          <div v-if="posts.length > 1" class="ef-sub">mitjana: {{ avgEngagement.toFixed(1) }}%</div>
         </div>
       </div>
       <div class="ef-bar-wrap">
@@ -42,39 +42,57 @@
       </div>
     </div>
 
-    <!-- Preview placeholder -->
-    <section class="panel-section">
-      <h3 class="section-title">Vista previa</h3>
-      <div class="preview-card" :style="previewBg">
-        <div class="preview-icon">
-          <component :is="typeIcon" :size="22" />
-        </div>
-        <div class="preview-meta">
-          <span class="preview-platform">{{ getPlatform(post.platform).label }}</span>
-          <span class="preview-account">{{ post.accountName }}</span>
-        </div>
-        <a href="#" class="preview-link" @click.prevent>
-          Abrir post original
-          <ExternalLink :size="11" />
-        </a>
+    <!-- Preview -->
+    <section v-if="hasPreview" class="panel-section">
+      <h3 class="section-title">Vista prèvia</h3>
+
+      <div v-if="youtubeId" class="preview-embed">
+        <iframe
+          :src="`https://www.youtube.com/embed/${youtubeId}`"
+          title="Reproductor de YouTube"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
       </div>
+
+      <a
+        v-else-if="post.thumbnail"
+        :href="post.post_url || undefined"
+        target="_blank"
+        rel="noopener"
+        class="preview-thumb"
+      >
+        <img :src="post.thumbnail" :alt="post.title" />
+      </a>
+
+      <a
+        v-if="post.post_url"
+        :href="post.post_url"
+        target="_blank"
+        rel="noopener"
+        class="preview-link"
+      >
+        Obrir publicació original a {{ getPlatform(post.platform).label }}
+        <ExternalLink :size="11" />
+      </a>
     </section>
 
-    <!-- KPI grid -->
+    <!-- KPI grid (real metrics, mateixos valors que la fila) -->
     <section class="panel-section">
-      <h3 class="section-title">Métricas</h3>
+      <h3 class="section-title">Mètriques</h3>
       <div class="kpi-grid">
-        <div class="kpi-cell" v-for="kpi in postKPIs" :key="kpi.field">
+        <div class="kpi-cell" v-for="kpi in postKPIs" :key="kpi.label">
           <component :is="kpi.icon" :size="13" class="kpi-icon" />
-          <div class="kpi-val">{{ formatNumber(post[kpi.field]) }}</div>
+          <div class="kpi-val">{{ formatNumber(kpi.value) }}</div>
           <div class="kpi-key">{{ kpi.label }}</div>
         </div>
       </div>
     </section>
 
     <!-- Comparativa -->
-    <section class="panel-section">
-      <h3 class="section-title">vs. media del periodo</h3>
+    <section v-if="posts.length > 1" class="panel-section">
+      <h3 class="section-title">vs. mitjana del període</h3>
       <div class="compare-list">
         <div v-for="m in compareMetrics" :key="m.label" class="compare-row">
           <span class="cmp-label">{{ m.label }}</span>
@@ -91,111 +109,120 @@
       </div>
     </section>
 
-    <!-- Trazabilidad -->
+    <!-- Detalls -->
     <section class="panel-section">
-      <h3 class="section-title">Trazabilidad</h3>
+      <h3 class="section-title">Detalls</h3>
       <dl class="info-list">
         <div class="info-row">
-          <dt>Clics generados</dt>
-          <dd class="font-mono">{{ formatNumber(post.clicks) }}</dd>
+          <dt>Tipus</dt>
+          <dd>{{ post.type }}</dd>
         </div>
         <div class="info-row">
-          <dt>UTM Campaign</dt>
+          <dt>Publicat</dt>
+          <dd>{{ formatDate(post.date) }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Campanya</dt>
+          <dd>{{ post.campaignName || '—' }}</dd>
+        </div>
+        <div v-if="post.post_url" class="info-row">
+          <dt>Enllaç</dt>
           <dd>
-            <code class="code-chip">
-              {{ post.campaignName ? post.campaignName.toLowerCase().replace(/\s/g,'-') : '—' }}
-            </code>
+            <a :href="post.post_url" target="_blank" rel="noopener" class="link-inline">
+              Veure original
+              <ExternalLink :size="11" />
+            </a>
           </dd>
-        </div>
-        <div class="info-row">
-          <dt>Producto vinculado</dt>
-          <dd>{{ post.productName || '—' }}</dd>
         </div>
       </dl>
     </section>
 
     <!-- Footer -->
     <div class="panel-footer">
-      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Cerrar</button>
-      <button class="panel-btn panel-btn-primary">
-        <Pencil :size="14" />
-        Editar etiquetas
-      </button>
+      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Tancar</button>
+      <a
+        v-if="post.post_url"
+        class="panel-btn panel-btn-primary"
+        :href="post.post_url"
+        target="_blank"
+        rel="noopener"
+      >
+        <ExternalLink :size="14" />
+        Obrir publicació
+      </a>
     </div>
   </div>
 
   <div v-else class="panel-empty">
     <AlertCircle :size="20" />
-    <span>Publicación no encontrada.</span>
+    <span>Publicació no trobada.</span>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import {
-  AtSign, Target, ExternalLink, Pencil, AlertCircle,
-  Heart, MessageCircle, Share2, Bookmark, Eye, MousePointer, BarChart2,
+  AtSign, Target, ExternalLink, AlertCircle,
+  Heart, MessageCircle, MousePointer, BarChart2,
   TrendingUp, TrendingDown,
-  Image as ImageIcon, Film, Layers, MessageSquare, FileText,
 } from 'lucide-vue-next'
-import {
-  socialPosts, getPlatform, formatNumber, formatDate,
-} from '@/services/socialCrmData'
+import { getPlatform, formatNumber, formatDate } from '@/services/socialCrmData'
 
 const props = defineProps({
-  postId: { type: Number, required: true },
+  postId: { type: [Number, String], required: true },
+  posts:  { type: Array, default: () => [] },
 })
 
 defineEmits(['close'])
 
-const post = computed(() => socialPosts.find(p => p.id === props.postId))
+// Read the real post from the list passed by the hub (DB-backed data),
+// never from mock data — guarantees platform/metrics match the table row.
+const post = computed(() => props.posts.find(p => p.id === props.postId) || null)
 
-const postKPIs = [
-  { label: 'Likes',         field: 'likes',       icon: Heart },
-  { label: 'Comentarios',   field: 'comments',    icon: MessageCircle },
-  { label: 'Compartidos',   field: 'shares',      icon: Share2 },
-  { label: 'Guardados',     field: 'saves',       icon: Bookmark },
-  { label: 'Vistas',        field: 'views',       icon: Eye },
-  { label: 'Alcance',       field: 'reach',       icon: BarChart2 },
-  { label: 'Impresiones',   field: 'impressions', icon: BarChart2 },
-  { label: 'Clics',         field: 'clicks',      icon: MousePointer },
-]
-
-const avgEngagement = computed(() =>
-  socialPosts.reduce((s, p) => s + p.engagement, 0) / socialPosts.length
-)
-
-const compareMetrics = computed(() => {
-  const avg = (field) => socialPosts.reduce((s, p) => s + p[field], 0) / socialPosts.length
+// Real metrics only, identical values to the table row.
+const postKPIs = computed(() => {
+  const p = post.value
+  if (!p) return []
   return [
-    { label: 'Alcance',    field: 'reach',      avg: Math.round(avg('reach')),      format: formatNumber },
-    { label: 'Engagement', field: 'engagement', avg: parseFloat(avg('engagement').toFixed(1)), format: v => v + '%' },
-    { label: 'Clics',      field: 'clicks',     avg: Math.round(avg('clicks')),     format: formatNumber },
-    { label: 'Likes',      field: 'likes',      avg: Math.round(avg('likes')),      format: formatNumber },
+    { label: 'Abast',      value: p.reach,    icon: BarChart2 },
+    { label: 'M\'agrada',  value: p.likes,    icon: Heart },
+    { label: 'Comentaris', value: p.comments, icon: MessageCircle },
+    { label: 'Clics',      value: p.clicks,   icon: MousePointer },
   ]
 })
 
-const typeIcon = computed(() => {
-  if (!post.value) return FileText
-  const map = {
-    'Imagen': ImageIcon, 'Vídeo': Film, 'Reel': Film, 'Story': Layers,
-    'Carrusel': Layers, 'Tweet': MessageSquare, 'Hilo': MessageSquare, 'Short': Film,
-  }
-  return map[post.value.type] || FileText
+const avgEngagement = computed(() => {
+  if (!props.posts.length) return 0
+  return props.posts.reduce((s, p) => s + (p.engagement || 0), 0) / props.posts.length
 })
 
-const previewBg = computed(() => {
-  if (!post.value) return {}
-  const p = getPlatform(post.value.platform)
-  return {
-    background: `linear-gradient(135deg, ${p.color}1a 0%, ${p.color}05 100%)`,
-    borderColor: `${p.color}33`,
-  }
+const compareMetrics = computed(() => {
+  const list = props.posts
+  const avg = (field) => list.length ? list.reduce((s, p) => s + (p[field] || 0), 0) / list.length : 0
+  return [
+    { label: 'Abast',      field: 'reach',      avg: Math.round(avg('reach')),                  format: formatNumber },
+    { label: 'Engagement', field: 'engagement', avg: parseFloat(avg('engagement').toFixed(1)),  format: v => v + '%' },
+    { label: 'M\'agrada',  field: 'likes',      avg: Math.round(avg('likes')),                  format: formatNumber },
+    { label: 'Comentaris', field: 'comments',   avg: Math.round(avg('comments')),               format: formatNumber },
+  ]
+})
+
+// YouTube video id extracted from the stored post URL → enables the embed player.
+const youtubeId = computed(() => {
+  const p = post.value
+  if (!p || p.platform !== 'youtube') return ''
+  const m = (p.post_url || '').match(/[?&]v=([\w-]+)/)
+  return m ? m[1] : ''
+})
+
+const hasPreview = computed(() => {
+  const p = post.value
+  return !!(p && (youtubeId.value || p.thumbnail || p.post_url))
 })
 
 function platformStyle(key) { const p = getPlatform(key); return { background: p.bg, color: p.color } }
 function engClass(v) { return v >= 6 ? 'eng-high' : v >= 3 ? 'eng-mid' : 'eng-low' }
-function engLabel(v) { return v >= 6 ? 'Muy alto' : v >= 4 ? 'Alto' : v >= 2 ? 'Medio' : 'Bajo' }
+function engLabel(v) { return v >= 6 ? 'Molt alt' : v >= 4 ? 'Alt' : v >= 2 ? 'Mitjà' : 'Baix' }
 </script>
 
 <style scoped>
@@ -327,31 +354,31 @@ function engLabel(v) { return v >= 6 ? 'Muy alto' : v >= 4 ? 'Alto' : v >= 2 ? '
   margin: 0;
 }
 
-/* Preview card */
-.preview-card {
-  border: 1px solid var(--border-color);
+/* Preview */
+.preview-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
-  padding: 1.25rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  text-align: center;
-}
-.preview-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--primary-color);
+  overflow: hidden;
   border: 1px solid var(--border-color);
+  background: #000;
 }
-.preview-meta { display: flex; flex-direction: column; gap: 2px; align-items: center; }
-.preview-platform { font-size: 0.78rem; font-weight: 700; color: var(--text-primary); }
-.preview-account { font-size: 0.72rem; color: var(--text-secondary); }
+.preview-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.preview-thumb {
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  line-height: 0;
+}
+.preview-thumb img { width: 100%; height: auto; display: block; }
 .preview-link {
   display: inline-flex;
   align-items: center;
@@ -419,14 +446,15 @@ function engLabel(v) { return v >= 6 ? 'Muy alto' : v >= 4 ? 'Alto' : v >= 2 ? '
 .info-row dd { color: var(--text-primary); margin: 0; text-align: right; }
 .font-mono { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; font-weight: 600; }
 
-.code-chip {
-  background: var(--bg-secondary);
-  padding: 2px 7px;
-  border-radius: 5px;
-  font-size: 0.74rem;
-  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
-  color: var(--text-primary);
+.link-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
 }
+.link-inline:hover { text-decoration: underline; }
 
 /* Footer */
 .panel-footer {
@@ -450,6 +478,7 @@ function engLabel(v) { return v >= 6 ? 'Muy alto' : v >= 4 ? 'Alto' : v >= 2 ? '
   border: 1px solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-primary);
+  text-decoration: none;
 }
 .panel-btn-primary {
   border: none;

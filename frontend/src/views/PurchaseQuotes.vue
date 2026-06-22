@@ -3,13 +3,13 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Presupuestos de compra</h1>
+          <h1 class="view-title">Pressupostos de compra</h1>
           <span class="count-badge">{{ quotes.length }}</span>
         </div>
         <div class="header-actions">
           <button class="btn btn-primary" @click="openForm()">
             <Plus :size="18" />
-            <span>Nuevo presupuesto</span>
+            <span>Nou pressupost</span>
           </button>
         </div>
       </div>
@@ -22,19 +22,19 @@
           <input
             type="text"
             class="input search-input"
-            placeholder="Buscar por nombre, proveedor..."
+            placeholder="Cerca per nom o proveïdor…"
             v-model="searchQuery"
           />
         </div>
         <div class="filter-actions">
           <select class="select filter-select" v-model="statusFilter">
-            <option value="all">Todos los estados</option>
-            <option value="Draft">Borrador</option>
-            <option value="Sent">Solicitado</option>
-            <option value="Accepted">Aceptado</option>
-            <option value="Rejected">Rechazado</option>
-            <option value="Expired">Expirado</option>
-            <option value="Converted">Convertido</option>
+            <option value="all">Tots els estats</option>
+            <option value="Draft">Esborrany</option>
+            <option value="Sent">Sol·licitat</option>
+            <option value="Accepted">Acceptat</option>
+            <option value="Rejected">Rebutjat</option>
+            <option value="Expired">Caducat</option>
+            <option value="Converted">Convertit</option>
           </select>
         </div>
       </div>
@@ -44,11 +44,11 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Proveedor</th>
-                <th>Fecha</th>
-                <th>Válido hasta</th>
-                <th>Estado</th>
+                <th>Nom</th>
+                <th>Proveïdor</th>
+                <th>Data</th>
+                <th>Vàlid fins</th>
+                <th>Estat</th>
                 <th>Total</th>
                 <th>Factura</th>
                 <th></th>
@@ -104,7 +104,7 @@
                 </td>
               </tr>
               <tr v-if="!filteredQuotes.length">
-                <td colspan="8" class="empty-row">No hay presupuestos.</td>
+                <td colspan="8" class="empty-row">No hi ha pressupostos.</td>
               </tr>
             </tbody>
           </table>
@@ -123,14 +123,14 @@
             <button class="btn-icon" @click="closeDetail"><X :size="20" /></button>
           </div>
           <div class="drawer-body">
-            <div class="info-row"><span>Proveedor</span><strong>{{ selectedQuote.provider?.name }}</strong></div>
-            <div class="info-row"><span>Fecha</span><strong>{{ formatDate(selectedQuote.issueDate) }}</strong></div>
-            <div class="info-row"><span>Válido hasta</span><strong>{{ formatDate(selectedQuote.validUntil) }}</strong></div>
+            <div class="info-row"><span>Proveïdor</span><strong>{{ selectedQuote.provider?.name }}</strong></div>
+            <div class="info-row"><span>Data</span><strong>{{ formatDate(selectedQuote.issueDate) }}</strong></div>
+            <div class="info-row"><span>Vàlid fins</span><strong>{{ formatDate(selectedQuote.validUntil) }}</strong></div>
 
-            <h3>Items</h3>
+            <h3>Línies</h3>
             <table class="table">
               <thead>
-                <tr><th>Descripción</th><th>Cant.</th><th>Precio</th><th>IVA</th><th>Subtotal</th></tr>
+                <tr><th>Descripció</th><th>Qt.</th><th>Preu</th><th>IVA</th><th>Subtotal</th></tr>
               </thead>
               <tbody>
                 <tr v-for="l in selectedQuote.lines" :key="l.id">
@@ -145,12 +145,12 @@
 
             <div class="totals">
               <div class="info-row"><span>Subtotal</span><strong>{{ formatCurrency(selectedQuote.subtotal) }}</strong></div>
-              <div class="info-row"><span>Impuestos</span><strong>{{ formatCurrency(selectedQuote.totalTax) }}</strong></div>
+              <div class="info-row"><span>Impostos</span><strong>{{ formatCurrency(selectedQuote.totalTax) }}</strong></div>
               <div class="info-row total"><span>Total</span><strong>{{ formatCurrency(selectedQuote.totalAmount) }}</strong></div>
             </div>
 
             <div v-if="selectedQuote.convertedInvoiceId" class="converted-info">
-              Convertido en factura
+              Convertit en factura
               <strong>{{ selectedQuote.convertedInvoiceNumber || `#${selectedQuote.convertedInvoiceId}` }}</strong>
             </div>
 
@@ -209,7 +209,7 @@ async function fetchQuotes() {
     const items = Array.isArray(data) ? data : (data.results || [])
     quotes.value = items.map(mapPurchaseQuoteFromApi)
   } catch (err) {
-    toast.error('Error al cargar presupuestos')
+    toast.error('Error en carregar els pressupostos')
   }
 }
 
@@ -219,7 +219,7 @@ async function fetchProviders() {
     const items = Array.isArray(data) ? data : (data.results || [])
     providers.value = items.map(mapProviderFromApi)
   } catch (err) {
-    toast.error('Error al cargar proveedores')
+    toast.error('Error en carregar els proveïdors')
   }
 }
 
@@ -281,15 +281,15 @@ async function handleSave(formData) {
   try {
     if (formQuote.value) {
       await quotesApi.update(formQuote.value.id, apiData)
-      toast.success('Presupuesto actualizado')
+      toast.success('Pressupost actualitzat')
     } else {
       await quotesApi.create(apiData)
-      toast.success('Presupuesto creado')
+      toast.success('Pressupost creat')
     }
     closeForm()
     await fetchQuotes()
   } catch (err) {
-    toast.error(parseDrfErrors(err.data) || err.message || 'Error al guardar')
+    toast.error(parseDrfErrors(err.data) || err.message || 'Error en desar')
   }
 }
 
@@ -302,7 +302,7 @@ async function openDetail(q) {
     selectedQuote.value = mapPurchaseQuoteDetailFromApi(data)
     detailOpen.value = true
   } catch (err) {
-    toast.error('Error al cargar el presupuesto')
+    toast.error('Error en carregar el pressupost')
   }
 }
 
@@ -312,31 +312,31 @@ function closeDetail() {
 }
 
 async function deleteQuote(q) {
-  if (!confirm(`¿Eliminar presupuesto "${q.name}"?`)) return
+  if (!confirm(`Vols eliminar el pressupost "${q.name}"?`)) return
   try {
     await quotesApi.delete(q.id)
-    toast.success('Presupuesto eliminado')
+    toast.success('Pressupost eliminat')
     await fetchQuotes()
   } catch (err) {
-    toast.error('Error al eliminar')
+    toast.error('Error en eliminar')
   }
 }
 
 async function convertToInvoice(q) {
   try {
     await quotesApi.convertToInvoice(q.id)
-    toast.success('Presupuesto convertido en factura de compra (borrador)')
+    toast.success('Pressupost convertit en factura de compra (esborrany)')
     closeDetail()
     await fetchQuotes()
   } catch (err) {
-    toast.error(parseDrfErrors(err.data) || err.message || 'Error al convertir')
+    toast.error(parseDrfErrors(err.data) || err.message || 'Error en convertir')
   }
 }
 
 function statusLabel(s) {
   return {
-    Draft: 'Borrador', Sent: 'Solicitado', Accepted: 'Aceptado',
-    Rejected: 'Rechazado', Expired: 'Expirado', Converted: 'Convertido',
+    Draft: 'Esborrany', Sent: 'Sol·licitat', Accepted: 'Acceptat',
+    Rejected: 'Rebutjat', Expired: 'Caducat', Converted: 'Convertit',
   }[s] || s
 }
 
@@ -349,11 +349,11 @@ function statusBadgeClass(s) {
 
 function formatCurrency(v) {
   if (v === null || v === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(v)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(v)
 }
 function formatDate(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Date(d).toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 </script>
 

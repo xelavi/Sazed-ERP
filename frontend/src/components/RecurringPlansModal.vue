@@ -6,7 +6,7 @@
           <div class="rp-header">
             <h3 class="rp-title">
               <Repeat :size="18" />
-              Facturas recurrentes
+              Factures recurrents
             </h3>
             <button class="rp-icon-btn" @click="$emit('close')">
               <X :size="20" />
@@ -15,8 +15,8 @@
 
           <div class="rp-body">
             <p v-if="!plans.length" class="rp-empty">
-              No hay planes de facturación recurrente.
-              Crea uno desde el menú de cualquier factura.
+              No hi ha plans de facturació recurrent.
+              Crea'n un des del menú de qualsevol factura.
             </p>
 
             <div v-for="plan in plans" :key="plan.id" class="rp-card">
@@ -33,13 +33,13 @@
                   <span>{{ formatCurrency(plan.template_total) }}</span>
                 </div>
                 <div class="rp-meta rp-meta-sub">
-                  <span v-if="plan.active">Próxima: <strong>{{ formatDate(plan.next_run) }}</strong></span>
-                  <span v-else>Finalizada</span>
+                  <span v-if="plan.active">Pròxima: <strong>{{ formatDate(plan.next_run) }}</strong></span>
+                  <span v-else>Finalitzada</span>
                   <span class="rp-dot">·</span>
-                  <span>{{ plan.occurrences }} emitida(s)<template v-if="plan.max_occurrences">/{{ plan.max_occurrences }}</template></span>
+                  <span>{{ plan.occurrences }} emesa(es)<template v-if="plan.max_occurrences">/{{ plan.max_occurrences }}</template></span>
                   <template v-if="plan.end_date">
                     <span class="rp-dot">·</span>
-                    <span>hasta {{ formatDate(plan.end_date) }}</span>
+                    <span>fins {{ formatDate(plan.end_date) }}</span>
                   </template>
                 </div>
               </div>
@@ -47,7 +47,7 @@
                 <button
                   v-if="plan.active"
                   class="rp-act"
-                  title="Generar ahora la siguiente factura"
+                  title="Generar ara la factura següent"
                   @click="$emit('run', plan)"
                 >
                   <Play :size="15" />
@@ -63,14 +63,14 @@
                 <button
                   v-else-if="!plan.is_finished"
                   class="rp-act"
-                  title="Reanudar"
+                  title="Reprendre"
                   @click="$emit('toggle', plan)"
                 >
                   <Play :size="15" />
                 </button>
                 <button
                   class="rp-act rp-act-danger"
-                  title="Eliminar plan"
+                  title="Eliminar el pla"
                   @click="$emit('remove', plan)"
                 >
                   <Trash2 :size="15" />
@@ -81,9 +81,9 @@
 
           <div class="rp-footer">
             <span class="rp-foot-note">
-              Las facturas se generan automáticamente cada día mediante la tarea programada.
+              Les factures es generen automàticament cada dia mitjançant la tasca programada.
             </span>
-            <button class="btn btn-secondary" @click="$emit('close')">Cerrar</button>
+            <button class="btn btn-secondary" @click="$emit('close')">Tancar</button>
           </div>
         </div>
       </div>
@@ -103,11 +103,11 @@ defineProps({
 defineEmits(['close', 'run', 'toggle', 'remove'])
 
 const FREQ = {
-  weekly: 'semana(s)',
-  monthly: 'mes(es)',
+  weekly: 'setmana(es)',
+  monthly: 'mes(os)',
   quarterly: 'trimestre(s)',
   semiannual: 'semestre(s)',
-  yearly: 'año(s)',
+  yearly: 'any(s)',
 }
 
 function frequencyText(plan) {
@@ -117,12 +117,12 @@ function frequencyText(plan) {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
 }
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 </script>
 

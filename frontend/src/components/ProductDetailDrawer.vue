@@ -14,7 +14,7 @@
                 <h2 class="drawer-title">{{ product.name }}</h2>
                 <div class="drawer-meta">
                   <span class="sku-text">{{ product.sku }}</span>
-                  <span :class="['badge', statusBadgeClass(product.status)]">{{ product.status }}</span>
+                  <span :class="['badge', statusBadgeClass(product.status)]">{{ statusLabel(product.status) }}</span>
                 </div>
               </div>
             </div>
@@ -44,117 +44,104 @@
             <!-- ========== A) GENERAL ========== -->
             <div v-if="activeTab === 'general'" class="tab-content">
               <section class="detail-section">
-                <h3 class="section-title"><FileText :size="16" /> General Information</h3>
+                <h3 class="section-title"><FileText :size="16" /> Informació general</h3>
                 <div class="detail-grid">
                   <div class="detail-field">
-                    <label>Name</label>
+                    <label>Nom</label>
                     <span>{{ product.name }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>SKU / Reference</label>
+                    <label>SKU / Referència</label>
                     <span class="sku-text">{{ product.sku }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Type</label>
+                    <label>Tipus</label>
                     <div class="type-cell">
                       <component :is="product.type === 'Product' ? Package : Wrench" :size="14" />
-                      <span>{{ product.type }}</span>
+                      <span>{{ typeLabel(product.type) }}</span>
                     </div>
                   </div>
                   <div class="detail-field">
-                    <label>Status</label>
-                    <span :class="['badge', statusBadgeClass(product.status)]">{{ product.status }}</span>
+                    <label>Estat</label>
+                    <span :class="['badge', statusBadgeClass(product.status)]">{{ statusLabel(product.status) }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Category</label>
-                    <span>{{ product.category }}</span>
+                    <label>Categoria</label>
+                    <span>{{ categoryLabel(product.category) }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Tags</label>
+                    <label>Etiquetes</label>
                     <div class="tags-list">
                       <span v-for="tag in product.detail.tags" :key="tag" class="tag-chip">{{ tag }}</span>
                     </div>
                   </div>
                   <div class="detail-field">
-                    <label>Unit</label>
+                    <label>Unitat</label>
                     <span>{{ product.detail.unit }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Sellable / Purchasable</label>
+                    <label>Vendible / Comprable</label>
                     <span>
-                      <span :class="product.detail.sellable ? 'flag-yes' : 'flag-no'">{{ product.detail.sellable ? 'Sellable' : 'Not sellable' }}</span>
+                      <span :class="product.detail.sellable ? 'flag-yes' : 'flag-no'">{{ product.detail.sellable ? 'Vendible' : 'No vendible' }}</span>
                       &nbsp;/&nbsp;
-                      <span :class="product.detail.purchasable ? 'flag-yes' : 'flag-no'">{{ product.detail.purchasable ? 'Purchasable' : 'Not purchasable' }}</span>
+                      <span :class="product.detail.purchasable ? 'flag-yes' : 'flag-no'">{{ product.detail.purchasable ? 'Comprable' : 'No comprable' }}</span>
                     </span>
                   </div>
                   <div class="detail-field">
-                    <label>Brand</label>
+                    <label>Marca</label>
                     <span>{{ product.detail.brand || '—' }}</span>
                   </div>
                 </div>
               </section>
 
               <section class="detail-section">
-                <h3 class="section-title"><FileText :size="16" /> Description</h3>
+                <h3 class="section-title"><FileText :size="16" /> Descripció</h3>
                 <p class="description-text">{{ product.detail.description }}</p>
               </section>
 
-              <section class="detail-section">
-                <h3 class="section-title"><ImageIcon :size="16" /> Images / Gallery</h3>
-                <div class="gallery-grid">
-                  <div v-for="(img, i) in product.detail.gallery" :key="i" class="gallery-item">
-                    <ImageIcon :size="28" class="gallery-placeholder" />
-                    <span class="gallery-label">{{ img }}</span>
-                  </div>
-                  <div v-if="!product.detail.gallery.length" class="empty-state-sm">
-                    <ImageIcon :size="20" />
-                    <span>No images uploaded</span>
-                  </div>
-                </div>
-              </section>
             </div>
 
             <!-- ========== B) PRICES & TAXES ========== -->
             <div v-if="activeTab === 'prices'" class="tab-content">
               <section class="detail-section">
-                <h3 class="section-title"><Receipt :size="16" /> Prices &amp; Taxes</h3>
+                <h3 class="section-title"><Receipt :size="16" /> Preus i impostos</h3>
                 <div class="detail-grid">
                   <div class="detail-field">
-                    <label>Sale Price (PVP)</label>
+                    <label>Preu de venda (PVP)</label>
                     <span class="value-highlight">{{ formatCurrency(product.price) }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Price excl. tax</label>
+                    <label>Preu sense IVA</label>
                     <span>{{ formatCurrency(product.detail.priceExclTax) }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Purchase / Cost Price</label>
+                    <label>Preu de compra / cost</label>
                     <span>{{ formatCurrency(product.cost) }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Tax (VAT)</label>
+                    <label>IVA</label>
                     <span class="tax-tag">{{ product.tax }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Margin</label>
+                    <label>Marge</label>
                     <span :class="['margin-value', marginClass(product)]">{{ calcMargin(product) }}%</span>
                   </div>
                   <div class="detail-field">
-                    <label>Currency</label>
+                    <label>Moneda</label>
                     <span>{{ product.detail.currency }}</span>
                   </div>
                 </div>
               </section>
 
               <section class="detail-section">
-                <h3 class="section-title"><List :size="16" /> Price Lists</h3>
+                <h3 class="section-title"><List :size="16" /> Llistes de preus</h3>
                 <table class="mini-table">
                   <thead>
                     <tr>
-                      <th>Price List</th>
-                      <th>Price</th>
-                      <th>Valid From</th>
-                      <th>Valid To</th>
+                      <th>Llista de preus</th>
+                      <th>Preu</th>
+                      <th>Vàlid des de</th>
+                      <th>Vàlid fins</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -172,66 +159,66 @@
             <!-- ========== C) INVENTORY ========== -->
             <div v-if="activeTab === 'inventory'" class="tab-content">
               <section class="detail-section">
-                <h3 class="section-title"><Warehouse :size="16" /> Stock Overview</h3>
+                <h3 class="section-title"><Warehouse :size="16" /> Resum d'estoc</h3>
                 <div class="stat-cards">
                   <div class="stat-card">
-                    <span class="stat-label">Current Stock</span>
+                    <span class="stat-label">Estoc actual</span>
                     <span class="stat-value">{{ product.stock ?? '—' }}</span>
                   </div>
                   <div class="stat-card">
-                    <span class="stat-label">Reserved</span>
+                    <span class="stat-label">Reservat</span>
                     <span class="stat-value">{{ product.reserved ?? 0 }}</span>
                   </div>
                   <div class="stat-card">
-                    <span class="stat-label">Available</span>
+                    <span class="stat-label">Disponible</span>
                     <span class="stat-value stat-available">{{ product.stock != null ? product.stock - (product.reserved || 0) : '—' }}</span>
                   </div>
                   <div class="stat-card">
-                    <span class="stat-label">Min. Stock</span>
+                    <span class="stat-label">Estoc mínim</span>
                     <span class="stat-value">{{ product.detail.minStock ?? '—' }}</span>
                   </div>
                 </div>
               </section>
 
               <section class="detail-section">
-                <h3 class="section-title"><MapPin :size="16" /> Warehouse &amp; Location</h3>
+                <h3 class="section-title"><MapPin :size="16" /> Magatzem i ubicació</h3>
                 <div class="detail-grid">
                   <div class="detail-field">
-                    <label>Warehouse</label>
+                    <label>Magatzem</label>
                     <span>{{ product.detail.warehouse }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Location (Aisle/Shelf)</label>
+                    <label>Ubicació (passadís/prestatge)</label>
                     <span>{{ product.detail.location || '—' }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Reorder Point</label>
+                    <label>Punt de comanda</label>
                     <span>{{ product.detail.reorderPoint ?? '—' }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Lot / Serial Tracking</label>
-                    <span :class="product.detail.lotTracking ? 'flag-yes' : 'flag-no'">{{ product.detail.lotTracking ? 'Yes' : 'No' }}</span>
+                    <label>Seguiment de lot / sèrie</label>
+                    <span :class="product.detail.lotTracking ? 'flag-yes' : 'flag-no'">{{ product.detail.lotTracking ? 'Sí' : 'No' }}</span>
                   </div>
                 </div>
               </section>
 
               <section class="detail-section">
-                <h3 class="section-title"><History :size="16" /> Stock Movements</h3>
+                <h3 class="section-title"><History :size="16" /> Moviments d'estoc</h3>
                 <table class="mini-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Type</th>
+                      <th>Data</th>
+                      <th>Tipus</th>
                       <th>Document</th>
-                      <th>Qty</th>
-                      <th>User</th>
+                      <th>Qt.</th>
+                      <th>Usuari</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="(mov, i) in product.detail.stockMovements" :key="i">
-                      <td>{{ mov.date }}</td>
+                      <td>{{ formatDateTime(mov.date) }}</td>
                       <td>
-                        <span :class="['badge', mov.type === 'In' ? 'badge-success' : mov.type === 'Out' ? 'badge-error' : 'badge-gray']">{{ mov.type }}</span>
+                        <span :class="['badge', mov.type === 'In' ? 'badge-success' : mov.type === 'Out' ? 'badge-error' : 'badge-gray']">{{ movementLabel(mov.type) }}</span>
                       </td>
                       <td>{{ mov.document }}</td>
                       <td :class="mov.qty > 0 ? 'text-success' : 'text-error'" class="font-semibold">{{ mov.qty > 0 ? '+' : '' }}{{ mov.qty }}</td>
@@ -245,7 +232,7 @@
             <!-- ========== D) VARIANTS ========== -->
             <div v-if="activeTab === 'variants'" class="tab-content">
               <section class="detail-section">
-                <h3 class="section-title"><Layers :size="16" /> Attributes</h3>
+                <h3 class="section-title"><Layers :size="16" /> Atributs</h3>
                 <div v-if="product.detail.attributes.length" class="attributes-list">
                   <div v-for="attr in product.detail.attributes" :key="attr.name" class="attribute-row">
                     <span class="attr-name">{{ attr.name }}</span>
@@ -256,19 +243,19 @@
                 </div>
                 <div v-else class="empty-state-sm">
                   <Layers :size="20" />
-                  <span>No variants configured</span>
+                  <span>No hi ha variants configurades</span>
                 </div>
               </section>
 
               <section v-if="product.detail.variants.length" class="detail-section">
-                <h3 class="section-title"><Grid3x3 :size="16" /> Variant List</h3>
+                <h3 class="section-title"><Grid3x3 :size="16" /> Llista de variants</h3>
                 <table class="mini-table">
                   <thead>
                     <tr>
                       <th>Variant</th>
                       <th>SKU</th>
-                      <th>Price</th>
-                      <th>Stock</th>
+                      <th>Preu</th>
+                      <th>Estoc</th>
                       <th>EAN</th>
                     </tr>
                   </thead>
@@ -290,25 +277,25 @@
               <div class="quick-actions">
                 <button class="btn btn-secondary btn-sm" @click="$emit('new-purchase-quote', product)">
                   <FileText :size="14" />
-                  <span>Nuevo presupuesto</span>
+                  <span>Nou pressupost</span>
                 </button>
                 <button class="btn btn-primary btn-sm" @click="$emit('new-purchase-invoice', product)">
                   <Receipt :size="14" />
-                  <span>Nueva factura</span>
+                  <span>Nova factura</span>
                 </button>
               </div>
 
               <section class="detail-section">
-                <h3 class="section-title"><Truck :size="16" /> Suppliers</h3>
+                <h3 class="section-title"><Truck :size="16" /> Proveïdors</h3>
                 <table v-if="product.detail.suppliers.length" class="mini-table">
                   <thead>
                     <tr>
-                      <th>Supplier</th>
-                      <th>Supplier SKU</th>
-                      <th>Price</th>
-                      <th>Lead Time</th>
-                      <th>Min. Order</th>
-                      <th>Primary</th>
+                      <th>Proveïdor</th>
+                      <th>SKU del proveïdor</th>
+                      <th>Preu</th>
+                      <th>Termini de lliurament</th>
+                      <th>Comanda mín.</th>
+                      <th>Principal</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -319,15 +306,15 @@
                       <td>{{ s.leadTime }}</td>
                       <td>{{ s.minOrder }}</td>
                       <td>
-                        <span v-if="s.primary" class="flag-yes">Primary</span>
-                        <span v-else class="flag-no">Alternative</span>
+                        <span v-if="s.primary" class="flag-yes">Principal</span>
+                        <span v-else class="flag-no">Alternatiu</span>
                       </td>
                     </tr>
                   </tbody>
                 </table>
                 <div v-else class="empty-state-sm">
                   <Truck :size="20" />
-                  <span>No suppliers linked</span>
+                  <span>No hi ha proveïdors vinculats</span>
                 </div>
               </section>
             </div>
@@ -337,24 +324,24 @@
               <div class="quick-actions">
                 <button class="btn btn-secondary btn-sm" @click="$emit('new-sales-quote', product)">
                   <FileText :size="14" />
-                  <span>Nuevo presupuesto</span>
+                  <span>Nou pressupost</span>
                 </button>
                 <button class="btn btn-primary btn-sm" @click="$emit('new-sales-invoice', product)">
                   <Receipt :size="14" />
-                  <span>Nueva factura</span>
+                  <span>Nova factura</span>
                 </button>
               </div>
 
               <section class="detail-section">
-                <h3 class="section-title"><ShoppingCart :size="16" /> Recent Sales</h3>
+                <h3 class="section-title"><ShoppingCart :size="16" /> Vendes recents</h3>
                 <table v-if="product.detail.recentSales.length" class="mini-table">
                   <thead>
                     <tr>
                       <th>Document</th>
-                      <th>Customer</th>
-                      <th>Date</th>
-                      <th>Qty</th>
-                      <th>Unit Price</th>
+                      <th>Client</th>
+                      <th>Data</th>
+                      <th>Qt.</th>
+                      <th>Preu unitari</th>
                       <th>Total</th>
                     </tr>
                   </thead>
@@ -371,20 +358,20 @@
                 </table>
                 <div v-else class="empty-state-sm">
                   <ShoppingCart :size="20" />
-                  <span>No sales recorded yet</span>
+                  <span>Encara no hi ha vendes registrades</span>
                 </div>
               </section>
 
               <section class="detail-section">
-                <h3 class="section-title"><RotateCcw :size="16" /> Returns</h3>
+                <h3 class="section-title"><RotateCcw :size="16" /> Devolucions</h3>
                 <table v-if="product.detail.returns.length" class="mini-table">
                   <thead>
                     <tr>
                       <th>Document</th>
-                      <th>Customer</th>
-                      <th>Date</th>
-                      <th>Qty</th>
-                      <th>Reason</th>
+                      <th>Client</th>
+                      <th>Data</th>
+                      <th>Qt.</th>
+                      <th>Motiu</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -399,18 +386,18 @@
                 </table>
                 <div v-else class="empty-state-sm">
                   <RotateCcw :size="20" />
-                  <span>No returns</span>
+                  <span>Sense devolucions</span>
                 </div>
               </section>
 
               <section class="detail-section">
-                <h3 class="section-title"><Link :size="16" /> Related Products / Cross-sell</h3>
+                <h3 class="section-title"><Link :size="16" /> Productes relacionats / venda creuada</h3>
                 <div v-if="product.detail.relatedProducts.length" class="related-chips">
                   <span v-for="rp in product.detail.relatedProducts" :key="rp" class="related-chip">{{ rp }}</span>
                 </div>
                 <div v-else class="empty-state-sm">
                   <Link :size="20" />
-                  <span>No related products</span>
+                  <span>No hi ha productes relacionats</span>
                 </div>
               </section>
             </div>
@@ -418,23 +405,23 @@
             <!-- ========== G) LOGISTICS / SHIPPING ========== -->
             <div v-if="activeTab === 'logistics'" class="tab-content">
               <section class="detail-section">
-                <h3 class="section-title"><PackageIcon :size="16" /> Shipping &amp; Dimensions</h3>
+                <h3 class="section-title"><PackageIcon :size="16" /> Enviament i dimensions</h3>
                 <div class="detail-grid">
                   <div class="detail-field">
-                    <label>Weight</label>
+                    <label>Pes</label>
                     <span>{{ product.detail.weight || '—' }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Dimensions (L × W × H)</label>
+                    <label>Dimensions (llarg × ample × alt)</label>
                     <span>{{ product.detail.dimensions || '—' }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Shipping Class</label>
+                    <label>Classe d'enviament</label>
                     <span>{{ product.detail.shippingClass || '—' }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Digital Product</label>
-                    <span :class="product.detail.digital ? 'flag-yes' : 'flag-no'">{{ product.detail.digital ? 'Yes' : 'No' }}</span>
+                    <label>Producte digital</label>
+                    <span :class="product.detail.digital ? 'flag-yes' : 'flag-no'">{{ product.detail.digital ? 'Sí' : 'No' }}</span>
                   </div>
                 </div>
               </section>
@@ -443,7 +430,7 @@
             <!-- ========== I) ATTACHMENTS & AUDIT ========== -->
             <div v-if="activeTab === 'audit'" class="tab-content">
               <section class="detail-section">
-                <h3 class="section-title"><Paperclip :size="16" /> Attachments</h3>
+                <h3 class="section-title"><Paperclip :size="16" /> Adjunts</h3>
                 <div v-if="product.detail.attachments.length" class="attachments-list">
                   <div v-for="file in product.detail.attachments" :key="file.name" class="attachment-row">
                     <FileText :size="16" class="attachment-icon" />
@@ -455,32 +442,32 @@
                 </div>
                 <div v-else class="empty-state-sm">
                   <Paperclip :size="20" />
-                  <span>No files attached</span>
+                  <span>No hi ha fitxers adjunts</span>
                 </div>
               </section>
 
               <section class="detail-section">
-                <h3 class="section-title"><StickyNote :size="16" /> Internal Notes</h3>
-                <p class="description-text">{{ product.detail.notes || 'No notes yet.' }}</p>
+                <h3 class="section-title"><StickyNote :size="16" /> Notes internes</h3>
+                <p class="description-text">{{ product.detail.notes || 'Encara no hi ha notes.' }}</p>
               </section>
 
               <section class="detail-section">
-                <h3 class="section-title"><History :size="16" /> Audit Trail</h3>
+                <h3 class="section-title"><History :size="16" /> Registre d'auditoria</h3>
                 <div class="detail-grid">
                   <div class="detail-field">
-                    <label>Created by</label>
+                    <label>Creat per</label>
                     <span>{{ product.detail.createdBy }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Created at</label>
+                    <label>Creat el</label>
                     <span>{{ product.detail.createdAt }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Last modified by</label>
+                    <label>Última modificació per</label>
                     <span>{{ product.detail.modifiedBy }}</span>
                   </div>
                   <div class="detail-field">
-                    <label>Last modified at</label>
+                    <label>Última modificació el</label>
                     <span>{{ formatDate(product.updatedAt) }}</span>
                   </div>
                 </div>
@@ -503,6 +490,7 @@ import {
   RotateCcw, Link, StickyNote,
   PackageIcon
 } from 'lucide-vue-next'
+import { categoryLabel } from '@/config/productCategories'
 
 /* ── Props & Emits ── */
 const props = defineProps({
@@ -523,13 +511,13 @@ const activeTab = ref('general')
 
 const tabs = [
   { key: 'general',   label: 'General',    icon: FileText },
-  { key: 'prices',    label: 'Prices',     icon: Receipt },
-  { key: 'inventory', label: 'Inventory',  icon: Warehouse },
+  { key: 'prices',    label: 'Preus',      icon: Receipt },
+  { key: 'inventory', label: 'Inventari',  icon: Warehouse },
   { key: 'variants',  label: 'Variants',   icon: Layers },
-  { key: 'purchases', label: 'Purchases',  icon: Truck },
-  { key: 'sales',     label: 'Sales',      icon: ShoppingCart },
-  { key: 'logistics', label: 'Logistics',  icon: PackageIcon },
-  { key: 'audit',     label: 'Audit',      icon: Paperclip }
+  { key: 'purchases', label: 'Compres',    icon: Truck },
+  { key: 'sales',     label: 'Vendes',     icon: ShoppingCart },
+  { key: 'logistics', label: 'Logística',  icon: PackageIcon },
+  { key: 'audit',     label: 'Auditoria',  icon: Paperclip }
 ]
 
 /* Reset tab when drawer opens */
@@ -548,6 +536,22 @@ function statusBadgeClass(status) {
   return map[status] || 'badge-gray'
 }
 
+/* ── Display labels (internal values stay unchanged) ── */
+function statusLabel(status) {
+  const map = { Active: 'Actiu', Inactive: 'Inactiu', Archived: 'Arxivat' }
+  return map[status] || status
+}
+
+function typeLabel(type) {
+  const map = { Product: 'Producte', Service: 'Servei' }
+  return map[type] || type
+}
+
+function movementLabel(type) {
+  const map = { In: 'Entrada', Out: 'Sortida' }
+  return map[type] || type
+}
+
 function calcMargin(product) {
   if (!product.price || !product.cost) return '—'
   return (((product.price - product.cost) / product.price) * 100).toFixed(1)
@@ -563,7 +567,15 @@ function marginClass(product) {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
+}
+
+function formatDateTime(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('ca-ES', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
 }
 
 function formatDate(iso) {
@@ -572,10 +584,10 @@ function formatDate(iso) {
   const now = new Date()
   const diffMs = now - d
   const diffDays = Math.floor(diffMs / 86400000)
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays}d ago`
-  return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })
+  if (diffDays === 0) return 'Avui'
+  if (diffDays === 1) return 'Ahir'
+  if (diffDays < 7) return `fa ${diffDays}d`
+  return d.toLocaleDateString('ca-ES', { day: '2-digit', month: 'short', year: '2-digit' })
 }
 </script>
 
@@ -839,39 +851,6 @@ function formatDate(iso) {
   font-weight: 500;
 }
 
-/* Gallery */
-.gallery-grid {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.gallery-item {
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  border: 1px dashed var(--border-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  background: var(--bg-secondary);
-}
-
-.gallery-placeholder {
-  color: var(--text-tertiary);
-}
-
-.gallery-label {
-  font-size: 0.625rem;
-  color: var(--text-tertiary);
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 72px;
-  white-space: nowrap;
-}
 
 /* Flags */
 .flag-yes {

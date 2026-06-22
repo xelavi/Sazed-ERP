@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     EcommerceSyncLogViewSet,
+    StoreFulSyncView,
     StoreConnectionViewSet,
     StoreTaxMappingViewSet,
     StoreTestConnectionView,
@@ -16,5 +17,6 @@ router.register(r'store/sync-logs', EcommerceSyncLogViewSet, basename='store-syn
 
 urlpatterns = [
     path('store/test-connection/', StoreTestConnectionView.as_view(), name='store-test-connection'),
+    path('store/full-sync/', StoreFulSyncView.as_view(), name='store-full-sync'),
     path('', include(router.urls)),
 ]

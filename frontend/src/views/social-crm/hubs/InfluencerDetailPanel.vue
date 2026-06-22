@@ -26,7 +26,7 @@
     <!-- Quick stats -->
     <div class="quick-stats">
       <div class="qs-cell">
-        <div class="qs-key">Seguidores</div>
+        <div class="qs-key">Seguidors</div>
         <div class="qs-val">{{ formatNumber(inf.followers) }}</div>
       </div>
       <div class="qs-cell">
@@ -36,7 +36,7 @@
         </div>
       </div>
       <div class="qs-cell">
-        <div class="qs-key">Ventas atrib.</div>
+        <div class="qs-key">Vendes atrib.</div>
         <div class="qs-val">{{ formatCurrency(inf.salesGenerated) }}</div>
       </div>
       <div class="qs-cell">
@@ -52,9 +52,9 @@
     <section class="panel-section">
       <h3 class="section-title">Perfil</h3>
       <dl class="info-list">
-        <div class="info-row"><dt>Nicho</dt><dd>{{ inf.niche }}</dd></div>
-        <div class="info-row"><dt>Contacto</dt><dd>{{ inf.contact }}</dd></div>
-        <div class="info-row"><dt>Agencia</dt><dd>{{ inf.agency || '—' }}</dd></div>
+        <div class="info-row"><dt>Nínxol</dt><dd>{{ inf.niche }}</dd></div>
+        <div class="info-row"><dt>Contacte</dt><dd>{{ inf.contact }}</dd></div>
+        <div class="info-row"><dt>Agència</dt><dd>{{ inf.agency || '—' }}</dd></div>
         <div class="info-row"><dt>País</dt><dd>{{ inf.country }}</dd></div>
         <div class="info-row"><dt>Idioma</dt><dd>{{ inf.language }}</dd></div>
       </dl>
@@ -62,7 +62,7 @@
 
     <!-- Internal rating -->
     <section v-if="inf.collaborations > 0" class="panel-section">
-      <h3 class="section-title">Valoración interna</h3>
+      <h3 class="section-title">Valoració interna</h3>
       <div class="rating-list">
         <div class="rating-row" v-for="r in ratingDimensions" :key="r.key">
           <div class="rating-name">{{ r.label }}</div>
@@ -79,14 +79,14 @@
 
     <!-- Notes -->
     <section v-if="inf.notes" class="panel-section">
-      <h3 class="section-title">Notas internas</h3>
+      <h3 class="section-title">Notes internes</h3>
       <p class="notes-text">{{ inf.notes }}</p>
     </section>
 
     <!-- Collab history -->
     <section class="panel-section">
       <div class="section-head">
-        <h3 class="section-title">Historial de colaboraciones</h3>
+        <h3 class="section-title">Historial de col·laboracions</h3>
         <span class="section-count">{{ collabs.length }}</span>
       </div>
       <ul class="collab-list">
@@ -97,7 +97,10 @@
           @click="$emit('open-collab', c.id)"
         >
           <div class="collab-main">
-            <div class="collab-name">{{ c.campaignName }}</div>
+            <button class="collab-name collab-name-link" @click.stop="goToCampaign(c.campaignId)" title="Anar a la campanya">
+              {{ c.campaignName }}
+              <ArrowUpRight :size="12" />
+            </button>
             <div class="collab-meta">{{ c.format }} · {{ formatDate(c.publishDate) }}</div>
           </div>
           <div class="collab-stats">
@@ -107,13 +110,13 @@
             </span>
           </div>
         </li>
-        <li v-if="!collabs.length" class="collab-empty">Sin colaboraciones registradas.</li>
+        <li v-if="!collabs.length" class="collab-empty">Sense col·laboracions registrades.</li>
       </ul>
     </section>
 
     <!-- Actions -->
     <div class="panel-footer">
-      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Cerrar</button>
+      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Tancar</button>
       <button class="panel-btn panel-btn-primary">
         <Pencil :size="14" />
         Editar
@@ -123,13 +126,14 @@
 
   <div v-else class="panel-empty">
     <AlertCircle :size="20" />
-    <span>Influencer no encontrado.</span>
+    <span>Influencer no trobat.</span>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import { Star, Pencil, AlertCircle } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Star, Pencil, AlertCircle, ArrowUpRight } from 'lucide-vue-next'
 import {
   socialInfluencers, socialCollaborations, COLLAB_STATUSES,
   getPlatform, formatNumber, formatCurrency, formatDate,
@@ -141,16 +145,22 @@ const props = defineProps({
 
 defineEmits(['close', 'open-collab'])
 
+const router = useRouter()
+// Cross-nav: jump to the campaigns hub with this campaign pre-opened.
+function goToCampaign(campaignId) {
+  router.push({ name: 'SocialCampaignsHub', query: { open: campaignId } })
+}
+
 const inf = computed(() => socialInfluencers.find(i => i.id === props.influencerId))
 const collabs = computed(() =>
   socialCollaborations.filter(c => c.influencerId === props.influencerId)
 )
 
 const ratingDimensions = [
-  { key: 'contentQuality', label: 'Calidad del contenido' },
-  { key: 'reliability',    label: 'Cumplimiento' },
-  { key: 'brandAffinity',  label: 'Afinidad con la marca' },
-  { key: 'reputationRisk', label: 'Riesgo reputacional (inv.)' },
+  { key: 'contentQuality', label: 'Qualitat del contingut' },
+  { key: 'reliability',    label: 'Compliment' },
+  { key: 'brandAffinity',  label: 'Afinitat amb la marca' },
+  { key: 'reputationRisk', label: 'Risc reputacional (inv.)' },
 ]
 
 const avatarStyle = computed(() => {
@@ -168,7 +178,7 @@ const avatarStyle = computed(() => {
 })
 
 function platformStyle(key) { const p = getPlatform(key); return { background: p.bg, color: p.color } }
-function statusLabel(s) { return s === 'active' ? 'Activo' : s === 'prospect' ? 'Prospecto' : 'Archivado' }
+function statusLabel(s) { return s === 'active' ? 'Actiu' : s === 'prospect' ? 'Prospecte' : 'Arxivat' }
 function ratingColor(v) { return v >= 4 ? '#10B981' : v >= 2.5 ? '#F59E0B' : '#EF4444' }
 function engClass(v) { return v >= 6 ? 'eng-high' : v >= 3 ? 'eng-mid' : 'eng-low' }
 </script>
@@ -350,6 +360,21 @@ function engClass(v) { return v >= 6 ? 'eng-high' : v >= 3 ? 'eng-mid' : 'eng-lo
 }
 .collab-main { flex: 1; min-width: 0; }
 .collab-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+.collab-name-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: color 0.15s ease;
+}
+.collab-name-link:hover { color: var(--primary-color); text-decoration: underline; }
+.collab-name-link svg { opacity: 0.5; flex-shrink: 0; }
+.collab-name-link:hover svg { opacity: 1; }
 .collab-meta { font-size: 0.72rem; color: var(--text-secondary); margin-top: 1px; }
 .collab-stats { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .collab-sales { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); font-feature-settings: "tnum"; }

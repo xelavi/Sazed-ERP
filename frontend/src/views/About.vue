@@ -1,52 +1,52 @@
 <template>
   <div class="about-view">
     <div class="view-header">
-      <h1 class="view-title">About</h1>
+      <h1 class="view-title">Quant a</h1>
     </div>
 
     <div class="content-wrapper">
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">Acerca de este ERP</h3>
+          <h3 class="card-title">Quant a aquest ERP</h3>
         </div>
         <div class="card-body">
-          <p>Este es un sistema ERP web moderno y sencillo construido con Vue 3 y Vite.</p>
-          <p>Características principales:</p>
+          <p>Aquest és un sistema ERP web modern i senzill construït amb Vue 3 i Vite.</p>
+          <p>Característiques principals:</p>
           <ul class="feature-list">
-            <li>✅ Gestión de productos</li>
-            <li>✅ Control de inventario</li>
-            <li>✅ Gestión de pagos y wallet</li>
-            <li>✅ Sistema de clientes</li>
-            <li>✅ Marketing y ventas</li>
-            <li>✅ Dashboard intuitivo</li>
+            <li>✅ Gestió de productes</li>
+            <li>✅ Control d'inventari</li>
+            <li>✅ Gestió de pagaments i cartera</li>
+            <li>✅ Sistema de clients</li>
+            <li>✅ Màrqueting i vendes</li>
+            <li>✅ Dashboard intuïtiu</li>
           </ul>
         </div>
       </div>
 
       <div class="card mt-3">
         <div class="card-header">
-          <h3 class="card-title">Tecnologías Utilizadas</h3>
+          <h3 class="card-title">Tecnologies utilitzades</h3>
         </div>
         <div class="tech-grid">
           <div class="tech-item">
             <div class="tech-icon">⚡</div>
             <h4 class="tech-name">Vite</h4>
-            <p class="tech-description">Build tool rápido y moderno</p>
+            <p class="tech-description">Eina de build ràpida i moderna</p>
           </div>
           <div class="tech-item">
             <div class="tech-icon">🎨</div>
             <h4 class="tech-name">Vue 3</h4>
-            <p class="tech-description">Framework progresivo para UI</p>
+            <p class="tech-description">Framework progressiu per a la UI</p>
           </div>
           <div class="tech-item">
             <div class="tech-icon">🛣️</div>
             <h4 class="tech-name">Vue Router</h4>
-            <p class="tech-description">Navegación SPA integrada</p>
+            <p class="tech-description">Navegació SPA integrada</p>
           </div>
           <div class="tech-item">
             <div class="tech-icon">🎭</div>
             <h4 class="tech-name">CSS Variables</h4>
-            <p class="tech-description">Sistema de diseño flexible</p>
+            <p class="tech-description">Sistema de disseny flexible</p>
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@
         </span>
         <span class="acc-status" :class="account.status === 'connected' ? 'st-on' : 'st-off'">
           <span class="status-dot"></span>
-          {{ account.status === 'connected' ? 'Conectada' : 'Desconectada' }}
+          {{ account.status === 'connected' ? 'Connectada' : 'Desconnectada' }}
         </span>
       </div>
       <h2 class="hero-name">{{ account.name }}</h2>
@@ -18,18 +18,18 @@
     <!-- Stats -->
     <div class="quick-stats">
       <div class="qs-cell">
-        <div class="qs-key">Seguidores</div>
+        <div class="qs-key">Seguidors</div>
         <div class="qs-val">{{ formatNumber(account.followers) }}</div>
       </div>
       <div class="qs-cell">
-        <div class="qs-key">Publicaciones</div>
+        <div class="qs-key">Publicacions</div>
         <div class="qs-val">{{ account.posts }}</div>
       </div>
     </div>
 
     <!-- Activity in this account -->
     <section class="panel-section">
-      <h3 class="section-title">Actividad reciente</h3>
+      <h3 class="section-title">Activitat recent</h3>
       <div v-if="recentPosts.length" class="recent-posts">
         <div v-for="post in recentPosts" :key="post.id" class="recent-row">
           <div class="recent-thumb" :style="thumbStyle(post)">
@@ -43,37 +43,37 @@
         </div>
       </div>
       <div v-else class="empty-mini">
-        Sin publicaciones recientes en esta cuenta.
+        Sense publicacions recents en aquest compte.
       </div>
     </section>
 
     <!-- Account meta -->
     <section class="panel-section">
-      <h3 class="section-title">Detalles de la cuenta</h3>
+      <h3 class="section-title">Detalls del compte</h3>
       <dl class="info-list">
         <div class="info-row">
           <dt>Responsable</dt>
           <dd>{{ account.responsible || '—' }}</dd>
         </div>
         <div class="info-row">
-          <dt>Última sincronización</dt>
+          <dt>Última sincronització</dt>
           <dd>{{ formatDateTime(account.lastSync) }}</dd>
         </div>
         <div class="info-row">
-          <dt>Estado del token</dt>
+          <dt>Estat del token</dt>
           <dd>
             <span class="token-state" :class="account.status === 'connected' ? 'tok-ok' : 'tok-bad'">
               <span class="status-dot"></span>
-              {{ account.status === 'connected' ? 'Válido' : 'Necesita renovación' }}
+              {{ account.status === 'connected' ? 'Vàlid' : 'Necessita renovació' }}
             </span>
           </dd>
         </div>
       </dl>
     </section>
 
-    <!-- Observaciones -->
+    <!-- Observacions -->
     <section v-if="account.observations" class="panel-section">
-      <h3 class="section-title">Notas internas</h3>
+      <h3 class="section-title">Notes internes</h3>
       <p class="notes-text">{{ account.observations }}</p>
     </section>
 
@@ -81,17 +81,17 @@
     <div v-if="account.status !== 'connected'" class="warning-card">
       <AlertTriangle :size="14" />
       <div>
-        <strong>Token expirado.</strong>
-        <p>Renueva la conexión para reanudar la sincronización automática de métricas.</p>
+        <strong>Token caducat.</strong>
+        <p>Renova la connexió per reprendre la sincronització automàtica de mètriques.</p>
       </div>
     </div>
 
     <!-- Footer -->
     <div class="panel-footer">
-      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Cerrar</button>
+      <button class="panel-btn panel-btn-ghost" @click="$emit('close')">Tancar</button>
       <button v-if="account.status === 'connected'" class="panel-btn panel-btn-ghost">
         <RefreshCw :size="13" />
-        Sincronizar
+        Sincronitzar
       </button>
       <button class="panel-btn panel-btn-primary">
         <Pencil :size="13" />
@@ -102,7 +102,7 @@
 
   <div v-else class="panel-empty">
     <AlertCircle :size="20" />
-    <span>Cuenta no encontrada.</span>
+    <span>Compte no trobat.</span>
   </div>
 </template>
 
@@ -149,7 +149,7 @@ function typeIcon(type) {
 function formatDateTime(iso) {
   if (!iso) return '—'
   const d = new Date(iso)
-  return d.toLocaleString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleString('ca-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 </script>
 

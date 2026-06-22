@@ -97,7 +97,7 @@ def sync_invoice(sender, instance, created, update_fields=None, **kwargs):
         return
     if instance.status == 'Draft':
         return
-    company = instance.company or instance.customer.company or instance.series.company
+    company = instance.company
     if not _has_active_connection(company):
         return
     from . import sync_service
@@ -118,7 +118,7 @@ def sync_purchase_invoice(sender, instance, created, update_fields=None, **kwarg
         return
     if instance.status == 'Draft':
         return
-    company = instance.series.company
+    company = instance.company
     if not _has_active_connection(company):
         return
     from . import sync_service
@@ -135,12 +135,11 @@ def connect_signals() -> None:
     """Conecta los receivers. Se llama desde AppConfig.ready()."""
     from customers.models import Customer
     from products.models import Product
-    from providers.models import Provider
     from invoices.models import Invoice
     from purchases.models import PurchaseInvoice
 
+    # Clients i proveïdors (ara unificats com a Customer)
     post_save.connect(sync_customer, sender=Customer, dispatch_uid='odoo_sync_customer')
-    post_save.connect(sync_provider, sender=Provider, dispatch_uid='odoo_sync_provider')
     post_save.connect(sync_product, sender=Product, dispatch_uid='odoo_sync_product')
     post_save.connect(sync_invoice, sender=Invoice, dispatch_uid='odoo_sync_invoice')
     post_save.connect(

@@ -15,12 +15,12 @@ export function formatValue(value, unit) {
   const n = Number(value ?? 0)
   if (unit === 'currency') {
     if (Math.abs(n) >= 1000) {
-      return '€' + n.toLocaleString('es-ES', { maximumFractionDigits: 0 })
+      return '€' + n.toLocaleString('ca-ES', { maximumFractionDigits: 0 })
     }
-    return '€' + n.toLocaleString('es-ES', { maximumFractionDigits: 2 })
+    return '€' + n.toLocaleString('ca-ES', { maximumFractionDigits: 2 })
   }
   if (unit === 'percent') return n.toFixed(1) + '%'
-  return n.toLocaleString('es-ES', { maximumFractionDigits: 0 })
+  return n.toLocaleString('ca-ES', { maximumFractionDigits: 0 })
 }
 
 export function formatCompact(value, unit) {
@@ -35,6 +35,28 @@ export function formatCompact(value, unit) {
   return s
 }
 
+// ── Enum label translations (backend values → Catalan display) ──────
+const LABEL_CA = {
+  // Invoice statuses
+  Draft: 'Esborrany',
+  Approved: 'Aprovada',
+  Paid: 'Pagada',
+  PartiallyPaid: 'Parcialment pagada',
+  Overdue: 'Vençuda',
+  Voided: 'Anul·lada',
+  Cancelled: 'Cancel·lada',
+  // Customer types
+  Company: 'Empresa',
+  Person: 'Particular',
+  // Generic
+  Active: 'Actiu',
+  Inactive: 'Inactiu',
+}
+
+export function translateLabel(label) {
+  return LABEL_CA[label] ?? label
+}
+
 // ── Curated categorical palette (matches design-system accents) ─────
 export const CATEGORY_PALETTE = [
   '#667eea', '#10b981', '#f59e0b', '#ec4899',
@@ -47,11 +69,11 @@ export const TEMPORAL_FORMATS = ['stat', 'line', 'bar']
 export const DISTRIBUTION_FORMATS = ['donut', 'hbar']
 
 export const CHART_FORMATS = [
-  { id: 'stat', label: 'Indicador', icon: Activity, kind: 'temporal', desc: 'Valor actual con tendencia' },
-  { id: 'line', label: 'Área / Línea', icon: LineChart, kind: 'temporal', desc: 'Evolución mes a mes' },
-  { id: 'bar', label: 'Barras', icon: BarChart3, kind: 'temporal', desc: 'Comparativa mensual' },
-  { id: 'donut', label: 'Circular', icon: PieChart, kind: 'distribution', desc: 'Reparto porcentual' },
-  { id: 'hbar', label: 'Barras horizontales', icon: AlignLeft, kind: 'distribution', desc: 'Ranking por grupo' },
+  { id: 'stat', label: 'Indicador', icon: Activity, kind: 'temporal', desc: 'Valor actual amb tendència' },
+  { id: 'line', label: 'Àrea / Línia', icon: LineChart, kind: 'temporal', desc: 'Evolució mes a mes' },
+  { id: 'bar', label: 'Barres', icon: BarChart3, kind: 'temporal', desc: 'Comparativa mensual' },
+  { id: 'donut', label: 'Circular', icon: PieChart, kind: 'distribution', desc: 'Repartiment percentual' },
+  { id: 'hbar', label: 'Barres horitzontals', icon: AlignLeft, kind: 'distribution', desc: 'Rànquing per grup' },
 ]
 
 export function isDistribution(chartId) {
@@ -61,47 +83,47 @@ export function isDistribution(chartId) {
 // ── KPI registry (maps to backend analytics.metrics keys) ───────────
 const KPI_DEFS = [
   {
-    id: 'revenue', label: 'Ingresos', icon: Euro, color: '#10b981',
+    id: 'revenue', label: 'Ingressos', icon: Euro, color: '#10b981',
     defaultChart: 'line',
     groupBys: [
-      { id: 'category', label: 'Categoría' },
-      { id: 'product', label: 'Producto' },
-      { id: 'region', label: 'Región' },
-      { id: 'customer', label: 'Cliente' },
+      { id: 'category', label: 'Categoria' },
+      { id: 'product', label: 'Producte' },
+      { id: 'region', label: 'Regió' },
+      { id: 'customer', label: 'Client' },
     ],
   },
   {
-    id: 'expenses', label: 'Gastos', icon: TrendingDown, color: '#f97316',
+    id: 'expenses', label: 'Despeses', icon: TrendingDown, color: '#f97316',
     defaultChart: 'bar',
-    groupBys: [{ id: 'provider', label: 'Proveedor' }],
+    groupBys: [{ id: 'provider', label: 'Proveïdor' }],
   },
   {
-    id: 'profit', label: 'Beneficio', icon: TrendingUp, color: '#667eea',
+    id: 'profit', label: 'Benefici', icon: TrendingUp, color: '#667eea',
     defaultChart: 'line', groupBys: [],
   },
   {
-    id: 'invoices', label: 'Facturas emitidas', icon: Receipt, color: '#3b82f6',
+    id: 'invoices', label: 'Factures emeses', icon: Receipt, color: '#3b82f6',
     defaultChart: 'bar',
-    groupBys: [{ id: 'status', label: 'Estado' }],
+    groupBys: [{ id: 'status', label: 'Estat' }],
   },
   {
-    id: 'new_customers', label: 'Nuevos clientes', icon: UserPlus, color: '#ec4899',
+    id: 'new_customers', label: 'Clients nous', icon: UserPlus, color: '#ec4899',
     defaultChart: 'stat',
     groupBys: [
-      { id: 'region', label: 'Región' },
-      { id: 'type', label: 'Tipo' },
+      { id: 'region', label: 'Regió' },
+      { id: 'type', label: 'Tipus' },
     ],
   },
   {
-    id: 'avg_ticket', label: 'Ticket medio', icon: CreditCard, color: '#f59e0b',
+    id: 'avg_ticket', label: 'Tiquet mitjà', icon: CreditCard, color: '#f59e0b',
     defaultChart: 'stat', groupBys: [],
   },
   {
-    id: 'units_sold', label: 'Unidades vendidas', icon: Package, color: '#8b5cf6',
+    id: 'units_sold', label: 'Unitats venudes', icon: Package, color: '#8b5cf6',
     defaultChart: 'hbar',
     groupBys: [
-      { id: 'product', label: 'Producto' },
-      { id: 'category', label: 'Categoría' },
+      { id: 'product', label: 'Producte' },
+      { id: 'category', label: 'Categoria' },
     ],
   },
 ]
@@ -131,7 +153,8 @@ export function getKpiView(analytics, kpiId, chartId, groupBy) {
 
   if (isDistribution(chartId)) {
     const dim = groupBy || defaultGroupBy(kpiId)
-    const series = (metric.breakdowns && metric.breakdowns[dim]) || []
+    const raw = (metric.breakdowns && metric.breakdowns[dim]) || []
+    const series = raw.map((p) => ({ ...p, label: translateLabel(p.label) }))
     const total = series.reduce((s, p) => s + p.value, 0)
     return { ...base, series, total, headline: total, empty: series.length === 0 }
   }

@@ -73,6 +73,8 @@ export function mapProductDetailFromApi(p) {
   return {
     ...base,
     category: p.category?.name || p.category || '—',
+    categoryId: p.category?.id || null,
+    taxRateId: p.tax_rate || null,
     detail: {
       description: p.description || '',
       tags: (p.tags || []).map(t => t.name || t),
@@ -91,7 +93,9 @@ export function mapProductDetailFromApi(p) {
       })),
       minStock: p.min_stock,
       reorderPoint: p.reorder_point,
-      warehouse: p.warehouse?.name || p.warehouse || '—',
+      warehouse: p.warehouse?.name || (typeof p.warehouse === 'string' ? p.warehouse : '') || '',
+      warehouseId: p.warehouse?.id || null,
+      warehouseAddress: p.warehouse?.address || '',
       location: p.location || '',
       lotTracking: p.lot_tracking || false,
       stockMovements: (p.stock_movements || []).map(sm => ({
@@ -173,6 +177,7 @@ export function mapProductToApi(formData) {
     stock: formData.stock ?? null,
     min_stock: formData.minStock ?? null,
     reorder_point: formData.reorderPoint ?? null,
+    warehouse: formData.warehouseId || null,
     location: formData.location || '',
     lot_tracking: formData.lotTracking || false,
     weight: formData.weight || '',
@@ -224,6 +229,8 @@ export function mapCustomerDetailFromApi(c) {
       bankAccount: c.bank_account || '',
       internalNotes: c.internal_notes || '',
       tags: (c.tags || []).map(t => t.name || t),
+      linkedContacts: (c.linked || []).map(l => ({ id: l.id, name: l.name })),
+      linkedContactIds: (c.linked || []).map(l => l.id),
       isCustomer: c.is_customer,
       isSupplier: c.is_supplier,
       totalInvoiced: parseFloat(c.total_invoiced) || 0,
@@ -290,6 +297,7 @@ export function mapCustomerToApi(formData) {
     avatar_color: formData.avatarColor || '',
     initials: formData.initials || '',
     internal_notes: formData.internalNotes || '',
+    linked_contact_ids: formData.linkedContactIds || [],
   }
 }
 
@@ -357,7 +365,7 @@ export function mapInvoiceDetailFromApi(inv) {
       description: l.description,
       quantity: l.quantity,
       unitPrice: parseFloat(l.unit_price),
-      discount: l.discount_value
+      discount: l.discount_value && parseFloat(l.discount_value) !== 0
         ? (l.discount_type === 'fixed' ? `${l.discount_value}` : `${l.discount_value}%`)
         : null,
       tax: (l.taxes || []).map(t => t.tax_name).join(', ') || '—',
@@ -414,6 +422,8 @@ export function mapInvoiceToApi(formData) {
     due_date: formData.dueDate,
     payment_method: formData.paymentMethod || 'Transfer 30 days',
     currency: formData.currency || 'EUR',
+    discount_type: formData.discountValue ? (formData.discountType || 'percent') : null,
+    discount_value: formData.discountValue || null,
     customer_notes: formData.customerNotes || '',
     internal_notes: formData.internalNotes || '',
     lines: (formData.lines || []).map(l => {
@@ -526,7 +536,6 @@ export function mapPurchaseInvoiceFromApi(inv) {
     id: inv.id,
     type: inv.invoice_type || 'Standard',
     status: inv.status,
-    series: inv.series_prefix || inv.series || '',
     number: inv.number,
     provider: {
       id: inv.provider,
@@ -556,8 +565,6 @@ export function mapPurchaseInvoiceDetailFromApi(inv) {
     id: inv.id,
     type: inv.invoice_type || 'Standard',
     status: inv.status,
-    series: inv.series_data?.prefix || '',
-    seriesId: inv.series_data?.id || null,
     number: inv.number,
     provider: {
       id: providerData.id || inv.provider,
@@ -577,7 +584,7 @@ export function mapPurchaseInvoiceDetailFromApi(inv) {
       description: l.description,
       quantity: l.quantity,
       unitPrice: parseFloat(l.unit_price),
-      discount: l.discount_value
+      discount: l.discount_value && parseFloat(l.discount_value) !== 0
         ? (l.discount_type === 'fixed' ? `${l.discount_value}` : `${l.discount_value}%`)
         : null,
       tax: (l.taxes || []).map(t => t.tax_name).join(', ') || '—',
@@ -787,19 +794,18 @@ export function mapPurchaseQuoteToApi(form) {
 }
 
 export function mapPurchaseInvoiceToApi(formData) {
-  const seriesRaw = formData.seriesId || formData.series
-  const series = Number.isFinite(Number(seriesRaw)) && seriesRaw !== '' ? Number(seriesRaw) : null
   const providerRaw = formData.providerId || formData.provider?.id
   const provider = Number.isFinite(Number(providerRaw)) && providerRaw !== '' ? Number(providerRaw) : null
 
   return {
     invoice_type: formData.type || 'Standard',
-    series,
     provider,
     issue_date: formData.issueDate,
     due_date: formData.dueDate,
     payment_method: formData.paymentMethod || 'Transfer 30 days',
     currency: formData.currency || 'EUR',
+    discount_type: formData.discountValue ? (formData.discountType || 'percent') : null,
+    discount_value: formData.discountValue || null,
     provider_notes: formData.providerNotes || '',
     internal_notes: formData.internalNotes || '',
     lines: (formData.lines || []).map(l => {

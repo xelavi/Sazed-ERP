@@ -7,7 +7,7 @@
           <div class="drawer-header">
             <div class="drawer-title-row">
               <div>
-                <h2 class="drawer-title">{{ invoice.number || 'Draft' }}</h2>
+                <h2 class="drawer-title">{{ invoice.number || 'Esborrany' }}</h2>
                 <span :class="['badge', statusBadgeClass(invoice)]">
                   {{ displayStatus(invoice) }}
                 </span>
@@ -27,11 +27,11 @@
                 <span class="summary-amount">{{ formatCurrency(invoice.totalAmount) }}</span>
               </div>
               <div class="summary-card">
-                <span class="summary-label">Paid</span>
+                <span class="summary-label">Pagat</span>
                 <span class="summary-amount paid-amount">{{ formatCurrency(invoice.paidAmount) }}</span>
               </div>
               <div class="summary-card">
-                <span class="summary-label">Balance due</span>
+                <span class="summary-label">Saldo pendent</span>
                 <span :class="['summary-amount', invoice.balanceDue > 0 ? 'has-balance' : 'zero-balance']">
                   {{ formatCurrency(invoice.balanceDue) }}
                 </span>
@@ -43,25 +43,25 @@
               <div class="progress-bar">
                 <div class="progress-fill" :style="{ width: paymentPercent + '%' }"></div>
               </div>
-              <span class="progress-label">{{ paymentPercent }}% collected</span>
+              <span class="progress-label">{{ paymentPercent }}% cobrat</span>
             </div>
 
             <!-- Customer -->
             <div class="detail-section">
               <h4 class="section-title">
                 <User :size="16" />
-                Customer
+                Client
               </h4>
               <div class="detail-row">
-                <span class="detail-label">Name</span>
+                <span class="detail-label">Nom</span>
                 <span class="detail-value">{{ invoice.customer.name }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">VAT ID</span>
+                <span class="detail-label">NIF / CIF</span>
                 <span class="detail-value">{{ invoice.customer.vatId || '—' }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Email</span>
+                <span class="detail-label">Correu electrònic</span>
                 <span class="detail-value">{{ invoice.customer.email }}</span>
               </div>
             </div>
@@ -70,24 +70,24 @@
             <div class="detail-section">
               <h4 class="section-title">
                 <FileText :size="16" />
-                Details
+                Detalls
               </h4>
               <div class="detail-row">
-                <span class="detail-label">Issue date</span>
+                <span class="detail-label">Data d'emissió</span>
                 <span class="detail-value">{{ formatDateShort(invoice.issueDate) }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Due date</span>
+                <span class="detail-label">Venciment</span>
                 <span :class="['detail-value', isOverdue(invoice) ? 'overdue-text' : '']">
                   {{ formatDateShort(invoice.dueDate) }}
                 </span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Payment method</span>
+                <span class="detail-label">Forma de pagament</span>
                 <span class="detail-value">{{ invoice.paymentMethod }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Currency</span>
+                <span class="detail-label">Moneda</span>
                 <span class="detail-value">{{ invoice.currency }}</span>
               </div>
             </div>
@@ -96,14 +96,14 @@
             <div class="detail-section">
               <h4 class="section-title">
                 <ClipboardList :size="16" />
-                Lines
+                Línies
               </h4>
               <div class="lines-table">
                 <div class="lines-header">
-                  <span class="lh-desc">Description</span>
-                  <span class="lh-qty">Qty</span>
-                  <span class="lh-price">Price</span>
-                  <span class="lh-tax">Tax</span>
+                  <span class="lh-desc">Descripció</span>
+                  <span class="lh-qty">Qt.</span>
+                  <span class="lh-price">Preu</span>
+                  <span class="lh-tax">IVA</span>
                   <span class="lh-subtotal">Subtotal</span>
                 </div>
                 <div v-for="line in invoice.lines" :key="line.id" class="line-row">
@@ -125,7 +125,7 @@
                   <span>{{ formatCurrency(invoice.subtotal) }}</span>
                 </div>
                 <div v-if="invoice.discountAmount" class="total-row">
-                  <span>Discount</span>
+                  <span>Descompte</span>
                   <span>-{{ formatCurrency(invoice.discountAmount) }}</span>
                 </div>
                 <div v-for="tax in invoice.taxSummary" :key="tax.name" class="total-row">
@@ -146,7 +146,7 @@
               <div class="section-title-row">
                 <h4 class="section-title">
                   <Banknote :size="16" />
-                  Payments
+                  Pagaments
                 </h4>
                 <button
                   v-if="invoice.status === 'Approved' || invoice.status === 'PartiallyPaid'"
@@ -154,20 +154,20 @@
                   @click="$emit('record-payment', invoice)"
                 >
                   <Plus :size="14" />
-                  Add payment
+                  Afegir pagament
                 </button>
               </div>
               <div v-if="invoice.payments.length" class="payments-list">
                 <div v-for="pay in invoice.payments" :key="pay.id" class="payment-item">
                   <div class="payment-info">
                     <span class="payment-date">{{ formatDateShort(pay.date) }}</span>
-                    <span class="payment-method-tag">{{ pay.method }}</span>
+                    <span class="payment-method-tag">{{ paymentMethodLabel(pay.method) }}</span>
                     <span v-if="pay.reference" class="payment-ref">{{ pay.reference }}</span>
                   </div>
                   <span class="payment-amount">{{ formatCurrency(pay.amount) }}</span>
                 </div>
               </div>
-              <p v-else class="empty-hint">No payments recorded yet.</p>
+              <p v-else class="empty-hint">Encara no hi ha pagaments registrats.</p>
             </div>
 
             <!-- Notes -->
@@ -177,11 +177,11 @@
                 Notes
               </h4>
               <div v-if="invoice.customerNotes" class="note-block">
-                <span class="note-label">Customer notes</span>
+                <span class="note-label">Notes per al client</span>
                 <p class="note-text">{{ invoice.customerNotes }}</p>
               </div>
               <div v-if="invoice.internalNotes" class="note-block">
-                <span class="note-label">Internal notes</span>
+                <span class="note-label">Notes internes</span>
                 <p class="note-text internal-note">{{ invoice.internalNotes }}</p>
               </div>
             </div>
@@ -190,7 +190,7 @@
             <div class="detail-section">
               <h4 class="section-title">
                 <Clock :size="16" />
-                Timeline
+                Cronologia
               </h4>
               <div class="timeline">
                 <div v-for="(event, idx) in invoice.timeline" :key="idx" class="timeline-item">
@@ -210,24 +210,24 @@
                 VERI*FACTU
               </h4>
               <div class="detail-row">
-                <span class="detail-label">Estado AEAT</span>
-                <span :class="['badge', vfBadgeClass(invoice.estadoAeat)]">{{ invoice.estadoAeat }}</span>
+                <span class="detail-label">Estat AEAT</span>
+                <span :class="['badge', vfBadgeClass(invoice.estadoAeat)]">{{ vfStatusLabel(invoice.estadoAeat) }}</span>
               </div>
               <div v-if="invoice.verifactuCsv" class="detail-row">
                 <span class="detail-label">CSV</span>
                 <span class="detail-value font-mono">{{ invoice.verifactuCsv }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Huella SHA-256</span>
+                <span class="detail-label">Empremta SHA-256</span>
                 <span class="detail-value hash-text">{{ invoice.hashActual }}</span>
               </div>
               <div v-if="invoice.fechaGeneracion" class="detail-row">
-                <span class="detail-label">Sellado</span>
+                <span class="detail-label">Segellat</span>
                 <span class="detail-value">{{ formatDateShort(invoice.fechaGeneracion) }}</span>
               </div>
               <div class="vf-note">
                 <Lock :size="12" />
-                Factura sellada — no se puede modificar
+                Factura segellada — no es pot modificar
               </div>
             </div>
           </div>
@@ -240,7 +240,7 @@
               @click="$emit('edit', invoice)"
             >
               <Pencil :size="18" />
-              Edit
+              Editar
             </button>
             <button
               v-if="invoice.status === 'Draft'"
@@ -248,7 +248,7 @@
               @click="$emit('approve', invoice)"
             >
               <CheckCircle2 :size="18" />
-              Approve
+              Aprovar
             </button>
             <button
               v-if="invoice.status === 'Approved' || invoice.status === 'PartiallyPaid'"
@@ -256,7 +256,7 @@
               @click="$emit('record-payment', invoice)"
             >
               <Banknote :size="18" />
-              Record payment
+              Registrar pagament
             </button>
             <button class="btn btn-secondary" @click="$emit('download-pdf', invoice)">
               <FileDown :size="18" />
@@ -268,7 +268,7 @@
               @click="$emit('verifactu-submit', invoice)"
             >
               <ShieldCheck :size="18" />
-              Enviar AEAT
+              Enviar a l'AEAT
             </button>
             <button
               v-if="invoice.status !== 'Draft' && invoice.status !== 'Voided'"
@@ -276,7 +276,7 @@
               @click="$emit('send', invoice)"
             >
               <Send :size="18" />
-              Send
+              Enviar
             </button>
           </div>
         </div>
@@ -305,6 +305,16 @@ function vfBadgeClass(estado) {
   return map[estado] || 'badge-gray'
 }
 
+function vfStatusLabel(estado) {
+  const map = { Pendiente: 'Pendent', Enviado_Mock: 'Enviat (mock)', Aceptado: 'Acceptat', Rechazado: 'Rebutjat' }
+  return map[estado] || estado
+}
+
+function paymentMethodLabel(method) {
+  const map = { Transfer: 'Transferència', DirectDebit: 'Domiciliació', Card: 'Targeta', Cash: 'Efectiu', Other: 'Altres' }
+  return map[method] || method
+}
+
 /* ── Helpers ── */
 const paymentPercent = computed(() => {
   if (!props.invoice.totalAmount || props.invoice.totalAmount === 0) return 100
@@ -318,8 +328,8 @@ function isOverdue(invoice) {
 }
 
 function displayStatus(invoice) {
-  if (isOverdue(invoice)) return 'Overdue'
-  const map = { Draft: 'Draft', Approved: 'Approved', PartiallyPaid: 'Partial', Paid: 'Paid', Voided: 'Voided', Rectified: 'Rectified' }
+  if (isOverdue(invoice)) return 'Vençuda'
+  const map = { Draft: 'Esborrany', Approved: 'Aprovada', PartiallyPaid: 'Parcial', Paid: 'Pagada', Voided: 'Anul·lada', Rectified: 'Rectificada' }
   return map[invoice.status] || invoice.status
 }
 
@@ -331,13 +341,13 @@ function statusBadgeClass(invoice) {
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+  return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value)
 }
 
 function formatDateShort(dateStr) {
   if (!dateStr) return '—'
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 </script>
 

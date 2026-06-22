@@ -8,14 +8,14 @@ from rest_framework.exceptions import ValidationError
 
 from accounts.mixins import CompanyMixin
 from .models import (
-    PurchaseInvoice, PurchaseSeries, PurchasePayment, PurchaseQuote,
-    PurchaseQuoteDoc, PurchaseInvoiceLine, PurchaseInvoiceLineTax,
+    PurchaseInvoice, PurchasePayment, PurchaseQuoteDoc,
+    PurchaseInvoiceLine, PurchaseInvoiceLineTax,
     PurchaseInvoiceTimeline, RecurringPurchaseInvoice,
 )
 from .serializers import (
     PurchaseInvoiceListSerializer, PurchaseInvoiceDetailSerializer,
-    PurchaseInvoiceWriteSerializer, PurchaseSeriesSerializer,
-    PurchasePaymentSerializer, PurchaseQuoteSerializer,
+    PurchaseInvoiceWriteSerializer,
+    PurchasePaymentSerializer,
     PurchaseQuoteDocListSerializer, PurchaseQuoteDocDetailSerializer,
     PurchaseQuoteDocWriteSerializer,
     RecurringPurchaseInvoiceSerializer, RecurringPurchaseInvoiceCreateSerializer,
@@ -25,15 +25,9 @@ from .services import PurchaseInvoiceService, RecurringPurchaseInvoiceService
 from core.excel import build_xlsx_response
 
 
-class PurchaseSeriesViewSet(CompanyMixin, viewsets.ModelViewSet):
-    queryset = PurchaseSeries.objects.all()
-    serializer_class = PurchaseSeriesSerializer
-    pagination_class = None
-
-
 class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
     queryset = PurchaseInvoice.objects.select_related(
-        'provider', 'series',
+        'provider',
     ).prefetch_related(
         'lines', 'lines__taxes', 'payments', 'timeline',
     ).all()
@@ -46,16 +40,17 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = PurchaseInvoice.objects.select_related(
-            'provider', 'series',
+            'provider',
         ).prefetch_related(
             'lines', 'lines__taxes', 'payments', 'timeline',
         ).filter(is_template=False)
         if hasattr(self.request, 'company') and self.request.company:
-            return qs.filter(series__company=self.request.company)
+            return qs.filter(company=self.request.company)
         return qs.none()
 
     def perform_create(self, serializer):
-        serializer.save()
+        company = getattr(self.request, 'company', None)
+        serializer.save(company=company)
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -68,7 +63,7 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
         invoice = self.get_object()
         if invoice.status != 'Draft':
             return Response(
-                {'error': 'Solo se pueden editar facturas en estado borrador.'},
+                {'error': 'Només es poden editar factures en estat esborrany.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return super().update(request, *args, **kwargs)
@@ -77,7 +72,7 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
         invoice = self.get_object()
         if invoice.status != 'Draft':
             return Response(
-                {'error': 'Solo se pueden editar facturas en estado borrador.'},
+                {'error': 'Només es poden editar factures en estat esborrany.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return super().partial_update(request, *args, **kwargs)
@@ -86,7 +81,7 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
         invoice = self.get_object()
         if invoice.status != 'Draft':
             return Response(
-                {'error': 'Solo se pueden eliminar borradores.'},
+                {'error': 'Només es poden eliminar esborranys.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         invoice.delete()
@@ -153,11 +148,8 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
             'skipped': len(ids) - deleted[0],
         })
 
-    # ---------- Export ----------
-
     @action(detail=False, methods=['get'])
     def export(self, request):
-        """Descarga el listado de facturas de compra en XLSX."""
         qs = self.filter_queryset(self.get_queryset())
         ids_param = request.query_params.get('ids')
         if ids_param:
@@ -168,11 +160,11 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
                 pass
 
         headers = [
-            'Número', 'Serie', 'Estado',
-            'Proveedor', 'NIF Proveedor',
-            'Fecha emisión', 'Fecha vencimiento',
-            'Subtotal', 'IVA', 'Retención', 'Total',
-            'Pagado', 'Pendiente', 'Moneda',
+            'Número', 'Estat',
+            'Proveïdor', 'NIF Proveïdor',
+            'Data emissió', 'Data venciment',
+            'Subtotal', 'IVA', 'Retenció', 'Total',
+            'Pagat', 'Pendent', 'Moneda',
         ]
         rows = []
         for inv in qs:
@@ -183,8 +175,7 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
                 inv.provider.vat_id if inv.provider_id else ''
             )
             rows.append([
-                inv.number or f'(Borrador #{inv.pk})',
-                inv.series.prefix if inv.series_id else '',
+                inv.number or f'(Esborrany #{inv.pk})',
                 inv.get_status_display() if inv.status else '',
                 provider_name,
                 provider_vat,
@@ -199,13 +190,11 @@ class PurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
                 inv.currency,
             ])
         return build_xlsx_response(
-            'facturas-compra', 'Facturas compra', headers, rows,
+            'factures-compra', 'Factures compra', headers, rows,
         )
 
 
 class RecurringPurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
-    """Planes de facturación recurrente de compra."""
-
     queryset = RecurringPurchaseInvoice.objects.select_related(
         'template', 'template__provider',
     ).all()
@@ -246,7 +235,7 @@ class RecurringPurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
         plan = self.get_object()
         if not plan.active:
             return Response(
-                {'error': 'Este plan de recurrencia no está activo.'},
+                {'error': 'Aquest pla de recurrència no està actiu.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         invoice = RecurringPurchaseInvoiceService.generate_one(plan)
@@ -256,27 +245,16 @@ class RecurringPurchaseInvoiceViewSet(CompanyMixin, viewsets.ModelViewSet):
         }, status=status.HTTP_201_CREATED)
 
 
-class PurchaseQuoteViewSet(CompanyMixin, viewsets.ModelViewSet):
-    queryset = PurchaseQuote.objects.all()
-    serializer_class = PurchaseQuoteSerializer
-    pagination_class = None
-
-    def get_queryset(self):
-        qs = PurchaseQuote.objects.all()
-        provider_id = self.request.query_params.get('provider')
-        if provider_id:
-            qs = qs.filter(provider_id=provider_id)
-        return qs
-
-
 class PurchaseQuoteDocViewSet(CompanyMixin, viewsets.ModelViewSet):
-    """Presupuestos de compra (con líneas y conversión a factura)."""
-
-    queryset = PurchaseQuoteDoc.objects.select_related('provider').prefetch_related('lines').all()
+    queryset = PurchaseQuoteDoc.objects.select_related('provider').prefetch_related(
+        'lines', 'lines__taxes',
+    ).all()
     pagination_class = None
 
     def get_queryset(self):
-        qs = PurchaseQuoteDoc.objects.select_related('provider').prefetch_related('lines').all()
+        qs = PurchaseQuoteDoc.objects.select_related('provider').prefetch_related(
+            'lines', 'lines__taxes',
+        ).all()
         if hasattr(self.request, 'company') and self.request.company:
             return qs.filter(company=self.request.company)
         return qs.none()
@@ -300,26 +278,16 @@ class PurchaseQuoteDocViewSet(CompanyMixin, viewsets.ModelViewSet):
         quote = self.get_object()
         if quote.converted_invoice_id:
             return Response(
-                {'error': 'Este presupuesto ya se convirtió en factura.'},
+                {'error': 'Aquest pressupost ja s\'ha convertit en factura.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        default_series = PurchaseSeries.objects.filter(
-            company=getattr(request, 'company', None),
-            is_default=True, active=True,
-        ).first()
-        if not default_series:
-            default_series = PurchaseSeries.objects.filter(
-                company=getattr(request, 'company', None), active=True,
-            ).first()
-        if not default_series:
-            raise ValidationError('No hay serie de facturas de compra configurada.')
-
         today = timezone.now().date()
+        company = getattr(request, 'company', None)
         invoice = PurchaseInvoice.objects.create(
             invoice_type='Standard',
             status='Draft',
-            series=default_series,
+            company=company,
             provider=quote.provider,
             issue_date=today,
             due_date=today + timedelta(days=30),
@@ -337,27 +305,22 @@ class PurchaseQuoteDocViewSet(CompanyMixin, viewsets.ModelViewSet):
                 quantity=ln.quantity,
                 unit_price=ln.unit_price,
             )
-            if ln.tax_percent and ln.tax_percent > 0:
-                from core.models import TaxRate
-                rate = TaxRate.objects.filter(
-                    percent=ln.tax_percent, active=True,
-                ).exclude(tax_type='RETENTION').first()
-                if rate:
-                    PurchaseInvoiceLineTax.objects.create(
-                        invoice_line=new_line,
-                        tax_rate=rate,
-                        tax_name=rate.name,
-                        tax_percent=rate.percent,
-                        is_retention=False,
-                        tax_amount=ln.tax_amount,
-                    )
+            for lt in ln.taxes.all():
+                PurchaseInvoiceLineTax.objects.create(
+                    invoice_line=new_line,
+                    tax_rate=lt.tax_rate,
+                    tax_name=lt.tax_name,
+                    tax_percent=lt.tax_percent,
+                    is_retention=lt.is_retention,
+                    tax_amount=lt.tax_amount,
+                )
 
         invoice.recalculate_totals()
 
         PurchaseInvoiceTimeline.objects.create(
             invoice=invoice,
             event_type='created',
-            action=f'Factura de compra creada desde presupuesto «{quote.name}» (PQ-{quote.id})',
+            action=f'Factura de compra creada des del pressupost «{quote.name}» (PQ-{quote.id})',
             actor=getattr(request.user, 'email', 'System'),
             date=today,
         )

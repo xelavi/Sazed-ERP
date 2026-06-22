@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Customer, CustomerNote, CustomerActivity, Quote
+from .models import Customer, CustomerNote, CustomerActivity
 
 
 class CustomerNoteInline(admin.TabularInline):
@@ -13,11 +13,6 @@ class CustomerActivityInline(admin.TabularInline):
     extra = 0
 
 
-class QuoteInline(admin.TabularInline):
-    model = Quote
-    extra = 0
-
-
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = [
@@ -26,7 +21,7 @@ class CustomerAdmin(admin.ModelAdmin):
     ]
     list_filter = ['contact_type', 'status', 'is_customer', 'is_supplier']
     search_fields = ['name', 'email', 'vat_id']
-    inlines = [CustomerNoteInline, CustomerActivityInline, QuoteInline]
+    inlines = [CustomerNoteInline, CustomerActivityInline]
 
 
 @admin.register(CustomerNote)
@@ -38,10 +33,3 @@ class CustomerNoteAdmin(admin.ModelAdmin):
 class CustomerActivityAdmin(admin.ModelAdmin):
     list_display = ['customer', 'activity_type', 'subject', 'date']
     list_filter = ['activity_type']
-
-
-@admin.register(Quote)
-class QuoteAdmin(admin.ModelAdmin):
-    list_display = ['number', 'customer', 'concept', 'amount', 'status', 'date']
-    list_filter = ['status']
-    search_fields = ['number', 'concept']

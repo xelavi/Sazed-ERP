@@ -3,21 +3,11 @@ from rest_framework import serializers
 from core.tax_utils import apply_line_vat
 from providers.serializers import ProviderListSerializer
 from .models import (
-    PurchaseSeries, PurchaseInvoice, PurchaseInvoiceLine,
+    PurchaseInvoice, PurchaseInvoiceLine,
     PurchaseInvoiceLineTax, PurchasePayment, PurchaseInvoiceTimeline,
-    PurchaseQuote, PurchaseQuoteDoc, PurchaseQuoteDocLine,
+    PurchaseQuoteDoc, PurchaseQuoteDocLine, PurchaseQuoteDocLineTax,
     RecurringPurchaseInvoice,
 )
-
-
-class PurchaseSeriesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PurchaseSeries
-        fields = [
-            'id', 'name', 'prefix', 'pattern',
-            'next_seq', 'reset_yearly', 'is_default', 'active',
-            'created_at',
-        ]
 
 
 class PurchaseInvoiceLineTaxSerializer(serializers.ModelSerializer):
@@ -31,8 +21,6 @@ class PurchaseInvoiceLineTaxSerializer(serializers.ModelSerializer):
 
 class PurchaseInvoiceLineSerializer(serializers.ModelSerializer):
     taxes = PurchaseInvoiceLineTaxSerializer(many=True, read_only=True)
-    # Porcentaje de IVA editado en el frontend. Se traduce a un
-    # PurchaseInvoiceLineTax al guardar (write-only, no es campo del modelo).
     tax_percent = serializers.DecimalField(
         max_digits=5, decimal_places=2, required=False,
         allow_null=True, write_only=True,
@@ -66,17 +54,6 @@ class PurchaseInvoiceTimelineSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 
-class PurchaseQuoteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PurchaseQuote
-        fields = [
-            'id', 'number', 'concept', 'amount',
-            'date', 'valid_days', 'notes', 'status',
-            'created_at', 'updated_at',
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
-
 class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
     provider_name = serializers.CharField(
         source='provider.name', read_only=True,
@@ -90,16 +67,13 @@ class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
     provider_initials = serializers.CharField(
         source='provider.initials', read_only=True,
     )
-    series_prefix = serializers.CharField(
-        source='series.prefix', read_only=True,
-    )
     is_overdue = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = PurchaseInvoice
         fields = [
             'id', 'invoice_type', 'status', 'number',
-            'series_prefix', 'provider', 'provider_name',
+            'provider', 'provider_name',
             'provider_vat_id', 'provider_avatar_color', 'provider_initials',
             'issue_date', 'due_date', 'payment_method',
             'subtotal', 'total_tax', 'total_amount',
@@ -110,7 +84,6 @@ class PurchaseInvoiceListSerializer(serializers.ModelSerializer):
 
 class PurchaseInvoiceDetailSerializer(serializers.ModelSerializer):
     provider_data = ProviderListSerializer(source='provider', read_only=True)
-    series_data = PurchaseSeriesSerializer(source='series', read_only=True)
     lines = PurchaseInvoiceLineSerializer(many=True, read_only=True)
     payments = PurchasePaymentSerializer(many=True, read_only=True)
     timeline = PurchaseInvoiceTimelineSerializer(many=True, read_only=True)
@@ -127,7 +100,7 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseInvoice
         fields = [
-            'id', 'invoice_type', 'series', 'provider',
+            'id', 'invoice_type', 'company', 'provider',
             'issue_date', 'due_date', 'payment_method', 'currency',
             'discount_type', 'discount_value',
             'provider_notes', 'internal_notes',
@@ -138,7 +111,7 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if self.instance and self.instance.status != 'Draft':
             raise serializers.ValidationError(
-                'Solo se pueden editar facturas en estado borrador.',
+                'Només es poden editar factures en estat esborrany.',
             )
         return data
 
@@ -146,7 +119,7 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
         lines_data = validated_data.pop('lines', [])
         invoice = PurchaseInvoice.objects.create(**validated_data)
 
-        company = getattr(getattr(invoice, 'provider', None), 'company', None)
+        company = invoice.company
         for line_data in lines_data:
             taxes_data = line_data.pop('taxes', [])
             tax_percent = line_data.pop('tax_percent', None)
@@ -162,7 +135,7 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
         PurchaseInvoiceTimeline.objects.create(
             invoice=invoice,
             event_type='created',
-            action='Factura de compra creada como borrador',
+            action='Factura de compra creada com a esborrany',
             actor=validated_data.get('created_by', 'System'),
             date=invoice.issue_date,
         )
@@ -177,7 +150,7 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
         instance.save()
 
         if lines_data is not None:
-            company = getattr(getattr(instance, 'provider', None), 'company', None)
+            company = instance.company
             instance.lines.all().delete()
             for line_data in lines_data:
                 taxes_data = line_data.pop('taxes', [])
@@ -197,8 +170,6 @@ class PurchaseInvoiceWriteSerializer(serializers.ModelSerializer):
 
 
 class RecurringPurchaseInvoiceSerializer(serializers.ModelSerializer):
-    """Lectura de un plan de recurrencia de compra."""
-
     provider_name = serializers.CharField(
         source='template.provider.name', read_only=True,
     )
@@ -242,17 +213,32 @@ class RecurringPurchaseInvoiceCreateSerializer(serializers.Serializer):
     )
 
 
-# ---------- Quote (Purchase) serializers ----------
+# ---------- Purchase Quote serializers ----------
+
+class PurchaseQuoteDocLineTaxSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseQuoteDocLineTax
+        fields = [
+            'id', 'tax_rate', 'tax_name', 'tax_percent',
+            'is_retention', 'tax_amount',
+        ]
+
 
 class PurchaseQuoteDocLineSerializer(serializers.ModelSerializer):
+    taxes = PurchaseQuoteDocLineTaxSerializer(many=True, read_only=True)
+    tax_percent = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False,
+        allow_null=True, write_only=True,
+    )
+
     class Meta:
         model = PurchaseQuoteDocLine
         fields = [
             'id', 'position', 'product', 'description',
-            'quantity', 'unit_price', 'tax_percent',
-            'subtotal', 'tax_amount',
+            'quantity', 'unit_price', 'subtotal',
+            'taxes', 'tax_percent',
         ]
-        read_only_fields = ['id', 'subtotal', 'tax_amount']
+        read_only_fields = ['id', 'subtotal']
 
 
 class PurchaseQuoteDocListSerializer(serializers.ModelSerializer):
@@ -303,11 +289,22 @@ class PurchaseQuoteDocWriteSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
 
+    def _save_lines(self, quote, lines_data):
+        company = quote.company
+        for line_data in lines_data:
+            taxes_data = line_data.pop('taxes', [])
+            tax_percent = line_data.pop('tax_percent', None)
+            line = PurchaseQuoteDocLine.objects.create(quote=quote, **line_data)
+            for tax_data in taxes_data:
+                PurchaseQuoteDocLineTax.objects.create(quote_line=line, **tax_data)
+            if not taxes_data:
+                apply_line_vat(PurchaseQuoteDocLineTax, line, tax_percent, company,
+                               line_fk_name='quote_line')
+
     def create(self, validated_data):
         lines_data = validated_data.pop('lines', [])
         quote = PurchaseQuoteDoc.objects.create(**validated_data)
-        for line_data in lines_data:
-            PurchaseQuoteDocLine.objects.create(quote=quote, **line_data)
+        self._save_lines(quote, lines_data)
         if lines_data:
             quote.recalculate_totals()
         return quote
@@ -319,7 +316,6 @@ class PurchaseQuoteDocWriteSerializer(serializers.ModelSerializer):
         instance.save()
         if lines_data is not None:
             instance.lines.all().delete()
-            for line_data in lines_data:
-                PurchaseQuoteDocLine.objects.create(quote=instance, **line_data)
+            self._save_lines(instance, lines_data)
             instance.recalculate_totals()
         return instance

@@ -4,13 +4,13 @@ import { useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useInbox } from '@/composables/useInbox'
 import {
-  Home, Package, Users,
+  Home, Package, Users, Link2,
   Globe, Settings, ChevronDown, ChevronRight,
   Menu, Search, Bell, HelpCircle, ShoppingBag,
   ClipboardList, TrendingUp,
   Receipt, FileText, Share2, AtSign, Image, Target, Star,
   Upload, ExternalLink, BarChart2, AlertTriangle, UserCheck, Truck,
-  Megaphone, LayoutDashboard, BookOpen
+  LayoutDashboard, BookOpen
 } from 'lucide-vue-next'
 import UserMenu from '@/components/UserMenu.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
@@ -29,7 +29,7 @@ async function openAccounting() {
   try {
     await odooApi.openOdooForCompany(activeCompany.value.id)
   } catch (err) {
-    toast.error(err.message || 'No se pudo abrir la contabilidad en Odoo')
+    toast.error(err.message || 'No s\'ha pogut obrir la comptabilitat a Odoo')
   } finally {
     openingOdoo.value = false
   }
@@ -52,13 +52,13 @@ watch(() => route.fullPath, () => {
 
 const currentDate = computed(() => {
   const now = new Date()
-  return now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  return now.toLocaleDateString('ca-ES', { weekday: 'long', month: 'long', day: 'numeric' })
 })
 
 const menuItems = [
   {
     id: 'home',
-    label: 'Home',
+    label: 'Inici',
     icon: Home,
     route: '/'
   },
@@ -70,41 +70,41 @@ const menuItems = [
   },
   {
     id: 'catalog',
-    label: 'Catalog',
+    label: 'Catàleg',
     icon: Package,
     submenu: [
-      { label: 'Products', route: '/products', icon: ShoppingBag, module: 'products' },
-      { label: 'Inventory', route: '/inventory', icon: ClipboardList, module: 'inventory' }
+      { label: 'Productes', route: '/products', icon: ShoppingBag, module: 'products' },
+      { label: 'Inventari', route: '/inventory', icon: ClipboardList, module: 'inventory' }
     ]
   },
   {
     id: 'sales',
-    label: 'Sales',
+    label: 'Vendes',
     icon: Receipt,
     submenu: [
-      { label: 'Invoices', route: '/invoices', icon: FileText, module: 'invoices' },
-      { label: 'Presupuestos', route: '/quotes', icon: ClipboardList, module: 'quotes' }
+      { label: 'Factures', route: '/invoices', icon: FileText, module: 'invoices' },
+      { label: 'Pressupostos', route: '/quotes', icon: ClipboardList, module: 'quotes' }
     ]
   },
   {
     id: 'purchases',
-    label: 'Purchases',
+    label: 'Compres',
     icon: ShoppingBag,
     submenu: [
-      { label: 'Purchase Invoices', route: '/purchase-invoices', icon: FileText, module: 'purchase_invoices' },
-      { label: 'Presupuestos', route: '/purchase-quotes', icon: ClipboardList, module: 'purchase_quotes' }
+      { label: 'Factures de compra', route: '/purchase-invoices', icon: FileText, module: 'purchase_invoices' },
+      { label: 'Pressupostos', route: '/purchase-quotes', icon: ClipboardList, module: 'purchase_quotes' }
     ]
   },
   {
     id: 'customers',
-    label: 'Customers',
+    label: 'Clients',
     icon: Users,
     route: '/customers',
     module: 'customers'
   },
   {
     id: 'providers',
-    label: 'Providers',
+    label: 'Proveïdors',
     icon: Truck,
     route: '/providers',
     module: 'providers'
@@ -116,31 +116,25 @@ const menuItems = [
     route: '/personnel',
     module: 'personnel'
   },
-  { 
-    id: 'marketing', 
-    label: 'Marketing', 
-    icon: Megaphone, 
-    route: '/marketing' 
-  },
   {
     id: 'social-crm',
     label: 'Social CRM',
     icon: Share2,
     module: 'social_crm',
     submenu: [
-      { label: 'Dashboard',   route: '/social-crm',             icon: BarChart2 },
-      { label: 'Contenido',   route: '/social-crm/content',     icon: Image },
-      { label: 'Campañas',    route: '/social-crm/campaigns',   icon: Target },
+      { label: 'Resum',       route: '/social-crm',             icon: BarChart2 },
+      { label: 'Comptes',     route: '/social-crm/accounts',    icon: Link2 },
+      { label: 'Contingut',   route: '/social-crm/content',     icon: Image },
+      { label: 'Campanyes',   route: '/social-crm/campaigns',   icon: Target },
       { label: 'Influencers', route: '/social-crm/influencers', icon: Star },
-      { label: 'Atribución',  route: '/social-crm/attribution', icon: TrendingUp },
-      { label: 'Ajustes',     route: '/social-crm/settings',    icon: Settings },
+      { label: 'Atribució',   route: '/social-crm/attribution', icon: TrendingUp },
     ]
   }
 ]
 
 // Accounts without a company see no modules — the sidebar stays empty.
 // Otherwise modules are filtered by the active role's view permissions.
-// (Items without a `module` key — Home, Marketing — are always shown.)
+// (Items without a `module` key — like Home — are always shown.)
 const visibleMenuItems = computed(() => {
   if (!hasCompany.value) return []
   return menuItems.reduce((acc, item) => {
@@ -181,27 +175,27 @@ const toggleSidebar = () => {
     <!-- Top Bar (dark) -->
     <header class="top-bar">
       <div class="topbar-left">
-        <button class="topbar-btn" @click="toggleSidebar" aria-label="Toggle sidebar">
+        <button class="topbar-btn" @click="toggleSidebar" aria-label="Mostra o amaga el menú lateral">
           <Menu :size="20" />
         </button>
         <div class="topbar-search">
           <Search :size="16" class="search-icon" />
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Search" 
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cercar"
             class="search-input"
           />
         </div>
       </div>
       <div class="topbar-right">
-        <button class="topbar-btn" aria-label="Help">
+        <button class="topbar-btn" aria-label="Ajuda">
           <HelpCircle :size="20" />
         </button>
         <router-link
           to="/inbox"
           class="topbar-btn notification-btn"
-          aria-label="Buzón"
+          aria-label="Bústia"
           :class="{ 'has-unread': unreadTotal > 0 }"
         >
           <Bell :size="20" />
@@ -211,7 +205,7 @@ const toggleSidebar = () => {
         </router-link>
         <button class="topbar-btn lang-btn">
           <Globe :size="16" />
-          <span class="lang-label">EN</span>
+          <span class="lang-label">CA</span>
         </button>
         <div class="topbar-divider"></div>
         <UserMenu />
@@ -279,10 +273,10 @@ const toggleSidebar = () => {
                 class="nav-link nav-link-button"
                 :disabled="openingOdoo"
                 @click="openAccounting"
-                title="Abrir el módulo de contabilidad en Odoo"
+                title="Obre el mòdul de comptabilitat a Odoo"
               >
                 <BookOpen :size="20" class="nav-icon" />
-                <span v-if="!isSidebarCollapsed" class="nav-label">Contabilidad</span>
+                <span v-if="!isSidebarCollapsed" class="nav-label">Comptabilitat</span>
                 <ExternalLink v-if="!isSidebarCollapsed" :size="14" class="nav-external-icon" />
               </button>
             </li>
@@ -293,7 +287,7 @@ const toggleSidebar = () => {
         <div v-if="hasCompany" class="sidebar-footer">
           <router-link to="/settings" class="nav-link" active-class="active">
             <Settings :size="20" class="nav-icon" />
-            <span v-if="!isSidebarCollapsed" class="nav-label">Settings</span>
+            <span v-if="!isSidebarCollapsed" class="nav-label">Configuració</span>
           </router-link>
         </div>
       </aside>

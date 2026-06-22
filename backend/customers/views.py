@@ -4,10 +4,10 @@ from rest_framework.response import Response
 
 from accounts.mixins import CompanyMixin
 from core.excel import build_xlsx_response
-from .models import Customer, CustomerNote, CustomerActivity, Quote
+from .models import Customer, CustomerNote, CustomerActivity
 from .serializers import (
     CustomerListSerializer, CustomerDetailSerializer, CustomerWriteSerializer,
-    CustomerNoteSerializer, CustomerActivitySerializer, QuoteSerializer,
+    CustomerNoteSerializer, CustomerActivitySerializer,
 )
 from .filters import CustomerFilter
 

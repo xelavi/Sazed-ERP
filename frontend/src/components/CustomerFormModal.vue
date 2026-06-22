@@ -5,7 +5,7 @@
         <div class="modal-container">
           <!-- Header -->
           <div class="modal-header">
-            <h2 class="modal-title">{{ isEditing ? 'Editar contacto' : 'Nuevo contacto' }}</h2>
+            <h2 class="modal-title">{{ isEditing ? 'Editar contacte' : 'Nou contacte' }}</h2>
             <button class="modal-close" @click="$emit('close')">
               <X :size="20" />
             </button>
@@ -16,151 +16,151 @@
             <!-- ==================== MAIN COLUMN ==================== -->
             <div class="modal-main">
 
-              <!-- ── Información básica ── -->
+              <!-- ── Informació bàsica ── -->
               <section class="form-section">
-                <h3 class="section-title">Información básica</h3>
-                <p class="section-desc">Datos principales del contacto. Podrás utilizarlos en facturas y presupuestos.</p>
+                <h3 class="section-title">Informació bàsica</h3>
+                <p class="section-desc">Dades principals del contacte. Les podràs utilitzar en factures i pressupostos.</p>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Tipo de contacto <span class="required">*</span></label>
+                    <label class="field-label">Tipus de contacte <span class="required">*</span></label>
                     <select class="select" v-model="form.type">
                       <option value="Company">Empresa</option>
                       <option value="Person">Persona</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label class="field-label">Estado</label>
+                    <label class="field-label">Estat</label>
                     <select class="select" v-model="form.status">
-                      <option value="Active">Activo</option>
-                      <option value="Inactive">Inactivo</option>
+                      <option value="Active">Actiu</option>
+                      <option value="Inactive">Inactiu</option>
                     </select>
                   </div>
                 </div>
 
                 <div class="field">
-                  <label class="field-label">{{ form.type === 'Company' ? 'Nombre de la empresa' : 'Nombre completo' }} <span class="required">*</span></label>
-                  <input class="input" type="text" :placeholder="form.type === 'Company' ? 'Ej: Acme Corp.' : 'Ej: María López'" v-model="form.name" />
+                  <label class="field-label">{{ form.type === 'Company' ? 'Nom de l\'empresa' : 'Nom complet' }} <span class="required">*</span></label>
+                  <input class="input" type="text" :placeholder="form.type === 'Company' ? 'Ex: Acme Corp.' : 'Ex: Maria López'" v-model="form.name" />
                 </div>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Email <span class="required">*</span></label>
-                    <input class="input" type="email" placeholder="correo@ejemplo.com" v-model="form.email" />
+                    <label class="field-label">Correu electrònic <span class="required">*</span></label>
+                    <input class="input" type="email" placeholder="correu@exemple.com" v-model="form.email" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Teléfono</label>
+                    <label class="field-label">Telèfon</label>
                     <input class="input" type="tel" placeholder="+34 600 000 000" v-model="form.phone" />
                   </div>
                 </div>
 
                 <div v-if="form.type === 'Company'" class="field">
                   <label class="field-label">NIF / CIF</label>
-                  <input class="input" type="text" placeholder="Ej: B-12345678" v-model="form.vatId" />
+                  <input class="input" type="text" placeholder="Ex: B-12345678" v-model="form.vatId" />
                 </div>
 
                 <div class="field">
                   <label class="field-label">Web</label>
-                  <input class="input" type="url" placeholder="https://www.ejemplo.com" v-model="form.website" />
+                  <input class="input" type="url" placeholder="https://www.exemple.com" v-model="form.website" />
                 </div>
               </section>
 
-              <!-- ── Dirección ── -->
+              <!-- ── Adreça ── -->
               <section class="form-section">
-                <h3 class="section-title">Dirección</h3>
-                <p class="section-desc">Dirección fiscal del contacto para documentos y envíos.</p>
+                <h3 class="section-title">Adreça</h3>
+                <p class="section-desc">Adreça fiscal del contacte per a documents i enviaments.</p>
 
                 <div class="field">
-                  <label class="field-label">Dirección</label>
-                  <input class="input" type="text" placeholder="Calle, número, piso..." v-model="form.address" />
+                  <label class="field-label">Adreça</label>
+                  <input class="input" type="text" placeholder="Carrer, número, pis…" v-model="form.address" />
                 </div>
 
                 <div class="field-row field-row-3">
                   <div class="field">
-                    <label class="field-label">Ciudad</label>
-                    <input class="input" type="text" placeholder="Madrid" v-model="form.city" />
+                    <label class="field-label">Ciutat</label>
+                    <input class="input" type="text" placeholder="Barcelona" v-model="form.city" />
                   </div>
                   <div class="field">
-                    <label class="field-label">Provincia</label>
-                    <input class="input" type="text" placeholder="Madrid" v-model="form.province" />
+                    <label class="field-label">Província</label>
+                    <input class="input" type="text" placeholder="Barcelona" v-model="form.province" />
                   </div>
                   <div class="field">
                     <label class="field-label">C.P.</label>
-                    <input class="input" type="text" placeholder="28001" v-model="form.postalCode" />
+                    <input class="input" type="text" placeholder="08001" v-model="form.postalCode" />
                   </div>
                 </div>
 
                 <div class="field">
                   <label class="field-label">País</label>
                   <select class="select" v-model="form.country">
-                    <option value="España">España</option>
+                    <option value="España">Espanya</option>
                     <option value="Portugal">Portugal</option>
-                    <option value="Francia">Francia</option>
-                    <option value="Alemania">Alemania</option>
-                    <option value="Italia">Italia</option>
-                    <option value="Reino Unido">Reino Unido</option>
-                    <option value="Estados Unidos">Estados Unidos</option>
+                    <option value="Francia">França</option>
+                    <option value="Alemania">Alemanya</option>
+                    <option value="Italia">Itàlia</option>
+                    <option value="Reino Unido">Regne Unit</option>
+                    <option value="Estados Unidos">Estats Units</option>
                   </select>
                 </div>
               </section>
 
-              <!-- ── Información fiscal (Company only) ── -->
+              <!-- ── Informació fiscal (només empresa) ── -->
               <section v-if="form.type === 'Company'" class="form-section">
-                <h3 class="section-title">Información fiscal</h3>
-                <p class="section-desc">Datos fiscales y condiciones de pago por defecto.</p>
+                <h3 class="section-title">Informació fiscal</h3>
+                <p class="section-desc">Dades fiscals i condicions de pagament per defecte.</p>
 
                 <div class="field">
-                  <label class="field-label">Razón social</label>
-                  <input class="input" type="text" placeholder="Razón social completa" v-model="form.legalName" />
+                  <label class="field-label">Raó social</label>
+                  <input class="input" type="text" placeholder="Raó social completa" v-model="form.legalName" />
                 </div>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field-label">Forma de pago</label>
+                    <label class="field-label">Forma de pagament</label>
                     <select class="select" v-model="form.paymentMethod">
-                      <option value="Transferencia 30 días">Transferencia 30 días</option>
-                      <option value="Transferencia">Transferencia</option>
-                      <option value="Domiciliación">Domiciliación</option>
-                      <option value="Tarjeta">Tarjeta</option>
-                      <option value="Efectivo">Efectivo</option>
+                      <option value="Transferència 30 dies">Transferència 30 dies</option>
+                      <option value="Transferència">Transferència</option>
+                      <option value="Domiciliació">Domiciliació</option>
+                      <option value="Targeta">Targeta</option>
+                      <option value="Efectiu">Efectiu</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label class="field-label">Cuenta bancaria (IBAN)</label>
+                    <label class="field-label">Compte bancari (IBAN)</label>
                     <input class="input" type="text" placeholder="ES00 0000 0000 0000 0000 0000" v-model="form.bankAccount" />
                   </div>
                 </div>
               </section>
 
-              <!-- ── Notas ── -->
+              <!-- ── Notes ── -->
               <section class="form-section">
-                <h3 class="section-title">Notas internas</h3>
-                <textarea class="input textarea" rows="3" placeholder="Añade notas internas sobre este contacto..." v-model="form.internalNotes"></textarea>
+                <h3 class="section-title">Notes internes</h3>
+                <textarea class="input textarea" rows="3" placeholder="Afegeix notes internes sobre aquest contacte…" v-model="form.internalNotes"></textarea>
               </section>
             </div>
 
             <!-- ==================== SIDEBAR COLUMN ==================== -->
             <div class="modal-sidebar">
 
-              <!-- ── Avatar Preview ── -->
+              <!-- ── Previsualització de l'avatar ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Preview</h4>
+                <h4 class="sidebar-card-title">Previsualització</h4>
                 <div class="avatar-preview">
                   <div class="preview-avatar" :style="{ background: previewGradient }">
                     {{ previewInitials }}
                   </div>
-                  <span class="preview-name">{{ form.name || 'Nombre del contacto' }}</span>
-                  <span class="preview-email">{{ form.email || 'email@ejemplo.com' }}</span>
+                  <span class="preview-name">{{ form.name || 'Nom del contacte' }}</span>
+                  <span class="preview-email">{{ form.email || 'correu@exemple.com' }}</span>
                 </div>
               </div>
 
-              <!-- ── Etiquetas ── -->
+              <!-- ── Etiquetes ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Etiquetas</h4>
-                <p class="sidebar-card-desc">Organiza tus contactos con etiquetas personalizadas.</p>
+                <h4 class="sidebar-card-title">Etiquetes</h4>
+                <p class="sidebar-card-desc">Organitza els teus contactes amb etiquetes personalitzades.</p>
 
                 <div class="field">
-                  <input class="input" type="text" placeholder="Busca o crea tags" v-model="tagInput" @keydown.enter.prevent="addTag" />
+                  <input class="input" type="text" placeholder="Cerca o crea etiquetes" v-model="tagInput" @keydown.enter.prevent="addTag" />
                   <div v-if="form.tags.length" class="tags-list">
                     <span v-for="(tag, i) in form.tags" :key="i" class="tag-chip">
                       {{ tag }}
@@ -172,27 +172,61 @@
                 </div>
               </div>
 
-              <!-- ── Contacto vinculado ── -->
+              <!-- ── Contactes vinculats ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Contacto vinculado</h4>
-                <p class="sidebar-card-desc">Vincula este contacto con una empresa o persona.</p>
+                <h4 class="sidebar-card-title">Contactes vinculats</h4>
+                <p class="sidebar-card-desc">Vincula amb altres empreses o persones del directori.</p>
 
-                <div class="field">
-                  <input class="input" type="text" placeholder="Busca un contacto..." v-model="form.linkedContact" />
+                <div v-if="form.linkedContacts.length" class="tags-list" style="margin-bottom: 0.625rem;">
+                  <span v-for="contact in form.linkedContacts" :key="contact.id" class="tag-chip">
+                    {{ contact.name }}
+                    <button class="tag-remove" @click="removeLinkedContact(contact.id)">
+                      <X :size="12" />
+                    </button>
+                  </span>
+                </div>
+
+                <div class="linked-search-wrap">
+                  <div class="linked-input-wrap">
+                    <Search :size="14" class="linked-search-icon" />
+                    <input
+                      class="input linked-input"
+                      type="text"
+                      placeholder="Cerca un contacte…"
+                      v-model="linkedSearchQuery"
+                      @input="onLinkedSearch"
+                      @focus="showLinkedDropdown = true"
+                      @blur="onLinkedBlur"
+                    />
+                  </div>
+                  <div v-if="showLinkedDropdown && linkedResults.length" class="linked-dropdown">
+                    <button
+                      v-for="c in linkedResults"
+                      :key="c.id"
+                      class="linked-option"
+                      @mousedown.prevent="selectLinkedContact(c)"
+                    >
+                      <span class="linked-option-name">{{ c.name }}</span>
+                      <span class="linked-option-email">{{ c.email }}</span>
+                    </button>
+                  </div>
+                  <div v-else-if="showLinkedDropdown && linkedSearchQuery && !linkedResults.length" class="linked-dropdown">
+                    <div class="linked-no-results">Cap resultat</div>
+                  </div>
                 </div>
               </div>
 
-              <!-- ── Opciones ── -->
+              <!-- ── Opcions ── -->
               <div class="sidebar-card">
-                <h4 class="sidebar-card-title">Opciones</h4>
+                <h4 class="sidebar-card-title">Opcions</h4>
 
                 <label class="toggle-field">
                   <input type="checkbox" class="checkbox" v-model="form.isCustomer" />
-                  <span>Es cliente</span>
+                  <span>És client</span>
                 </label>
                 <label class="toggle-field">
                   <input type="checkbox" class="checkbox" v-model="form.isSupplier" />
-                  <span>Es proveedor</span>
+                  <span>És proveïdor</span>
                 </label>
               </div>
             </div>
@@ -203,7 +237,7 @@
             <button class="btn btn-secondary" @click="$emit('close')">Descartar</button>
             <button class="btn btn-primary" @click="handleSave">
               <Check :size="18" />
-              <span>Guardar</span>
+              <span>Desar</span>
             </button>
           </div>
         </div>
@@ -214,8 +248,9 @@
 
 <script setup>
 import { ref, reactive, watch, computed } from 'vue'
-import { X, Check } from 'lucide-vue-next'
+import { X, Check, Search } from 'lucide-vue-next'
 import Swal from 'sweetalert2'
+import customersApi from '@/services/customers'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -256,11 +291,12 @@ function blankForm() {
     postalCode: '',
     country: 'España',
     legalName: '',
-    paymentMethod: 'Transferencia 30 días',
+    paymentMethod: 'Transferència 30 dies',
     bankAccount: '',
     internalNotes: '',
     tags: [],
-    linkedContact: '',
+    linkedContactIds: [],
+    linkedContacts: [],
     isCustomer: true,
     isSupplier: false
   }
@@ -268,6 +304,48 @@ function blankForm() {
 
 const form = reactive(blankForm())
 const tagInput = ref('')
+
+/* ── Linked contacts search ── */
+const linkedSearchQuery = ref('')
+const linkedResults = ref([])
+const showLinkedDropdown = ref(false)
+let linkedTimer = null
+
+async function onLinkedSearch() {
+  clearTimeout(linkedTimer)
+  const q = linkedSearchQuery.value.trim()
+  if (!q) { linkedResults.value = []; return }
+  linkedTimer = setTimeout(async () => {
+    try {
+      const data = await customersApi.search(q)
+      const items = Array.isArray(data) ? data : (data.results || [])
+      linkedResults.value = items
+        .filter(c => !form.linkedContactIds.includes(c.id))
+        .filter(c => !props.customer || c.id !== props.customer.id)
+        .slice(0, 8)
+        .map(c => ({ id: c.id, name: c.name, email: c.email || '' }))
+    } catch { linkedResults.value = [] }
+  }, 280)
+}
+
+function selectLinkedContact(contact) {
+  if (!form.linkedContactIds.includes(contact.id)) {
+    form.linkedContactIds.push(contact.id)
+    form.linkedContacts.push(contact)
+  }
+  linkedSearchQuery.value = ''
+  linkedResults.value = []
+  showLinkedDropdown.value = false
+}
+
+function removeLinkedContact(id) {
+  const idx = form.linkedContactIds.indexOf(id)
+  if (idx !== -1) { form.linkedContactIds.splice(idx, 1); form.linkedContacts.splice(idx, 1) }
+}
+
+function onLinkedBlur() {
+  setTimeout(() => { showLinkedDropdown.value = false }, 180)
+}
 
 /* ── Preview ── */
 const previewInitials = computed(() => {
@@ -301,17 +379,20 @@ watch(() => props.open, (isOpen) => {
       postalCode: c.detail?.postalCode || '',
       country: c.detail?.country || 'España',
       legalName: c.detail?.legalName || '',
-      paymentMethod: c.detail?.paymentMethod || 'Transferencia 30 días',
+      paymentMethod: c.detail?.paymentMethod || 'Transferència 30 dies',
       bankAccount: c.detail?.bankAccount || '',
       internalNotes: c.detail?.internalNotes || '',
       tags: [...(c.detail?.tags || [])],
-      linkedContact: '',
+      linkedContactIds: [...(c.detail?.linkedContactIds || [])],
+      linkedContacts: [...(c.detail?.linkedContacts || [])],
       isCustomer: c.detail?.isCustomer ?? true,
       isSupplier: c.detail?.isSupplier ?? false
     })
   } else if (isOpen) {
     Object.assign(form, blankForm())
     tagInput.value = ''
+    linkedSearchQuery.value = ''
+    linkedResults.value = []
   }
 })
 
@@ -331,14 +412,14 @@ function removeTag(index) {
 /* ── Save ── */
 function handleSave() {
   const errors = []
-  if (!form.name.trim()) errors.push('El nombre es obligatorio')
-  if (!form.email.trim()) errors.push('El email es obligatorio')
-  if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.push('El email no es válido')
+  if (!form.name.trim()) errors.push('El nom és obligatori')
+  if (!form.email.trim()) errors.push('El correu electrònic és obligatori')
+  if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.push('El correu electrònic no és vàlid')
 
   if (errors.length) {
     Swal.fire({
       icon: 'warning',
-      title: 'Campos obligatorios',
+      title: 'Camps obligatoris',
       html: `<ul style="text-align:left;margin:0;padding-left:1.2em">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`,
       confirmButtonText: 'OK',
       confirmButtonColor: '#667eea',
@@ -630,6 +711,84 @@ function handleSave() {
 
 .tag-remove:hover {
   opacity: 1;
+}
+
+/* ============================
+   LINKED CONTACTS
+   ============================ */
+.linked-search-wrap {
+  position: relative;
+}
+
+.linked-input-wrap {
+  position: relative;
+}
+
+.linked-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.linked-input {
+  padding-left: 2.25rem;
+}
+
+.linked-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  z-index: 200;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.linked-option {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f5f5f7;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-family: var(--font-family);
+}
+
+.linked-option:last-child {
+  border-bottom: none;
+}
+
+.linked-option:hover {
+  background: var(--bg-hover);
+}
+
+.linked-option-name {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.linked-option-email {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.linked-no-results {
+  padding: 0.75rem;
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  text-align: center;
 }
 
 /* ============================

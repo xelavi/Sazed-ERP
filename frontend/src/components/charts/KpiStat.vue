@@ -46,7 +46,7 @@ const spark = computed(() => {
         {{ Math.abs(delta).toFixed(1) }}%
       </span>
     </div>
-    <span class="stat-sub">vs. periodo anterior</span>
+    <span class="stat-sub">vs. període anterior</span>
 
     <svg :viewBox="`0 0 ${W} ${Hs}`" preserveAspectRatio="none" class="stat-spark">
       <defs>

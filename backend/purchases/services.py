@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError
 from core.recurrence import add_period
 from .models import (
     PurchaseInvoice, PurchaseInvoiceLine, PurchaseInvoiceLineTax,
-    PurchaseSeries, PurchaseInvoiceTimeline, PurchasePayment,
+    PurchaseInvoiceTimeline, PurchasePayment,
     RecurringPurchaseInvoice,
 )
 
@@ -18,9 +18,12 @@ class PurchaseInvoiceService:
     @staticmethod
     def approve(invoice):
         if invoice.status != 'Draft':
-            raise ValidationError('Solo se pueden aprobar borradores.')
+            raise ValidationError('Només es poden aprovar esborranys.')
+        if not invoice.number:
+            raise ValidationError(
+                'Cal introduir el número de factura del proveïdor abans d\'aprovar.',
+            )
 
-        invoice.number = invoice.series.generate_number()
         invoice.status = 'Approved'
         invoice.locked_at = timezone.now()
         invoice.provider_name_snapshot = invoice.provider.name
@@ -41,7 +44,7 @@ class PurchaseInvoiceService:
         PurchaseInvoiceTimeline.objects.create(
             invoice=invoice,
             event_type='approved',
-            action=f'Factura de compra {invoice.number} aprobada',
+            action=f'Factura de compra {invoice.number} aprovada',
             actor='System',
             date=timezone.now().date(),
         )
@@ -51,11 +54,11 @@ class PurchaseInvoiceService:
     def void(invoice):
         if invoice.status != 'Approved':
             raise ValidationError(
-                'Solo se pueden anular facturas aprobadas sin pagos.',
+                'Només es poden anul·lar factures aprovades sense pagaments.',
             )
         if invoice.payments.exists():
             raise ValidationError(
-                'No se puede anular una factura con pagos registrados.',
+                'No es pot anul·lar una factura amb pagaments registrats.',
             )
 
         invoice.status = 'Voided'
@@ -64,7 +67,7 @@ class PurchaseInvoiceService:
         PurchaseInvoiceTimeline.objects.create(
             invoice=invoice,
             event_type='voided',
-            action=f'Factura de compra {invoice.number} anulada',
+            action=f'Factura de compra {invoice.number} anul·lada',
             actor='System',
             date=timezone.now().date(),
         )
@@ -74,7 +77,7 @@ class PurchaseInvoiceService:
     def record_payment(invoice, payment_data):
         if invoice.status not in ('Approved', 'PartiallyPaid'):
             raise ValidationError(
-                'No se puede registrar pago en esta factura.',
+                'No es pot registrar un pagament en aquesta factura.',
             )
 
         amount = min(
@@ -94,7 +97,7 @@ class PurchaseInvoiceService:
         PurchaseInvoiceTimeline.objects.create(
             invoice=invoice,
             event_type='payment',
-            action=f'Pago de {amount} € registrado',
+            action=f'Pagament de {amount} € registrat',
             actor='System',
             date=payment_data['date'],
         )
@@ -104,30 +107,18 @@ class PurchaseInvoiceService:
     @staticmethod
     def create_credit_note(invoice):
         if invoice.status not in ('Approved', 'Paid', 'PartiallyPaid'):
-            raise ValidationError(
-                'No se puede rectificar esta factura.',
-            )
-
-        rec_series = PurchaseSeries.objects.filter(
-            prefix='PREC', active=True,
-        ).first()
-        if not rec_series:
-            rec_series = PurchaseSeries.objects.filter(active=True).first()
-        if not rec_series:
-            raise ValidationError(
-                'No hay serie de rectificativas de compra configurada.',
-            )
+            raise ValidationError('No es pot rectificar aquesta factura.')
 
         credit_note = PurchaseInvoice.objects.create(
             invoice_type='CreditNote',
             status='Draft',
-            series=rec_series,
+            company=invoice.company,
             provider=invoice.provider,
             issue_date=timezone.now().date(),
             due_date=timezone.now().date(),
             payment_method=invoice.payment_method,
             currency=invoice.currency,
-            provider_notes=f'Rectificación de factura {invoice.number}.',
+            provider_notes=f'Rectificació de la factura {invoice.number}.',
             rectified_invoice=invoice,
         )
 
@@ -136,7 +127,7 @@ class PurchaseInvoiceService:
                 invoice=credit_note,
                 position=line.position,
                 product=line.product,
-                description=f'{line.description} (devolución)',
+                description=f'{line.description} (devolució)',
                 quantity=-line.quantity,
                 unit_price=line.unit_price,
                 discount_type=line.discount_type,
@@ -160,7 +151,7 @@ class PurchaseInvoiceService:
         PurchaseInvoiceTimeline.objects.create(
             invoice=invoice,
             event_type='rectified',
-            action=f'Factura rectificada. Nota de crédito: Draft #{credit_note.id}',
+            action=f'Factura rectificada. Nota de crèdit: Esborrany #{credit_note.id}',
             actor='System',
             date=timezone.now().date(),
         )
@@ -169,14 +160,10 @@ class PurchaseInvoiceService:
 
     @staticmethod
     def duplicate(invoice):
-        default_series = PurchaseSeries.objects.filter(
-            is_default=True, active=True,
-        ).first()
-
         dup = PurchaseInvoice.objects.create(
             invoice_type=invoice.invoice_type,
             status='Draft',
-            series=default_series or invoice.series,
+            company=invoice.company,
             provider=invoice.provider,
             issue_date=timezone.now().date(),
             due_date=timezone.now().date() + timedelta(days=30),
@@ -214,7 +201,7 @@ class PurchaseInvoiceService:
         PurchaseInvoiceTimeline.objects.create(
             invoice=dup,
             event_type='created',
-            action=f'Duplicado desde {invoice.number or f"Draft #{invoice.id}"}',
+            action=f'Duplicat des de {invoice.number or f"Esborrany #{invoice.id}"}',
             actor='System',
             date=timezone.now().date(),
         )
@@ -223,7 +210,6 @@ class PurchaseInvoiceService:
 
 
 def _clone_purchase_lines(source, target):
-    """Copia las líneas e impuestos de una factura de compra a otra."""
     for line in source.lines.all():
         new_line = PurchaseInvoiceLine.objects.create(
             invoice=target,
@@ -247,7 +233,6 @@ def _clone_purchase_lines(source, target):
 
 
 class RecurringPurchaseInvoiceService:
-    """Gestión de facturas recurrentes de compra."""
 
     @staticmethod
     @transaction.atomic
@@ -256,7 +241,7 @@ class RecurringPurchaseInvoiceService:
             invoice_type=source_invoice.invoice_type,
             status='Draft',
             is_template=True,
-            series=source_invoice.series,
+            company=source_invoice.company,
             provider=source_invoice.provider,
             issue_date=timezone.now().date(),
             due_date=timezone.now().date(),
@@ -272,7 +257,7 @@ class RecurringPurchaseInvoiceService:
 
         start_date = data['start_date']
         plan = RecurringPurchaseInvoice.objects.create(
-            company=getattr(source_invoice.series, 'company', None),
+            company=source_invoice.company,
             template=template,
             frequency=data['frequency'],
             interval=data.get('interval', 1) or 1,
@@ -294,7 +279,7 @@ class RecurringPurchaseInvoiceService:
             invoice_type=template.invoice_type,
             status='Draft',
             is_template=False,
-            series=template.series,
+            company=template.company,
             provider=template.provider,
             issue_date=issue,
             due_date=issue + timedelta(days=plan.payment_term_days),

@@ -13,7 +13,7 @@
         <!-- Left: selector -->
         <div class="selector-panel">
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Tipo de informe</h3></div>
+            <div class="card-header"><h3 class="card-title">Tipus d'informe</h3></div>
             <div class="report-list">
               <div
                 v-for="r in reportTypes" :key="r.id"
@@ -31,36 +31,36 @@
           </div>
 
           <div class="card filters-card">
-            <div class="card-header"><h3 class="card-title">Parámetros</h3></div>
+            <div class="card-header"><h3 class="card-title">Paràmetres</h3></div>
             <div class="filters-body">
-              <div class="field"><label class="field-label">Período</label>
+              <div class="field"><label class="field-label">Període</label>
                 <select class="select full" v-model="params.period">
-                  <option value="7d">Últimos 7 días</option>
-                  <option value="30d">Últimos 30 días</option>
+                  <option value="7d">Últims 7 dies</option>
+                  <option value="30d">Últims 30 dies</option>
                   <option value="q1">Q1 2026</option>
                   <option value="q2">Q2 2026</option>
-                  <option value="ytd">Año completo 2026</option>
+                  <option value="ytd">Any complet 2026</option>
                 </select>
               </div>
-              <div class="field"><label class="field-label">Red social</label>
+              <div class="field"><label class="field-label">Xarxa social</label>
                 <select class="select full" v-model="params.platform">
-                  <option value="all">Todas</option>
+                  <option value="all">Totes</option>
                   <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
                 </select>
               </div>
-              <div class="field"><label class="field-label">Campaña</label>
+              <div class="field"><label class="field-label">Campanya</label>
                 <select class="select full" v-model="params.campaign">
-                  <option value="all">Todas</option>
+                  <option value="all">Totes</option>
                   <option v-for="c in socialCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
                 </select>
               </div>
               <div class="field"><label class="field-label">Influencer</label>
                 <select class="select full" v-model="params.influencer">
-                  <option value="all">Todos</option>
+                  <option value="all">Tots</option>
                   <option v-for="i in socialInfluencers" :key="i.id" :value="i.id">{{ i.alias }}</option>
                 </select>
               </div>
-              <button class="btn btn-primary full-btn" @click="generatePreview">Generar vista previa</button>
+              <button class="btn btn-primary full-btn" @click="generatePreview">Generar vista prèvia</button>
             </div>
           </div>
         </div>
@@ -71,7 +71,7 @@
             <div class="preview-header">
               <div>
                 <h2 class="preview-title">{{ currentReport?.name }}</h2>
-                <p class="preview-meta">Generado el {{ today }} · Período: {{ periodLabel }}</p>
+                <p class="preview-meta">Generat el {{ today }} · Període: {{ periodLabel }}</p>
               </div>
               <div class="preview-actions">
                 <button class="btn btn-secondary" @click="exportReport('pdf')"><FileDown :size="16" /><span>PDF</span></button>
@@ -96,13 +96,13 @@
 
             <div class="preview-placeholder">
               <BarChart2 :size="40" class="placeholder-icon" />
-              <p>El informe completo incluye los gráficos y tablas listadas arriba.<br>Exporta para obtener el documento final.</p>
+              <p>L'informe complet inclou els gràfics i taules llistats a dalt.<br>Exporta per obtenir el document final.</p>
             </div>
           </div>
 
           <div class="empty-preview" v-else>
             <FileText :size="48" />
-            <p>Selecciona un tipo de informe y configura los parámetros para generar la vista previa.</p>
+            <p>Selecciona un tipus d'informe i configura els paràmetres per generar la vista prèvia.</p>
           </div>
         </div>
       </div>
@@ -116,27 +116,27 @@ import { BarChart2, FileText, FileDown, FileSpreadsheet, Download, CheckCircle, 
 import { socialCampaigns, socialInfluencers, socialPosts, socialCollaborations, PLATFORMS, formatNumber, formatCurrency } from '@/services/socialCrmData'
 
 const reportTypes = [
-  { id: 'monthly',    name: 'Informe mensual',       desc: 'Resumen completo de actividad',  icon: LayoutDashboard, color: '#667eea', colorBg: '#eef2ff' },
-  { id: 'campaign',   name: 'Por campaña',            desc: 'Rendimiento de una campaña',      icon: Megaphone,       color: '#10B981', colorBg: '#ecfdf5' },
-  { id: 'influencer', name: 'Por influencer',         desc: 'Comparativa de colaboradores',    icon: Users,          color: '#F59E0B', colorBg: '#fffbeb' },
-  { id: 'conversion', name: 'De conversión',          desc: 'Embudo y ROI por canal',          icon: TrendingUp,     color: '#EC4899', colorBg: '#fdf2f8' },
-  { id: 'executive',  name: 'Ejecutivo',              desc: 'KPIs clave en una página',        icon: FileText,       color: '#6366F1', colorBg: '#eef2ff' },
+  { id: 'monthly',    name: 'Informe mensual',       desc: 'Resum complet d\'activitat',     icon: LayoutDashboard, color: '#667eea', colorBg: '#eef2ff' },
+  { id: 'campaign',   name: 'Per campanya',           desc: 'Rendiment d\'una campanya',      icon: Megaphone,       color: '#10B981', colorBg: '#ecfdf5' },
+  { id: 'influencer', name: 'Per influencer',         desc: 'Comparativa de col·laboradors',  icon: Users,          color: '#F59E0B', colorBg: '#fffbeb' },
+  { id: 'conversion', name: 'De conversió',           desc: 'Embut i ROI per canal',          icon: TrendingUp,     color: '#EC4899', colorBg: '#fdf2f8' },
+  { id: 'executive',  name: 'Executiu',               desc: 'KPIs clau en una pàgina',        icon: FileText,       color: '#6366F1', colorBg: '#eef2ff' },
 ]
 
 const sectionsByType = {
-  monthly:    ['Evolución de seguidores por red', 'Publicaciones y engagement', 'Top 5 posts', 'Resumen de campañas activas', 'Gasto e ingresos atribuidos'],
-  campaign:   ['Ficha de la campaña', 'KPIs de rendimiento', 'Posts asociados', 'Colaboraciones', 'Embudo de conversión'],
-  influencer: ['Tabla comparativa de influencers', 'Ranking por ventas', 'Coste por conversión', 'ROAS por colaborador'],
-  conversion: ['Embudo agregado (clic → compra)', 'Revenue por canal', 'Análisis UTM', 'Comparativa campañas'],
-  executive:  ['KPIs globales', 'Tendencia semanal', 'Top influencer', 'Alerta destacada', 'Próximos eventos'],
+  monthly:    ['Evolució de seguidors per xarxa', 'Publicacions i engagement', 'Top 5 posts', 'Resum de campanyes actives', 'Despesa i ingressos atribuïts'],
+  campaign:   ['Fitxa de la campanya', 'KPIs de rendiment', 'Posts associats', 'Col·laboracions', 'Embut de conversió'],
+  influencer: ['Taula comparativa d\'influencers', 'Rànquing per vendes', 'Cost per conversió', 'ROAS per col·laborador'],
+  conversion: ['Embut agregat (clic → compra)', 'Revenue per canal', 'Anàlisi UTM', 'Comparativa campanyes'],
+  executive:  ['KPIs globals', 'Tendència setmanal', 'Top influencer', 'Alerta destacada', 'Pròxims esdeveniments'],
 }
 
 const selectedReport = ref('monthly')
 const params = reactive({ period: '30d', platform: 'all', campaign: 'all', influencer: 'all' })
 const preview = ref(false)
-const today = new Date().toLocaleDateString('es-ES')
+const today = new Date().toLocaleDateString('ca-ES')
 const currentReport = computed(() => reportTypes.find(r => r.id === selectedReport.value))
-const periodLabel = computed(() => ({ '7d': 'Últimos 7 días', '30d': 'Últimos 30 días', 'q1': 'Q1 2026', 'q2': 'Q2 2026', 'ytd': 'Año 2026' }[params.period]))
+const periodLabel = computed(() => ({ '7d': 'Últims 7 dies', '30d': 'Últims 30 dies', 'q1': 'Q1 2026', 'q2': 'Q2 2026', 'ytd': 'Any 2026' }[params.period]))
 
 const previewKPIs = computed(() => {
   const posts = socialPosts; const collabs = socialCollaborations
@@ -145,18 +145,18 @@ const previewKPIs = computed(() => {
   const totalSales = collabs.reduce((s,c) => s + c.sales, 0)
   const totalCost  = collabs.reduce((s,c) => s + c.cost, 0)
   return [
-    { label: 'Alcance total', value: formatNumber(totalReach) },
-    { label: 'Engagement medio', value: totalEng.toFixed(1) + '%' },
-    { label: 'Ingresos atribuidos', value: formatCurrency(totalSales) },
-    { label: 'Gasto', value: formatCurrency(totalCost) },
+    { label: 'Abast total', value: formatNumber(totalReach) },
+    { label: 'Engagement mitjà', value: totalEng.toFixed(1) + '%' },
+    { label: 'Ingressos atribuïts', value: formatCurrency(totalSales) },
+    { label: 'Despesa', value: formatCurrency(totalCost) },
     { label: 'ROAS', value: totalCost ? (totalSales / totalCost).toFixed(2) + 'x' : '—' },
-    { label: 'Posts analizados', value: posts.length },
+    { label: 'Posts analitzats', value: posts.length },
   ]
 })
 const previewSections = computed(() => sectionsByType[selectedReport.value] || [])
 
 function generatePreview() { preview.value = true }
-function exportReport(format) { alert(`Exportando informe en formato ${format.toUpperCase()}... (simulado)`) }
+function exportReport(format) { alert(`Exportant informe en format ${format.toUpperCase()}... (simulat)`) }
 </script>
 
 <style scoped>

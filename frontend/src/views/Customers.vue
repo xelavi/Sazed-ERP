@@ -3,17 +3,17 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Customers</h1>
+          <h1 class="view-title">Clients</h1>
           <span class="count-badge">{{ customers.length }}</span>
         </div>
         <div class="header-actions">
           <button class="btn btn-secondary" :disabled="exporting" @click="handleExport">
             <Download :size="18" />
-            <span>{{ exporting ? 'Exportando…' : 'Export' }}</span>
+            <span>{{ exporting ? 'Exportant…' : 'Exportar' }}</span>
           </button>
           <button class="btn btn-primary" @click="openCustomerForm()">
             <Plus :size="18" />
-            <span>Add customer</span>
+            <span>Afegir client</span>
           </button>
         </div>
       </div>
@@ -26,7 +26,7 @@
           <input
             type="text"
             class="input search-input"
-            placeholder="Search by name, email..."
+            placeholder="Cerca per nom o correu…"
             v-model="searchQuery"
           />
         </div>
@@ -35,34 +35,34 @@
             <button
               :class="['toggle-btn', { active: typeFilter === 'all' }]"
               @click="typeFilter = 'all'"
-            >All</button>
+            >Tots</button>
             <button
               :class="['toggle-btn', { active: typeFilter === 'company' }]"
               @click="typeFilter = 'company'"
             >
               <Building2 :size="14" />
-              Company
+              Empresa
             </button>
             <button
               :class="['toggle-btn', { active: typeFilter === 'person' }]"
               @click="typeFilter = 'person'"
             >
               <User :size="14" />
-              Person
+              Persona
             </button>
           </div>
           <select class="select filter-select" v-model="statusFilter">
-            <option value="all">All statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">Tots els estats</option>
+            <option value="active">Actiu</option>
+            <option value="inactive">Inactiu</option>
           </select>
           <select class="select filter-select" v-model="cityFilter">
-            <option value="all">All cities</option>
+            <option value="all">Totes les ciutats</option>
             <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
           </select>
           <button class="btn btn-secondary" @click="sortCustomers">
             <ArrowUpDown :size="18" />
-            <span>Sort</span>
+            <span>Ordenar</span>
           </button>
         </div>
       </div>
@@ -76,12 +76,12 @@
                   <input type="checkbox" class="checkbox" @change="toggleSelectAll" :checked="allSelected" />
                 </th>
                 <th class="col-avatar"></th>
-                <th class="col-name">Name</th>
-                <th class="col-type">Type</th>
-                <th class="col-email">Email</th>
-                <th class="col-city">City</th>
-                <th class="col-linked">Linked</th>
-                <th class="col-status">Status</th>
+                <th class="col-name">Nom</th>
+                <th class="col-type">Tipus</th>
+                <th class="col-email">Correu</th>
+                <th class="col-city">Ciutat</th>
+                <th class="col-linked">Vinculat</th>
+                <th class="col-status">Estat</th>
                 <th class="col-actions"></th>
               </tr>
             </thead>
@@ -103,7 +103,7 @@
                   <span :class="['type-badge', customer.type === 'Company' ? 'type-company' : 'type-person']">
                     <Building2 v-if="customer.type === 'Company'" :size="12" />
                     <User v-else :size="12" />
-                    {{ customer.type }}
+                    {{ typeLabel(customer.type) }}
                   </span>
                 </td>
                 <td class="col-email">
@@ -121,7 +121,7 @@
                 </td>
                 <td class="col-status">
                   <span :class="['badge', statusBadgeClass(customer.status)]">
-                    {{ customer.status }}
+                    {{ statusLabel(customer.status) }}
                   </span>
                 </td>
                 <td class="col-actions" @click.stop>
@@ -138,7 +138,7 @@
         </div>
         <div class="table-footer">
           <span class="table-footer-info">
-            Showing <strong>{{ filteredCustomers.length }}</strong> of <strong>{{ customers.length }}</strong> customers
+            Mostrant <strong>{{ filteredCustomers.length }}</strong> de <strong>{{ customers.length }}</strong> clients
           </span>
         </div>
       </div>
@@ -190,11 +190,11 @@ async function handleExport() {
   try {
     const blob = await customersApi.export()
     const stamp = new Date().toISOString().slice(0, 10)
-    saveBlob(blob, `clientes-${stamp}.xlsx`)
-    toast.success('Exportación generada')
+    saveBlob(blob, `clients-${stamp}.xlsx`)
+    toast.success('Exportació generada')
   } catch (err) {
     console.error('Export failed:', err)
-    toast.error(err.message || 'Error al exportar clientes')
+    toast.error(err.message || 'Error en exportar els clients')
   } finally {
     exporting.value = false
   }
@@ -209,7 +209,7 @@ async function fetchCustomers() {
     customers.value = items.map(mapCustomerFromApi)
   } catch (err) {
     console.error('Failed to load customers:', err)
-    toast.error('Error al cargar clientes')
+    toast.error('Error en carregar els clients')
   } finally {
     loading.value = false
   }
@@ -255,14 +255,14 @@ async function handleCustomerSave(formData) {
   try {
     if (formCustomer.value) {
       await customersApi.update(formCustomer.value.id, apiData)
-      toast.success('Cliente actualizado')
+      toast.success('Client actualitzat')
     } else {
       await customersApi.create(apiData)
-      toast.success('Cliente creado')
+      toast.success('Client creat')
     }
     await fetchCustomers()
   } catch (err) {
-    toast.error(parseDrfErrors(err.data) || err.message || 'Error al guardar cliente')
+    toast.error(parseDrfErrors(err.data) || err.message || 'Error en desar el client')
   }
 }
 
@@ -270,9 +270,9 @@ async function deleteCustomer(customer) {
   try {
     await customersApi.delete(customer.id)
     customers.value = customers.value.filter(c => c.id !== customer.id)
-    toast.success('Cliente eliminado')
+    toast.success('Client eliminat')
   } catch (err) {
-    toast.error(err.data?.detail || err.message || 'Error al eliminar cliente')
+    toast.error(err.data?.detail || err.message || 'Error en eliminar el client')
   }
 }
 
@@ -356,6 +356,16 @@ function sortCustomers() {
 function statusBadgeClass(status) {
   const map = { Active: 'badge-success', Inactive: 'badge-warning' }
   return map[status] || 'badge-gray'
+}
+
+function statusLabel(status) {
+  const map = { Active: 'Actiu', Inactive: 'Inactiu' }
+  return map[status] || status
+}
+
+function typeLabel(type) {
+  const map = { Company: 'Empresa', Person: 'Persona' }
+  return map[type] || type
 }
 </script>
 

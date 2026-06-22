@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from core.models import Tag, SalesChannel
-from core.serializers import TagSerializer, SalesChannelSerializer
+from core.serializers import TagSerializer, SalesChannelSerializer, WarehouseSerializer
 from .models import (
     Category, Product, ProductImage, ProductAttribute,
     ProductAttributeValue, ProductVariant, PriceList,
@@ -114,6 +114,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     """Serializer para el detalle completo de un producto."""
 
     category = CategorySerializer(read_only=True)
+    warehouse = WarehouseSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     channels = SalesChannelSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)

@@ -7,16 +7,16 @@
         </div>
         <div class="header-actions">
           <div class="tab-toggle">
-            <button :class="['tab-btn', { active: tab === 'content' }]" @click="tab = 'content'">Contenido</button>
+            <button :class="['tab-btn', { active: tab === 'content' }]" @click="tab = 'content'">Contingut</button>
             <button :class="['tab-btn', { active: tab === 'influencers' }]" @click="tab = 'influencers'">Influencers</button>
           </div>
           <select class="select" v-model="periodFilter">
-            <option value="30d">Últimos 30 días</option>
-            <option value="90d">Últimos 3 meses</option>
-            <option value="ytd">Este año</option>
+            <option value="30d">Últims 30 dies</option>
+            <option value="90d">Últims 3 mesos</option>
+            <option value="ytd">Aquest any</option>
           </select>
           <select class="select" v-model="campaignFilter">
-            <option value="all">Todas las campañas</option>
+            <option value="all">Totes les campanyes</option>
             <option v-for="c in socialCampaigns" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
         </div>
@@ -26,7 +26,7 @@
     <div class="content-wrapper">
       <!-- CONTENT ANALYTICS -->
       <template v-if="tab === 'content'">
-        <div class="section-title">Rendimiento por formato de contenido</div>
+        <div class="section-title">Rendiment per format de contingut</div>
         <div class="bar-compare-grid">
           <div class="card compare-card" v-for="fmt in contentByFormat" :key="fmt.type">
             <div class="fmt-header">
@@ -35,7 +35,7 @@
             </div>
             <div class="fmt-stats">
               <div class="fmt-stat"><span class="stat-val">{{ fmt.engagement.toFixed(1) }}%</span><span class="stat-key">Eng.</span></div>
-              <div class="fmt-stat"><span class="stat-val">{{ formatNumber(fmt.avgReach) }}</span><span class="stat-key">Alcance</span></div>
+              <div class="fmt-stat"><span class="stat-val">{{ formatNumber(fmt.avgReach) }}</span><span class="stat-key">Abast</span></div>
               <div class="fmt-stat"><span class="stat-val">{{ formatNumber(fmt.avgClicks) }}</span><span class="stat-key">Clics</span></div>
             </div>
             <div class="eng-bar-wrap">
@@ -46,13 +46,13 @@
 
         <div class="two-col">
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Rendimiento por red social</h3></div>
+            <div class="card-header"><h3 class="card-title">Rendiment per xarxa social</h3></div>
             <div class="platform-table">
               <div class="pt-row pt-header">
-                <span>Red</span>
+                <span>Xarxa</span>
                 <span class="text-right">Posts</span>
-                <span class="text-right">Eng. medio</span>
-                <span class="text-right">Alcance total</span>
+                <span class="text-right">Eng. mitjà</span>
+                <span class="text-right">Abast total</span>
                 <span class="text-right">Clics</span>
               </div>
               <div class="pt-row" v-for="plt in contentByPlatform" :key="plt.platform">
@@ -66,7 +66,7 @@
           </div>
 
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Rendimiento por franja horaria (publicación)</h3></div>
+            <div class="card-header"><h3 class="card-title">Rendiment per franja horària (publicació)</h3></div>
             <div class="hour-chart">
               <div v-for="slot in timeSlots" :key="slot.label" class="hour-row">
                 <span class="hour-label">{{ slot.label }}</span>
@@ -82,19 +82,19 @@
 
       <!-- INFLUENCER ANALYTICS -->
       <template v-if="tab === 'influencers'">
-        <div class="section-title">Comparativa de influencers</div>
+        <div class="section-title">Comparativa d'influencers</div>
         <div class="card table-card">
           <div class="table-wrapper">
             <table class="table">
               <thead>
                 <tr>
                   <th>Influencer</th>
-                  <th class="text-right">Alcance</th>
+                  <th class="text-right">Abast</th>
                   <th class="text-right">Engagement</th>
                   <th class="text-right">Clics</th>
-                  <th class="text-right">Conversiones</th>
-                  <th class="text-right">Ventas</th>
-                  <th class="text-right">Coste</th>
+                  <th class="text-right">Conversions</th>
+                  <th class="text-right">Vendes</th>
+                  <th class="text-right">Cost</th>
                   <th class="text-right">CPA</th>
                   <th class="text-right">ROAS</th>
                 </tr>
@@ -126,7 +126,7 @@
 
         <div class="two-col">
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Ranking por ventas generadas</h3></div>
+            <div class="card-header"><h3 class="card-title">Rànquing per vendes generades</h3></div>
             <div class="ranking-list">
               <div v-for="(inf, i) in influencersByRanking" :key="inf.id" class="rank-row">
                 <span class="rank-num">{{ i + 1 }}</span>
@@ -141,10 +141,10 @@
             </div>
           </div>
           <div class="card">
-            <div class="card-header"><h3 class="card-title">Dispersión coste vs. ventas</h3></div>
+            <div class="card-header"><h3 class="card-title">Dispersió cost vs. vendes</h3></div>
             <div class="scatter-note">
               <BarChart2 :size="32" class="scatter-icon" />
-              <span>Visualización disponible próximamente con integración de gráficos</span>
+              <span>Visualització disponible pròximament amb integració de gràfics</span>
             </div>
           </div>
         </div>

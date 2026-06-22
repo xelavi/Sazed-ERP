@@ -3,11 +3,11 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Alertas</h1>
-          <span class="count-badge pending-count">{{ pending.length }} pendientes</span>
+          <h1 class="view-title">Alertes</h1>
+          <span class="count-badge pending-count">{{ pending.length }} pendents</span>
         </div>
         <div class="header-actions">
-          <button class="btn btn-secondary" @click="markAllReviewed">Marcar todas revisadas</button>
+          <button class="btn btn-secondary" @click="markAllReviewed">Marcar totes revisades</button>
         </div>
       </div>
     </div>
@@ -15,19 +15,19 @@
     <div class="content-wrapper">
       <div class="filters-bar">
         <select class="select" v-model="severityFilter">
-          <option value="all">Todas las gravedades</option>
+          <option value="all">Totes les gravetat</option>
           <option value="high">Alta</option>
-          <option value="medium">Media</option>
-          <option value="low">Baja</option>
+          <option value="medium">Mitjana</option>
+          <option value="low">Baixa</option>
         </select>
         <select class="select" v-model="statusFilter">
-          <option value="all">Todos los estados</option>
-          <option value="pending">Pendiente</option>
+          <option value="all">Tots els estats</option>
+          <option value="pending">Pendent</option>
           <option value="reviewed">Revisada</option>
-          <option value="assigned">Asignada</option>
+          <option value="assigned">Assignada</option>
         </select>
         <select class="select" v-model="typeFilter">
-          <option value="all">Todos los tipos</option>
+          <option value="all">Tots els tipus</option>
           <option v-for="(type, key) in ALERT_TYPES" :key="key" :value="key">{{ type.label }}</option>
         </select>
       </div>
@@ -37,14 +37,14 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Entidad afectada</th>
-                <th>Descripción</th>
-                <th>Gravedad</th>
-                <th>Estado</th>
+                <th>Data</th>
+                <th>Tipus</th>
+                <th>Entitat afectada</th>
+                <th>Descripció</th>
+                <th>Gravetat</th>
+                <th>Estat</th>
                 <th>Responsable</th>
-                <th>Acciones</th>
+                <th>Accions</th>
               </tr>
             </thead>
             <tbody>
@@ -57,12 +57,12 @@
                 <td class="desc-cell">{{ alert.description }}</td>
                 <td>
                   <span :class="['sev-badge', `sev-${alert.severity}`]">
-                    {{ { high: 'Alta', medium: 'Media', low: 'Baja' }[alert.severity] }}
+                    {{ { high: 'Alta', medium: 'Mitjana', low: 'Baixa' }[alert.severity] }}
                   </span>
                 </td>
                 <td>
                   <span :class="['badge', statusBadge(alert.status)]">
-                    {{ { pending: 'Pendiente', reviewed: 'Revisada', assigned: 'Asignada' }[alert.status] }}
+                    {{ { pending: 'Pendent', reviewed: 'Revisada', assigned: 'Assignada' }[alert.status] }}
                   </span>
                 </td>
                 <td class="text-sm">{{ alert.responsible || '—' }}</td>
@@ -74,7 +74,7 @@
                       @click="markReviewed(alert.id)">
                       <Check :size="15" />
                     </button>
-                    <button class="icon-btn" title="Asignar responsable" @click="assignAlert(alert)">
+                    <button class="icon-btn" title="Assignar responsable" @click="assignAlert(alert)">
                       <UserPlus :size="15" />
                     </button>
                   </div>
@@ -90,7 +90,7 @@
     <div v-if="assignTarget" class="modal-overlay" @click.self="assignTarget = null">
       <div class="modal">
         <div class="modal-header">
-          <h2 class="modal-title">Asignar responsable</h2>
+          <h2 class="modal-title">Assignar responsable</h2>
           <button class="icon-btn" @click="assignTarget = null"><X :size="20" /></button>
         </div>
         <div class="modal-body">
@@ -103,8 +103,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="assignTarget = null">Cancelar</button>
-          <button class="btn btn-primary" @click="confirmAssign">Asignar</button>
+          <button class="btn btn-secondary" @click="assignTarget = null">Cancel·lar</button>
+          <button class="btn btn-primary" @click="confirmAssign">Assignar</button>
         </div>
       </div>
     </div>

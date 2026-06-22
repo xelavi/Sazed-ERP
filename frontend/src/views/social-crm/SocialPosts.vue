@@ -3,7 +3,7 @@
     <div class="view-header">
       <div class="header-content">
         <div class="title-section">
-          <h1 class="view-title">Publicaciones</h1>
+          <h1 class="view-title">Publicacions</h1>
           <span class="count-badge">{{ filtered.length }}</span>
         </div>
         <div class="header-actions">
@@ -17,21 +17,21 @@
     <div class="content-wrapper">
       <div class="filters-bar">
         <select class="select" v-model="platformFilter">
-          <option value="all">Todas las redes</option>
+          <option value="all">Totes les xarxes</option>
           <option v-for="(p, key) in PLATFORMS" :key="key" :value="key">{{ p.label }}</option>
         </select>
         <select class="select" v-model="typeFilter">
-          <option value="all">Todos los tipos</option>
+          <option value="all">Tots els tipus</option>
           <option v-for="t in CONTENT_TYPES" :key="t" :value="t">{{ t }}</option>
         </select>
         <select class="select" v-model="campaignFilter">
-          <option value="all">Todas las campañas</option>
-          <option value="none">Sin campaña</option>
+          <option value="all">Totes les campanyes</option>
+          <option value="none">Sense campanya</option>
           <option v-for="c in socialCampaigns" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
         </select>
         <select class="select" v-model="sortKey">
-          <option value="date">Fecha</option>
-          <option value="reach">Alcance</option>
+          <option value="date">Data</option>
+          <option value="reach">Abast</option>
           <option value="engagement">Engagement</option>
           <option value="clicks">Clics</option>
         </select>
@@ -42,20 +42,20 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>Red</th>
-                <th>Cuenta</th>
-                <th>Publicación</th>
-                <th>Tipo</th>
-                <th>Campaña</th>
+                <th>Data</th>
+                <th>Xarxa</th>
+                <th>Compte</th>
+                <th>Publicació</th>
+                <th>Tipus</th>
+                <th>Campanya</th>
                 <th class="text-right">Likes</th>
-                <th class="text-right">Comentarios</th>
-                <th class="text-right">Compartidos</th>
-                <th class="text-right">Guardados</th>
-                <th class="text-right">Alcance</th>
+                <th class="text-right">Comentaris</th>
+                <th class="text-right">Compartits</th>
+                <th class="text-right">Desats</th>
+                <th class="text-right">Abast</th>
                 <th class="text-right">Clics</th>
                 <th class="text-right">Engagement</th>
-                <th>Acciones</th>
+                <th>Accions</th>
               </tr>
             </thead>
             <tbody>
@@ -79,10 +79,10 @@
                 </td>
                 <td>
                   <div class="row-actions">
-                    <button class="icon-btn" @click="$router.push('/social-crm/posts/' + post.id)" title="Ver detalle">
+                    <button class="icon-btn" @click="$router.push('/social-crm/posts/' + post.id)" title="Veure detall">
                       <Eye :size="15" />
                     </button>
-                    <button class="icon-btn" title="Asociar campaña">
+                    <button class="icon-btn" title="Associar campanya">
                       <Link :size="15" />
                     </button>
                   </div>

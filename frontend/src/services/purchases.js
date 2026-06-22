@@ -54,22 +54,6 @@ export default {
     return post('/purchases/bulk-delete/', { ids: invoiceIds })
   },
 
-  async getSeries() {
-    return get('/purchases/series/')
-  },
-
-  async createSeries(data) {
-    return post('/purchases/series/', data)
-  },
-
-  async getQuotes(filters = {}) {
-    return get('/purchases/quotes/', filters)
-  },
-
-  async createQuote(data) {
-    return post('/purchases/quotes/', data)
-  },
-
   async search(query, filters = {}) {
     return get('/purchases/', { search: query, ...filters })
   },
